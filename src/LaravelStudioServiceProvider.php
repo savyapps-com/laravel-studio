@@ -7,6 +7,8 @@ use SavyApps\LaravelStudio\Console\Commands\InstallCommand;
 use SavyApps\LaravelStudio\Console\Commands\MakeResourceCommand;
 use SavyApps\LaravelStudio\Console\Commands\MakeFilterCommand;
 use SavyApps\LaravelStudio\Console\Commands\MakeActionCommand;
+use SavyApps\LaravelStudio\Http\Middleware\EnsureUserCanAccessPanel;
+use SavyApps\LaravelStudio\Services\PanelService;
 
 class LaravelStudioServiceProvider extends ServiceProvider
 {
@@ -20,6 +22,11 @@ class LaravelStudioServiceProvider extends ServiceProvider
             __DIR__.'/../config/studio.php',
             'studio'
         );
+
+        // Register PanelService as singleton
+        $this->app->singleton(PanelService::class, function ($app) {
+            return new PanelService();
+        });
     }
 
     /**
@@ -27,6 +34,9 @@ class LaravelStudioServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register middleware alias
+        $this->registerMiddleware();
+
         // Load package routes
         $this->loadRoutesFrom(__DIR__.'/../routes/api.php');
 
@@ -49,5 +59,19 @@ class LaravelStudioServiceProvider extends ServiceProvider
                 MakeActionCommand::class,
             ]);
         }
+    }
+
+    /**
+     * Register middleware aliases.
+     */
+    protected function registerMiddleware(): void
+    {
+        $router = $this->app['router'];
+
+        // Register panel middleware alias
+        $router->aliasMiddleware('panel', EnsureUserCanAccessPanel::class);
+
+        // Legacy aliases for backward compatibility
+        $router->aliasMiddleware('studio.panel', EnsureUserCanAccessPanel::class);
     }
 }

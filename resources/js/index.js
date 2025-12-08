@@ -14,12 +14,21 @@ export { default as FilterBar } from './components/resource/FilterBar.vue'
 export { default as ActionButtons } from './components/resource/ActionButtons.vue'
 export { default as QuickCreateModal } from './components/resource/QuickCreateModal.vue'
 
+// Layout Components
+export { default as PanelLayout } from './components/layout/PanelLayout.vue'
+export { default as PanelSwitcher } from './components/layout/PanelSwitcher.vue'
+
 // Common Components
 export { default as Toast } from './components/common/Toast.vue'
 export { default as ToastContainer } from './components/common/ToastContainer.vue'
 export { default as ConfirmDialog } from './components/common/ConfirmDialog.vue'
 export { default as ConfirmDialogContainer } from './components/common/ConfirmDialogContainer.vue'
 export { default as Icon } from './components/common/Icon.vue'
+export { default as ToggleSwitch } from './components/common/ToggleSwitch.vue'
+export { default as VirtualScroll } from './components/common/VirtualScroll.vue'
+export { default as ImageEditor } from './components/common/ImageEditor.vue'
+export { default as ImageLightbox } from './components/common/ImageLightbox.vue'
+export { default as ImageWithBlurPlaceholder } from './components/common/ImageWithBlurPlaceholder.vue'
 
 // Form Components
 export { default as FormInput } from './components/form/FormInput.vue'
@@ -45,14 +54,52 @@ export { default as FormActions } from './components/form/FormActions.vue'
 
 // Services
 export { resourceService } from './services/resourceService.js'
+export { panelService } from './services/panelService.js'
+export { authService } from './services/authService.js'
+export { settingsService } from './services/settingsService.js'
+export { mediaService } from './services/mediaService.js'
+export { impersonationService } from './services/impersonationService.js'
+
+// Stores
+export { useAuthStore } from './stores/auth.js'
+export { usePanelStore } from './stores/panel.js'
+export { useDialogStore } from './stores/dialog.js'
+export { useToastStore } from './stores/toast.js'
+export { useSettingsStore } from './stores/settings.js'
+
+// Router Utilities
+export {
+    generatePanelRoutes,
+    loadDynamicPanelRoutes,
+    createPanelGuard,
+    generateStaticPanelRoutes,
+    getPanelFromRoute,
+    getResourceFromRoute
+} from './router/panelRoutes.js'
 
 // Composables
 export { useToast } from './composables/useToast.js'
 export { useDialog } from './composables/useDialog.js'
 export { useModal } from './composables/useModal.js'
+export { usePasswordToggle } from './composables/usePasswordToggle.js'
+export { useImageEditor } from './composables/useImageEditor.js'
+export { useImageEditHistory } from './composables/useImageEditHistory.js'
+export { useLightbox } from './composables/useLightbox.js'
+export { useUploadProgress } from './composables/useUploadProgress.js'
 
 // Directives
 export { default as tooltipDirective } from './directives/tooltip.js'
+
+// Utilities
+export * from './utils/validationRules.js'
+export * from './utils/validationMessages.js'
+export * from './utils/validationSchemas.js'
+export * from './utils/laravelErrorMapper.js'
+export * from './utils/httpErrorHandler.js'
+export * from './utils/imageManipulation.js'
+export * from './utils/memoization.js'
+export * from './utils/debouncedValidation.js'
+export * from './utils/lazyValidation.js'
 
 /**
  * Vue Plugin Installation
@@ -67,6 +114,8 @@ export default {
         app.component('ResourceManager', () => import('./components/resource/ResourceManager.vue'))
         app.component('ResourceTable', () => import('./components/resource/ResourceTable.vue'))
         app.component('ResourceForm', () => import('./components/resource/ResourceForm.vue'))
+        app.component('PanelLayout', () => import('./components/layout/PanelLayout.vue'))
+        app.component('PanelSwitcher', () => import('./components/layout/PanelSwitcher.vue'))
 
         // Register tooltip directive
         app.directive('tooltip', tooltipDirective)

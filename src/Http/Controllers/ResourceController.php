@@ -5,6 +5,7 @@ namespace SavyApps\LaravelStudio\Http\Controllers;
 use Illuminate\Routing\Controller;
 use SavyApps\LaravelStudio\Http\Requests\ResourceStoreRequest;
 use SavyApps\LaravelStudio\Http\Requests\ResourceUpdateRequest;
+use SavyApps\LaravelStudio\Services\PanelService;
 use SavyApps\LaravelStudio\Services\ResourceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,12 +13,15 @@ use Illuminate\Support\Facades\Validator;
 
 class ResourceController extends Controller
 {
+    public function __construct(
+        protected PanelService $panelService
+    ) {}
     /**
      * Get resource metadata (fields, filters, actions).
      */
     public function meta(Request $request, string $resource): JsonResponse
     {
-        $resourceInstance = $this->resolveResource($resource);
+        $resourceInstance = $this->resolveResource($resource, $request);
 
         // Determine which fields to return based on context
         $context = $request->query('context', 'index'); // 'index' or 'form'
@@ -45,7 +49,7 @@ class ResourceController extends Controller
      */
     public function index(Request $request, string $resource): JsonResponse
     {
-        $resourceInstance = $this->resolveResource($resource);
+        $resourceInstance = $this->resolveResource($resource, $request);
         $service = new ResourceService($resourceInstance);
 
         $data = $service->index($request->all());
@@ -56,9 +60,9 @@ class ResourceController extends Controller
     /**
      * Show single resource.
      */
-    public function show(string $resource, int|string $id): JsonResponse
+    public function show(Request $request, string $resource, int|string $id): JsonResponse
     {
-        $resourceInstance = $this->resolveResource($resource);
+        $resourceInstance = $this->resolveResource($resource, $request);
         $service = new ResourceService($resourceInstance);
 
         $model = $service->show($id);
@@ -74,8 +78,8 @@ class ResourceController extends Controller
      */
     public function store(Request $request, string $resource): JsonResponse
     {
-        $resourceClass = $this->resolveResourceClass($resource);
-        $resourceInstance = $this->resolveResource($resource);
+        $resourceClass = $this->resolveResourceClass($resource, $request);
+        $resourceInstance = $this->resolveResource($resource, $request);
 
         // Create and configure the form request with dynamic validation
         $formRequest = app(ResourceStoreRequest::class);
@@ -109,8 +113,8 @@ class ResourceController extends Controller
      */
     public function update(Request $request, string $resource, int|string $id): JsonResponse
     {
-        $resourceClass = $this->resolveResourceClass($resource);
-        $resourceInstance = $this->resolveResource($resource);
+        $resourceClass = $this->resolveResourceClass($resource, $request);
+        $resourceInstance = $this->resolveResource($resource, $request);
 
         // Create and configure the form request with dynamic validation
         $formRequest = app(ResourceUpdateRequest::class);
@@ -151,7 +155,7 @@ class ResourceController extends Controller
      */
     public function patch(Request $request, string $resource, int|string $id): JsonResponse
     {
-        $resourceInstance = $this->resolveResource($resource);
+        $resourceInstance = $this->resolveResource($resource, $request);
         $modelClass = $resourceInstance::model();
 
         // Get only the fields being updated (before filtering)
@@ -233,9 +237,9 @@ class ResourceController extends Controller
     /**
      * Delete resource.
      */
-    public function destroy(string $resource, int|string $id): JsonResponse
+    public function destroy(Request $request, string $resource, int|string $id): JsonResponse
     {
-        $resourceInstance = $this->resolveResource($resource);
+        $resourceInstance = $this->resolveResource($resource, $request);
         $service = new ResourceService($resourceInstance);
 
         $service->destroy($id);
@@ -255,7 +259,7 @@ class ResourceController extends Controller
             'ids.*' => 'required|integer',
         ]);
 
-        $resourceInstance = $this->resolveResource($resource);
+        $resourceInstance = $this->resolveResource($resource, $request);
         $service = new ResourceService($resourceInstance);
 
         $count = $service->bulkDestroy($request->input('ids'));
@@ -277,7 +281,7 @@ class ResourceController extends Controller
             'data' => 'required|array',
         ]);
 
-        $resourceInstance = $this->resolveResource($resource);
+        $resourceInstance = $this->resolveResource($resource, $request);
         $service = new ResourceService($resourceInstance);
 
         $count = $service->bulkUpdate(
@@ -301,7 +305,7 @@ class ResourceController extends Controller
             'ids.*' => 'required|integer',
         ]);
 
-        $resourceInstance = $this->resolveResource($resource);
+        $resourceInstance = $this->resolveResource($resource, $request);
         $service = new ResourceService($resourceInstance);
 
         $result = $service->runAction(
@@ -325,7 +329,7 @@ class ResourceController extends Controller
             'query' => 'nullable|string|max:255',
         ]);
 
-        $resourceInstance = $this->resolveResource($resource);
+        $resourceInstance = $this->resolveResource($resource, $request);
         $service = new ResourceService($resourceInstance);
 
         $data = $service->index([
@@ -339,11 +343,28 @@ class ResourceController extends Controller
     /**
      * Resolve resource class from key.
      */
-    protected function resolveResourceClass(string $resourceKey): string
+    protected function resolveResourceClass(string $resourceKey, ?Request $request = null): string
     {
-        $resourceClass = config("studio.resources.{$resourceKey}");
+        // Check if this is a panel-scoped request
+        if ($request) {
+            $panel = $request->get('_panel') ?? $request->attributes->get('panel');
 
-        if (! $resourceClass || ! class_exists($resourceClass)) {
+            if ($panel) {
+                // Verify resource is available in this panel
+                if (!$this->panelService->panelHasResource($panel, $resourceKey)) {
+                    abort(403, "Resource '{$resourceKey}' is not available in panel '{$panel}'");
+                }
+            }
+        }
+
+        $resourceConfig = config("studio.resources.{$resourceKey}");
+
+        // Handle both old format (string) and new format (array with 'class' key)
+        $resourceClass = is_array($resourceConfig)
+            ? ($resourceConfig['class'] ?? null)
+            : $resourceConfig;
+
+        if (!$resourceClass || !class_exists($resourceClass)) {
             abort(404, "Resource not found: {$resourceKey}");
         }
 
@@ -353,9 +374,9 @@ class ResourceController extends Controller
     /**
      * Resolve resource instance from key.
      */
-    protected function resolveResource(string $resourceKey): object
+    protected function resolveResource(string $resourceKey, ?Request $request = null): object
     {
-        $resourceClass = $this->resolveResourceClass($resourceKey);
+        $resourceClass = $this->resolveResourceClass($resourceKey, $request);
 
         return new $resourceClass;
     }
