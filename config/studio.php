@@ -252,4 +252,62 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Dashboard Cards/Widgets Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure the dashboard cards and widgets system for displaying
+    | metrics, charts, and key performance indicators.
+    |
+    */
+
+    'cards' => [
+        // Enable/disable cards feature
+        'enabled' => true,
+
+        // Default cache TTL for card data (in seconds)
+        'cache_ttl' => 300,
+
+        // Default card refresh interval (in seconds, null = no auto-refresh)
+        'refresh_interval' => null,
+
+        // Maximum cards per row
+        'max_per_row' => 4,
+
+        // Available color palette for cards
+        'colors' => [
+            'blue' => '#3B82F6',
+            'green' => '#10B981',
+            'yellow' => '#F59E0B',
+            'red' => '#EF4444',
+            'purple' => '#8B5CF6',
+            'pink' => '#EC4899',
+            'indigo' => '#6366F1',
+            'cyan' => '#06B6D4',
+            'orange' => '#F97316',
+            'teal' => '#14B8A6',
+            'gray' => '#6B7280',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Dashboard Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure the default dashboard widgets. These will be shown on the
+    | main dashboard unless a panel specifies its own widgets.
+    |
+    */
+
+    'dashboard' => [
+        'widgets' => [
+            // Define default dashboard widgets here
+            // Example:
+            // ['component' => 'StatsOverview', 'width' => 'full'],
+            // ['component' => 'RecentActivity', 'width' => '1/2'],
+        ],
+    ],
+
 ];

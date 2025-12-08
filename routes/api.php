@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use SavyApps\LaravelStudio\Http\Controllers\ActivityController;
+use SavyApps\LaravelStudio\Http\Controllers\CardController;
 use SavyApps\LaravelStudio\Http\Controllers\GlobalSearchController;
 use SavyApps\LaravelStudio\Http\Controllers\PanelController;
 use SavyApps\LaravelStudio\Http\Controllers\PermissionController;
@@ -77,6 +78,20 @@ Route::middleware(['api', 'auth:sanctum'])
         Route::get('resources', [GlobalSearchController::class, 'searchableResources'])->name('resources');
         Route::get('{resource}', [GlobalSearchController::class, 'searchResource'])->name('resource');
         Route::delete('recent', [GlobalSearchController::class, 'clearRecent'])->name('recent.clear');
+    });
+
+// Card/Widget Routes
+Route::middleware(['api', 'auth:sanctum'])
+    ->prefix('api/cards')
+    ->name('api.cards.')
+    ->group(function () {
+        Route::get('dashboard', [CardController::class, 'dashboardCards'])->name('dashboard');
+        Route::get('types', [CardController::class, 'types'])->name('types');
+        Route::delete('cache', [CardController::class, 'clearAllCaches'])->name('cache.clear-all');
+        Route::get('{resource}', [CardController::class, 'resourceCards'])->name('resource');
+        Route::get('{resource}/{cardKey}', [CardController::class, 'show'])->name('show');
+        Route::post('{resource}/{cardKey}/refresh', [CardController::class, 'refresh'])->name('refresh');
+        Route::delete('{resource}/cache', [CardController::class, 'clearCache'])->name('cache.clear');
     });
 
 // Panel-specific Resource Routes

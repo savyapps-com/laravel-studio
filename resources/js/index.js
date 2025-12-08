@@ -32,6 +32,14 @@ export { default as ActivityDetailsModal } from './components/activity/ActivityD
 export { default as SearchPalette } from './components/search/SearchPalette.vue'
 export { default as SearchResultItem } from './components/search/SearchResultItem.vue'
 
+// Card/Widget Components
+export { default as CardGrid } from './components/cards/CardGrid.vue'
+export { default as ValueCard } from './components/cards/ValueCard.vue'
+export { default as TrendCard } from './components/cards/TrendCard.vue'
+export { default as PartitionCard } from './components/cards/PartitionCard.vue'
+export { default as TableCard } from './components/cards/TableCard.vue'
+export { default as ChartCard } from './components/cards/ChartCard.vue'
+
 // Common Components
 export { default as Toast } from './components/common/Toast.vue'
 export { default as ToastContainer } from './components/common/ToastContainer.vue'
@@ -76,6 +84,7 @@ export { impersonationService } from './services/impersonationService.js'
 export { permissionService } from './services/permissionService.js'
 export { activityService } from './services/activityService.js'
 export { searchService } from './services/searchService.js'
+export { cardService } from './services/cardService.js'
 
 // Stores
 export { useAuthStore } from './stores/auth.js'
@@ -105,6 +114,7 @@ export { useLightbox } from './composables/useLightbox.js'
 export { useUploadProgress } from './composables/useUploadProgress.js'
 export { usePermissions, useRolePermissions, useAllPermissions } from './composables/usePermissions.js'
 export { useGlobalSearch } from './composables/useGlobalSearch.js'
+export { useCards } from './composables/useCards.js'
 
 // Directives
 export { default as tooltipDirective } from './directives/tooltip.js'
@@ -149,6 +159,14 @@ export default {
         // Search components
         app.component('SearchPalette', () => import('./components/search/SearchPalette.vue'))
         app.component('SearchResultItem', () => import('./components/search/SearchResultItem.vue'))
+
+        // Card/Widget components
+        app.component('CardGrid', () => import('./components/cards/CardGrid.vue'))
+        app.component('ValueCard', () => import('./components/cards/ValueCard.vue'))
+        app.component('TrendCard', () => import('./components/cards/TrendCard.vue'))
+        app.component('PartitionCard', () => import('./components/cards/PartitionCard.vue'))
+        app.component('TableCard', () => import('./components/cards/TableCard.vue'))
+        app.component('ChartCard', () => import('./components/cards/ChartCard.vue'))
 
         // Register tooltip directive
         app.directive('tooltip', tooltipDirective)
