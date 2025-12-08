@@ -2,7 +2,7 @@
 module.exports = function() {
     return {
         content: [
-            './vendor/savyapps/laravel-studio/dist/**/*.js',
+            './vendor/savyapps-com/laravel-studio/dist/**/*.js',
         ],
         theme: {
             extend: {

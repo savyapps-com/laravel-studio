@@ -694,7 +694,7 @@ detect_project_state()
 **Step 2: Installation** (if needed)
 ```typescript
 install_laravel_studio()
-→ Executes: composer require savyapps/laravel-studio
+→ Executes: composer require savyapps-com/laravel-studio
 → Executes: php artisan vendor:publish --tag=studio-config
 
 install_starter({ template: 'default' })
@@ -1460,7 +1460,7 @@ Step 1: Detecting project state...
 ✗ Starter not installed
 
 Step 2: Installing Laravel Studio...
-→ Running: composer require savyapps/laravel-studio
+→ Running: composer require savyapps-com/laravel-studio
 ✓ Package installed successfully
 
 Step 3: Installing starter template...

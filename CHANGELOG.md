@@ -19,4 +19,4 @@ All notable changes to `laravel-studio` will be documented in this file.
 
 Initial release
 
-[Unreleased]: https://github.com/savyapps/laravel-studio/compare/main...HEAD
+[Unreleased]: https://github.com/savyapps-com/laravel-studio/compare/main...HEAD

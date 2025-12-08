@@ -1,8 +1,8 @@
 # Laravel Studio
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/savyapps/laravel-studio.svg?style=flat-square)](https://packagist.org/packages/savyapps/laravel-studio)
-[![Total Downloads](https://img.shields.io/packagist/dt/savyapps/laravel-studio.svg?style=flat-square)](https://packagist.org/packages/savyapps/laravel-studio)
-[![License](https://img.shields.io/packagist/l/savyapps/laravel-studio.svg?style=flat-square)](https://packagist.org/packages/savyapps/laravel-studio)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/savyapps-com/laravel-studio.svg?style=flat-square)](https://packagist.org/packages/savyapps-com/laravel-studio)
+[![Total Downloads](https://img.shields.io/packagist/dt/savyapps-com/laravel-studio.svg?style=flat-square)](https://packagist.org/packages/savyapps-com/laravel-studio)
+[![License](https://img.shields.io/packagist/l/savyapps-com/laravel-studio.svg?style=flat-square)](https://packagist.org/packages/savyapps-com/laravel-studio)
 
 > **A free, open-source Laravel Nova alternative** - craft beautiful admin panels with a fluent resource-based CRUD system, powered by Vue 3.
 
@@ -39,7 +39,7 @@
 
 ```bash
 # 1. Install the package
-composer require savyapps/laravel-studio --dev
+composer require savyapps-com/laravel-studio --dev
 
 # 2. IMPORTANT: Regenerate autoload files
 composer dump-autoload
