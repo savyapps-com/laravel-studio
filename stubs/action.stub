@@ -1,0 +1,62 @@
+<?php
+
+namespace {{ namespace }};
+
+use SavyApps\LaravelStudio\Resources\Actions\Action;
+use Illuminate\Support\Collection;
+
+class {{ class }} extends Action
+{
+    /**
+     * The action's label.
+     */
+    public string $label = '{{ label }}';
+
+    /**
+     * The action's icon.
+     */
+    public ?string $icon = null;
+
+    /**
+     * Whether this action requires confirmation.
+     */
+    public bool $requiresConfirmation = false;
+
+    /**
+     * The confirmation message.
+     */
+    public ?string $confirmationMessage = null;
+
+    /**
+     * Perform the action on the given models.
+     *
+     * @param Collection $models
+     * @param array $data
+     * @return array
+     */
+    public function handle(Collection $models, array $data = []): array
+    {
+        // Implement your action logic here
+        // Example:
+        // foreach ($models as $model) {
+        //     $model->update(['status' => 'archived']);
+        // }
+
+        return [
+            'success' => true,
+            'message' => 'Action completed successfully!',
+        ];
+    }
+
+    /**
+     * Get the fields displayed on this action.
+     *
+     * @return array
+     */
+    public function fields(): array
+    {
+        return [
+            // Add fields that the user should fill when running this action
+        ];
+    }
+}

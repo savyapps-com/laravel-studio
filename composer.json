@@ -1,0 +1,68 @@
+{
+    "name": "savyapps/laravel-studio",
+    "description": "A free, open-source Laravel Nova alternative with Vue 3 - craft beautiful admin panels with a fluent resource-based CRUD system",
+    "keywords": [
+        "laravel",
+        "admin",
+        "crud",
+        "vue",
+        "vue3",
+        "nova",
+        "resources",
+        "admin-panel",
+        "savyapps"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "SavyApps",
+            "email": "hello@savyapps.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "illuminate/support": "^12.0",
+        "illuminate/database": "^12.0",
+        "illuminate/http": "^12.0",
+        "illuminate/console": "^12.0",
+        "spatie/laravel-medialibrary": "^11.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^10.0",
+        "phpunit/phpunit": "^11.0",
+        "laravel/pint": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "SavyApps\\LaravelStudio\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SavyApps\\LaravelStudio\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "SavyApps\\LaravelStudio\\LaravelStudioServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "@php -r \"file_exists('artisan') && !class_exists('Laravel\\\\Sanctum\\\\HasApiTokens') ? exit(0) : exit(1);\" && echo 'Please run: composer dump-autoload' || echo ''"
+        ],
+        "post-update-cmd": [
+            "@php -r \"file_exists('artisan') && !class_exists('Laravel\\\\Sanctum\\\\HasApiTokens') ? exit(0) : exit(1);\" && echo 'Please run: composer dump-autoload' || echo ''"
+        ]
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true,
+        "preferred-install": "dist",
+        "optimize-autoloader": true
+    }
+}

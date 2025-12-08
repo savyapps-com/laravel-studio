@@ -1,0 +1,105 @@
+<?php
+
+namespace {{ namespace }};
+
+use SavyApps\LaravelStudio\Resources\Resource;
+use SavyApps\LaravelStudio\Resources\Fields\ID;
+use SavyApps\LaravelStudio\Resources\Fields\Text;
+use SavyApps\LaravelStudio\Resources\Fields\Date;
+use {{ modelNamespace }}\{{ model }};
+
+class {{ class }} extends Resource
+{
+    /**
+     * The model the resource corresponds to.
+     */
+    public static string $model = {{ model }}::class;
+
+    /**
+     * The resource label (plural).
+     */
+    public static string $label = '{{ labelPlural }}';
+
+    /**
+     * The singular label for this resource.
+     */
+    public static string $singularLabel = '{{ labelSingular }}';
+
+    /**
+     * The column to display in relationship fields.
+     */
+    public static string $title = 'id';
+
+    /**
+     * The columns that should be searched.
+     */
+    public static array $search = [];
+
+    /**
+     * The number of resources to show per page.
+     */
+    public static int $perPage = 15;
+
+    /**
+     * Get the fields displayed in the index view.
+     */
+    public function indexFields(): array
+    {
+        return [
+            ID::make(),
+            // Add your index fields here
+            Date::make('Created At', 'created_at')->sortable(),
+        ];
+    }
+
+    /**
+     * Get the fields displayed in the detail view.
+     */
+    public function showFields(): array
+    {
+        return [
+            ID::make(),
+            // Add your detail fields here
+            Date::make('Created At', 'created_at'),
+            Date::make('Updated At', 'updated_at'),
+        ];
+    }
+
+    /**
+     * Get the fields displayed in create/edit forms.
+     */
+    public function formFields(): array
+    {
+        return [
+            // Add your form fields here
+        ];
+    }
+
+    /**
+     * Get the filters available for the resource.
+     */
+    public function filters(): array
+    {
+        return [
+            // Add your filters here
+        ];
+    }
+
+    /**
+     * Get the actions available for the resource.
+     */
+    public function actions(): array
+    {
+        return [
+            // Add your actions here
+        ];
+    }
+
+    /**
+     * Get the relationships to eager load on every query.
+     */
+    public function with(): array
+    {
+        return [];
+    }
+}

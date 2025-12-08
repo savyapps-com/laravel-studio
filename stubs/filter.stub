@@ -1,0 +1,37 @@
+<?php
+
+namespace {{ namespace }};
+
+use SavyApps\LaravelStudio\Resources\Filters\Filter;
+use Illuminate\Database\Eloquent\Builder;
+
+class {{ class }} extends Filter
+{
+    /**
+     * Apply the filter to the given query.
+     *
+     * @param Builder $query
+     * @param mixed $value
+     * @return Builder
+     */
+    public function apply(Builder $query, mixed $value): Builder
+    {
+        // Implement your filter logic here
+        // Example:
+        // return $query->where('column', $value);
+
+        return $query;
+    }
+
+    /**
+     * Get the filter's available options.
+     *
+     * @return array
+     */
+    public function options(): array
+    {
+        return [
+            // 'value' => 'Label',
+        ];
+    }
+}

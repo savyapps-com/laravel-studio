@@ -1,0 +1,100 @@
+/**
+ * Laravel Studio - Base Styles
+ *
+ * This file contains the base styles for Laravel Studio components.
+ * Tailwind CSS 4 utilities are imported and available throughout the components.
+ */
+
+@import "tailwindcss";
+
+/**
+ * Laravel Studio Component Styles
+ */
+.studio-container {
+    @apply w-full h-full;
+}
+
+.studio-resource-table {
+    @apply w-full border-collapse;
+}
+
+.studio-resource-form {
+    @apply space-y-6;
+}
+
+.studio-field {
+    @apply mb-4;
+}
+
+.studio-filter-bar {
+    @apply flex flex-wrap items-center gap-4 mb-6;
+}
+
+.studio-action-buttons {
+    @apply flex items-center gap-2;
+}
+
+/**
+ * Toast Notifications
+ */
+.studio-toast {
+    @apply pointer-events-auto w-full max-w-sm overflow-hidden rounded-lg shadow-lg;
+}
+
+/**
+ * Confirm Dialog
+ */
+.studio-dialog {
+    @apply inline-block w-full max-w-md transform overflow-hidden rounded-lg text-left align-bottom transition-all sm:align-middle;
+}
+
+/**
+ * Modal Overlays
+ */
+.studio-modal-overlay {
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-black/30;
+}
+
+/**
+ * Tooltip Styles
+ */
+.studio-tooltip {
+    @apply absolute z-50 px-2 py-1 text-xs font-medium text-white bg-gray-900 rounded shadow-lg pointer-events-none;
+}
+
+/**
+ * Loading States
+ */
+.studio-loading {
+    @apply animate-pulse;
+}
+
+.studio-spinner {
+    @apply inline-block animate-spin rounded-full border-2 border-solid border-current border-r-transparent;
+}
+
+/**
+ * Transitions
+ */
+.studio-fade-enter-active,
+.studio-fade-leave-active {
+    @apply transition-opacity duration-200;
+}
+
+.studio-fade-enter-from,
+.studio-fade-leave-to {
+    @apply opacity-0;
+}
+
+.studio-slide-enter-active,
+.studio-slide-leave-active {
+    @apply transition-transform duration-300;
+}
+
+.studio-slide-enter-from {
+    @apply translate-y-full;
+}
+
+.studio-slide-leave-to {
+    @apply translate-y-full;
+}

@@ -1,0 +1,47 @@
+{
+    "name": "laravel-studio",
+    "version": "0.1.0",
+    "description": "Vue 3 components for Laravel Studio - a free, open-source Laravel Nova alternative",
+    "keywords": [
+        "laravel",
+        "vue",
+        "vue3",
+        "admin",
+        "crud",
+        "resources",
+        "nova",
+        "savyapps"
+    ],
+    "main": "dist/laravel-studio.js",
+    "module": "dist/laravel-studio.es.js",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite build --watch"
+    },
+    "peerDependencies": {
+        "vue": "^3.5.0",
+        "axios": "^1.0.0",
+        "pinia": "^3.0.0",
+        "vue-router": "^4.0.0"
+    },
+    "devDependencies": {
+        "vue": "^3.5.22",
+        "vite": "^6.0.0",
+        "@vitejs/plugin-vue": "^5.0.0",
+        "tailwindcss": "^4.1.13",
+        "@tailwindcss/vite": "^4.1.13"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/savyapps/laravel-studio.git"
+    },
+    "bugs": {
+        "url": "https://github.com/savyapps/laravel-studio/issues"
+    },
+    "homepage": "https://github.com/savyapps/laravel-studio#readme",
+    "author": "SavyApps",
+    "license": "MIT"
+}
