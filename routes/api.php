@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use SavyApps\LaravelStudio\Http\Controllers\PanelController;
+use SavyApps\LaravelStudio\Http\Controllers\PermissionController;
 use SavyApps\LaravelStudio\Http\Controllers\ResourceController;
 
 /*
@@ -25,6 +26,26 @@ Route::middleware(['api', 'auth:sanctum'])
         Route::get('{panel}/menu', [PanelController::class, 'menu'])->name('menu');
         Route::get('{panel}/resources', [PanelController::class, 'resources'])->name('resources');
         Route::post('{panel}/switch', [PanelController::class, 'switch'])->name('switch');
+    });
+
+// Permission API Routes
+Route::middleware(['api', 'auth:sanctum'])
+    ->prefix('api/permissions')
+    ->name('api.permissions.')
+    ->group(function () {
+        Route::get('/', [PermissionController::class, 'index'])->name('index');
+        Route::get('my', [PermissionController::class, 'myPermissions'])->name('my');
+        Route::post('check', [PermissionController::class, 'check'])->name('check');
+        Route::post('sync', [PermissionController::class, 'sync'])->name('sync');
+    });
+
+// Role Permissions Routes
+Route::middleware(['api', 'auth:sanctum'])
+    ->prefix('api/roles')
+    ->name('api.roles.')
+    ->group(function () {
+        Route::get('{role}/permissions', [PermissionController::class, 'rolePermissions'])->name('permissions');
+        Route::put('{role}/permissions', [PermissionController::class, 'updateRolePermissions'])->name('permissions.update');
     });
 
 // Panel-specific Resource Routes

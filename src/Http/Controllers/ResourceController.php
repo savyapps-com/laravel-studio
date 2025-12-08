@@ -50,6 +50,10 @@ class ResourceController extends Controller
     public function index(Request $request, string $resource): JsonResponse
     {
         $resourceInstance = $this->resolveResource($resource, $request);
+
+        // Authorization check
+        $this->authorizeResource($resourceInstance, 'viewAny');
+
         $service = new ResourceService($resourceInstance);
 
         $data = $service->index($request->all());
@@ -67,6 +71,9 @@ class ResourceController extends Controller
 
         $model = $service->show($id);
 
+        // Authorization check
+        $this->authorizeResource($resourceInstance, 'view', $model);
+
         // Return full model data with relationships for edit forms
         return response()->json([
             'data' => $model->toArray(),
@@ -80,6 +87,9 @@ class ResourceController extends Controller
     {
         $resourceClass = $this->resolveResourceClass($resource, $request);
         $resourceInstance = $this->resolveResource($resource, $request);
+
+        // Authorization check
+        $this->authorizeResource($resourceInstance, 'create');
 
         // Create and configure the form request with dynamic validation
         $formRequest = app(ResourceStoreRequest::class);
@@ -116,6 +126,13 @@ class ResourceController extends Controller
         $resourceClass = $this->resolveResourceClass($resource, $request);
         $resourceInstance = $this->resolveResource($resource, $request);
 
+        // Get the model for authorization
+        $service = new ResourceService($resourceInstance);
+        $model = $service->show($id);
+
+        // Authorization check
+        $this->authorizeResource($resourceInstance, 'update', $model);
+
         // Create and configure the form request with dynamic validation
         $formRequest = app(ResourceUpdateRequest::class);
         $formRequest->setResource($resourceClass);
@@ -139,7 +156,6 @@ class ResourceController extends Controller
             ], 422);
         }
 
-        $service = new ResourceService($resourceInstance);
         $model = $service->update($id, $validator->validated());
 
         return response()->json([
@@ -156,13 +172,18 @@ class ResourceController extends Controller
     public function patch(Request $request, string $resource, int|string $id): JsonResponse
     {
         $resourceInstance = $this->resolveResource($resource, $request);
-        $modelClass = $resourceInstance::model();
+
+        // Get model and service for authorization
+        $service = new ResourceService($resourceInstance);
+        $model = $service->show($id);
+
+        // Authorization check
+        $this->authorizeResource($resourceInstance, 'update', $model);
 
         // Get only the fields being updated (before filtering)
         $fields = $request->all();
 
         // Filter to only visible fields
-        $service = new ResourceService($resourceInstance);
         $fields = $this->filterVisibleFieldsDataForPatch($resourceInstance, $fields);
 
         if (empty($fields)) {
@@ -225,7 +246,6 @@ class ResourceController extends Controller
             ], 422);
         }
 
-        $service = new ResourceService($resourceInstance);
         $model = $service->update($id, $validator->validated());
 
         return response()->json([
@@ -241,6 +261,12 @@ class ResourceController extends Controller
     {
         $resourceInstance = $this->resolveResource($resource, $request);
         $service = new ResourceService($resourceInstance);
+
+        // Get model for authorization
+        $model = $service->show($id);
+
+        // Authorization check
+        $this->authorizeResource($resourceInstance, 'delete', $model);
 
         $service->destroy($id);
 
@@ -260,6 +286,10 @@ class ResourceController extends Controller
         ]);
 
         $resourceInstance = $this->resolveResource($resource, $request);
+
+        // Authorization check for bulk delete
+        $this->authorizeResource($resourceInstance, 'bulkDelete');
+
         $service = new ResourceService($resourceInstance);
 
         $count = $service->bulkDestroy($request->input('ids'));
@@ -282,6 +312,10 @@ class ResourceController extends Controller
         ]);
 
         $resourceInstance = $this->resolveResource($resource, $request);
+
+        // Authorization check for bulk update
+        $this->authorizeResource($resourceInstance, 'bulkUpdate');
+
         $service = new ResourceService($resourceInstance);
 
         $count = $service->bulkUpdate(
@@ -306,6 +340,10 @@ class ResourceController extends Controller
         ]);
 
         $resourceInstance = $this->resolveResource($resource, $request);
+
+        // Authorization check for running action
+        $this->authorizeResource($resourceInstance, 'runAction', $action);
+
         $service = new ResourceService($resourceInstance);
 
         $result = $service->runAction(
@@ -397,5 +435,16 @@ class ResourceController extends Controller
 
         // Filter data to only include allowed attributes
         return array_intersect_key($data, array_flip($allowedAttributes));
+    }
+
+    /**
+     * Authorize resource action.
+     */
+    protected function authorizeResource(object $resourceInstance, string $ability, $model = null): void
+    {
+        // Check if resource uses the Authorizable trait
+        if (method_exists($resourceInstance, 'authorize')) {
+            $resourceInstance::authorize($ability, $model);
+        }
     }
 }

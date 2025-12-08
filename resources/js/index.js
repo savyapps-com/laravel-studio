@@ -18,6 +18,10 @@ export { default as QuickCreateModal } from './components/resource/QuickCreateMo
 export { default as PanelLayout } from './components/layout/PanelLayout.vue'
 export { default as PanelSwitcher } from './components/layout/PanelSwitcher.vue'
 
+// Permission Components
+export { default as PermissionGuard } from './components/permissions/PermissionGuard.vue'
+export { default as RolePermissionMatrix } from './components/permissions/RolePermissionMatrix.vue'
+
 // Common Components
 export { default as Toast } from './components/common/Toast.vue'
 export { default as ToastContainer } from './components/common/ToastContainer.vue'
@@ -59,6 +63,7 @@ export { authService } from './services/authService.js'
 export { settingsService } from './services/settingsService.js'
 export { mediaService } from './services/mediaService.js'
 export { impersonationService } from './services/impersonationService.js'
+export { permissionService } from './services/permissionService.js'
 
 // Stores
 export { useAuthStore } from './stores/auth.js'
@@ -86,6 +91,7 @@ export { useImageEditor } from './composables/useImageEditor.js'
 export { useImageEditHistory } from './composables/useImageEditHistory.js'
 export { useLightbox } from './composables/useLightbox.js'
 export { useUploadProgress } from './composables/useUploadProgress.js'
+export { usePermissions, useRolePermissions, useAllPermissions } from './composables/usePermissions.js'
 
 // Directives
 export { default as tooltipDirective } from './directives/tooltip.js'
@@ -116,6 +122,10 @@ export default {
         app.component('ResourceForm', () => import('./components/resource/ResourceForm.vue'))
         app.component('PanelLayout', () => import('./components/layout/PanelLayout.vue'))
         app.component('PanelSwitcher', () => import('./components/layout/PanelSwitcher.vue'))
+
+        // Permission components
+        app.component('PermissionGuard', () => import('./components/permissions/PermissionGuard.vue'))
+        app.component('RolePermissionMatrix', () => import('./components/permissions/RolePermissionMatrix.vue'))
 
         // Register tooltip directive
         app.directive('tooltip', tooltipDirective)

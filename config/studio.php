@@ -148,4 +148,39 @@ return [
 
     'name_prefix' => 'studio.',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Authorization Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure the authorization system for resource-level, field-level,
+    | and action-level permission control.
+    |
+    */
+
+    'authorization' => [
+        // Enable/disable authorization checks globally
+        'enabled' => true,
+
+        // Role that bypasses all permission checks
+        'super_admin_role' => 'super_admin',
+
+        // Permission caching
+        'cache' => [
+            'enabled' => true,
+            'ttl' => 3600, // seconds
+            'prefix' => 'studio_permissions_',
+        ],
+
+        // Auto-register Laravel Gates for permissions
+        'register_gates' => true,
+
+        // Model classes (can be overridden if using custom models)
+        'models' => [
+            'user' => \App\Models\User::class,
+            'role' => \App\Models\Role::class,
+            'permission' => \SavyApps\LaravelStudio\Models\Permission::class,
+        ],
+    ],
+
 ];

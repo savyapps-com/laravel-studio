@@ -7,7 +7,10 @@ use SavyApps\LaravelStudio\Console\Commands\InstallCommand;
 use SavyApps\LaravelStudio\Console\Commands\MakeResourceCommand;
 use SavyApps\LaravelStudio\Console\Commands\MakeFilterCommand;
 use SavyApps\LaravelStudio\Console\Commands\MakeActionCommand;
+use SavyApps\LaravelStudio\Console\Commands\SyncPermissionsCommand;
+use SavyApps\LaravelStudio\Http\Middleware\CheckResourcePermission;
 use SavyApps\LaravelStudio\Http\Middleware\EnsureUserCanAccessPanel;
+use SavyApps\LaravelStudio\Services\AuthorizationService;
 use SavyApps\LaravelStudio\Services\PanelService;
 
 class LaravelStudioServiceProvider extends ServiceProvider
@@ -27,6 +30,11 @@ class LaravelStudioServiceProvider extends ServiceProvider
         $this->app->singleton(PanelService::class, function ($app) {
             return new PanelService();
         });
+
+        // Register AuthorizationService as singleton
+        $this->app->singleton(AuthorizationService::class, function ($app) {
+            return new AuthorizationService();
+        });
     }
 
     /**
@@ -34,11 +42,17 @@ class LaravelStudioServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Register middleware alias
+        // Register middleware aliases
         $this->registerMiddleware();
 
         // Load package routes
         $this->loadRoutesFrom(__DIR__.'/../routes/api.php');
+
+        // Load package migrations
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+
+        // Register authorization gates
+        $this->registerAuthorizationGates();
 
         // Publish configuration file
         $this->publishes([
@@ -50,6 +64,11 @@ class LaravelStudioServiceProvider extends ServiceProvider
             __DIR__.'/../dist' => public_path('vendor/laravel-studio'),
         ], 'studio-assets');
 
+        // Publish migrations
+        $this->publishes([
+            __DIR__.'/../database/migrations' => database_path('migrations'),
+        ], 'studio-migrations');
+
         // Register Artisan commands
         if ($this->app->runningInConsole()) {
             $this->commands([
@@ -57,6 +76,7 @@ class LaravelStudioServiceProvider extends ServiceProvider
                 MakeResourceCommand::class,
                 MakeFilterCommand::class,
                 MakeActionCommand::class,
+                SyncPermissionsCommand::class,
             ]);
         }
     }
@@ -71,7 +91,31 @@ class LaravelStudioServiceProvider extends ServiceProvider
         // Register panel middleware alias
         $router->aliasMiddleware('panel', EnsureUserCanAccessPanel::class);
 
+        // Register permission middleware alias
+        $router->aliasMiddleware('permission', CheckResourcePermission::class);
+
         // Legacy aliases for backward compatibility
         $router->aliasMiddleware('studio.panel', EnsureUserCanAccessPanel::class);
+        $router->aliasMiddleware('studio.permission', CheckResourcePermission::class);
+    }
+
+    /**
+     * Register authorization gates for permissions.
+     */
+    protected function registerAuthorizationGates(): void
+    {
+        if (!config('studio.authorization.register_gates', true)) {
+            return;
+        }
+
+        // Defer gate registration until after the app has booted
+        $this->app->booted(function () {
+            try {
+                $service = $this->app->make(AuthorizationService::class);
+                $service->registerGates();
+            } catch (\Exception $e) {
+                // Silently fail if database is not ready
+            }
+        });
     }
 }
