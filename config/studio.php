@@ -217,4 +217,39 @@ return [
         'model' => \SavyApps\LaravelStudio\Models\Activity::class,
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Global Search Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure the global search functionality for searching across resources.
+    |
+    */
+
+    'global_search' => [
+        // Enable/disable global search
+        'enabled' => true,
+
+        // Minimum characters required before search triggers
+        'min_characters' => 2,
+
+        // Debounce time in milliseconds for search input
+        'debounce_ms' => 300,
+
+        // Maximum total results to return
+        'max_results' => 20,
+
+        // Results per resource type (can be overridden per resource)
+        'results_per_resource' => 5,
+
+        // Cache search results (in seconds, 0 to disable)
+        'cache_ttl' => 60,
+
+        // Keyboard shortcut to open search palette
+        'shortcut' => [
+            'key' => 'k',
+            'modifier' => 'meta', // 'meta' for Cmd/Win, 'ctrl' for Ctrl
+        ],
+    ],
+
 ];

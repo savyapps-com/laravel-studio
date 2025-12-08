@@ -13,6 +13,7 @@ use SavyApps\LaravelStudio\Http\Middleware\CheckResourcePermission;
 use SavyApps\LaravelStudio\Http\Middleware\EnsureUserCanAccessPanel;
 use SavyApps\LaravelStudio\Services\ActivityService;
 use SavyApps\LaravelStudio\Services\AuthorizationService;
+use SavyApps\LaravelStudio\Services\GlobalSearchService;
 use SavyApps\LaravelStudio\Services\PanelService;
 
 class LaravelStudioServiceProvider extends ServiceProvider
@@ -41,6 +42,11 @@ class LaravelStudioServiceProvider extends ServiceProvider
         // Register ActivityService as singleton
         $this->app->singleton(ActivityService::class, function ($app) {
             return new ActivityService();
+        });
+
+        // Register GlobalSearchService as singleton
+        $this->app->singleton(GlobalSearchService::class, function ($app) {
+            return new GlobalSearchService();
         });
     }
 

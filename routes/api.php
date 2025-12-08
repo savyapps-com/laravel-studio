@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use SavyApps\LaravelStudio\Http\Controllers\ActivityController;
+use SavyApps\LaravelStudio\Http\Controllers\GlobalSearchController;
 use SavyApps\LaravelStudio\Http\Controllers\PanelController;
 use SavyApps\LaravelStudio\Http\Controllers\PermissionController;
 use SavyApps\LaravelStudio\Http\Controllers\ResourceController;
@@ -64,6 +65,18 @@ Route::middleware(['api', 'auth:sanctum'])
         Route::delete('{id}', [ActivityController::class, 'destroy'])->name('destroy');
         Route::post('bulk/delete', [ActivityController::class, 'bulkDelete'])->name('bulk.delete');
         Route::post('cleanup', [ActivityController::class, 'cleanup'])->name('cleanup');
+    });
+
+// Global Search Routes
+Route::middleware(['api', 'auth:sanctum'])
+    ->prefix('api/search')
+    ->name('api.search.')
+    ->group(function () {
+        Route::get('/', [GlobalSearchController::class, 'search'])->name('index');
+        Route::get('suggestions', [GlobalSearchController::class, 'suggestions'])->name('suggestions');
+        Route::get('resources', [GlobalSearchController::class, 'searchableResources'])->name('resources');
+        Route::get('{resource}', [GlobalSearchController::class, 'searchResource'])->name('resource');
+        Route::delete('recent', [GlobalSearchController::class, 'clearRecent'])->name('recent.clear');
     });
 
 // Panel-specific Resource Routes

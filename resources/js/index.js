@@ -28,6 +28,10 @@ export { default as ActivityItem } from './components/activity/ActivityItem.vue'
 export { default as ActivityDiff } from './components/activity/ActivityDiff.vue'
 export { default as ActivityDetailsModal } from './components/activity/ActivityDetailsModal.vue'
 
+// Search Components
+export { default as SearchPalette } from './components/search/SearchPalette.vue'
+export { default as SearchResultItem } from './components/search/SearchResultItem.vue'
+
 // Common Components
 export { default as Toast } from './components/common/Toast.vue'
 export { default as ToastContainer } from './components/common/ToastContainer.vue'
@@ -71,6 +75,7 @@ export { mediaService } from './services/mediaService.js'
 export { impersonationService } from './services/impersonationService.js'
 export { permissionService } from './services/permissionService.js'
 export { activityService } from './services/activityService.js'
+export { searchService } from './services/searchService.js'
 
 // Stores
 export { useAuthStore } from './stores/auth.js'
@@ -99,6 +104,7 @@ export { useImageEditHistory } from './composables/useImageEditHistory.js'
 export { useLightbox } from './composables/useLightbox.js'
 export { useUploadProgress } from './composables/useUploadProgress.js'
 export { usePermissions, useRolePermissions, useAllPermissions } from './composables/usePermissions.js'
+export { useGlobalSearch } from './composables/useGlobalSearch.js'
 
 // Directives
 export { default as tooltipDirective } from './directives/tooltip.js'
@@ -139,6 +145,10 @@ export default {
         app.component('ActivityItem', () => import('./components/activity/ActivityItem.vue'))
         app.component('ActivityDiff', () => import('./components/activity/ActivityDiff.vue'))
         app.component('ActivityDetailsModal', () => import('./components/activity/ActivityDetailsModal.vue'))
+
+        // Search components
+        app.component('SearchPalette', () => import('./components/search/SearchPalette.vue'))
+        app.component('SearchResultItem', () => import('./components/search/SearchResultItem.vue'))
 
         // Register tooltip directive
         app.directive('tooltip', tooltipDirective)
