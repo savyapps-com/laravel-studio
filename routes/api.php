@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use SavyApps\LaravelStudio\Http\Controllers\ActivityController;
 use SavyApps\LaravelStudio\Http\Controllers\PanelController;
 use SavyApps\LaravelStudio\Http\Controllers\PermissionController;
 use SavyApps\LaravelStudio\Http\Controllers\ResourceController;
@@ -46,6 +47,23 @@ Route::middleware(['api', 'auth:sanctum'])
     ->group(function () {
         Route::get('{role}/permissions', [PermissionController::class, 'rolePermissions'])->name('permissions');
         Route::put('{role}/permissions', [PermissionController::class, 'updateRolePermissions'])->name('permissions.update');
+    });
+
+// Activity Log Routes
+Route::middleware(['api', 'auth:sanctum'])
+    ->prefix('api/activities')
+    ->name('api.activities.')
+    ->group(function () {
+        Route::get('/', [ActivityController::class, 'index'])->name('index');
+        Route::get('recent', [ActivityController::class, 'recent'])->name('recent');
+        Route::get('statistics', [ActivityController::class, 'statistics'])->name('statistics');
+        Route::get('filter-options', [ActivityController::class, 'filterOptions'])->name('filter-options');
+        Route::get('my', [ActivityController::class, 'myActivities'])->name('my');
+        Route::get('subject/{subjectType}/{subjectId}', [ActivityController::class, 'forSubject'])->name('subject');
+        Route::get('{id}', [ActivityController::class, 'show'])->name('show');
+        Route::delete('{id}', [ActivityController::class, 'destroy'])->name('destroy');
+        Route::post('bulk/delete', [ActivityController::class, 'bulkDelete'])->name('bulk.delete');
+        Route::post('cleanup', [ActivityController::class, 'cleanup'])->name('cleanup');
     });
 
 // Panel-specific Resource Routes

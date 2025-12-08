@@ -183,4 +183,38 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Activity Log Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure the activity logging system for tracking changes to resources.
+    |
+    */
+
+    'activity_log' => [
+        // Enable/disable activity logging globally
+        'enabled' => true,
+
+        // Default number of activities per page
+        'per_page' => 25,
+
+        // Number of days to keep activities (used by cleanup command)
+        // Set to 0 to never auto-cleanup
+        'cleanup_days' => 90,
+
+        // Events to log by default (can be overridden per model)
+        'default_events' => ['created', 'updated', 'deleted'],
+
+        // Attributes to ignore by default
+        'ignore_attributes' => ['password', 'remember_token', 'updated_at'],
+
+        // Log IP address and user agent
+        'log_ip' => true,
+        'log_user_agent' => true,
+
+        // Activity model class (can be overridden if using custom model)
+        'model' => \SavyApps\LaravelStudio\Models\Activity::class,
+    ],
+
 ];

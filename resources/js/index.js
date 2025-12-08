@@ -22,6 +22,12 @@ export { default as PanelSwitcher } from './components/layout/PanelSwitcher.vue'
 export { default as PermissionGuard } from './components/permissions/PermissionGuard.vue'
 export { default as RolePermissionMatrix } from './components/permissions/RolePermissionMatrix.vue'
 
+// Activity Components
+export { default as ActivityTimeline } from './components/activity/ActivityTimeline.vue'
+export { default as ActivityItem } from './components/activity/ActivityItem.vue'
+export { default as ActivityDiff } from './components/activity/ActivityDiff.vue'
+export { default as ActivityDetailsModal } from './components/activity/ActivityDetailsModal.vue'
+
 // Common Components
 export { default as Toast } from './components/common/Toast.vue'
 export { default as ToastContainer } from './components/common/ToastContainer.vue'
@@ -64,6 +70,7 @@ export { settingsService } from './services/settingsService.js'
 export { mediaService } from './services/mediaService.js'
 export { impersonationService } from './services/impersonationService.js'
 export { permissionService } from './services/permissionService.js'
+export { activityService } from './services/activityService.js'
 
 // Stores
 export { useAuthStore } from './stores/auth.js'
@@ -126,6 +133,12 @@ export default {
         // Permission components
         app.component('PermissionGuard', () => import('./components/permissions/PermissionGuard.vue'))
         app.component('RolePermissionMatrix', () => import('./components/permissions/RolePermissionMatrix.vue'))
+
+        // Activity components
+        app.component('ActivityTimeline', () => import('./components/activity/ActivityTimeline.vue'))
+        app.component('ActivityItem', () => import('./components/activity/ActivityItem.vue'))
+        app.component('ActivityDiff', () => import('./components/activity/ActivityDiff.vue'))
+        app.component('ActivityDetailsModal', () => import('./components/activity/ActivityDetailsModal.vue'))
 
         // Register tooltip directive
         app.directive('tooltip', tooltipDirective)

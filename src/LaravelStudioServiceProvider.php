@@ -8,8 +8,10 @@ use SavyApps\LaravelStudio\Console\Commands\MakeResourceCommand;
 use SavyApps\LaravelStudio\Console\Commands\MakeFilterCommand;
 use SavyApps\LaravelStudio\Console\Commands\MakeActionCommand;
 use SavyApps\LaravelStudio\Console\Commands\SyncPermissionsCommand;
+use SavyApps\LaravelStudio\Console\Commands\CleanupActivitiesCommand;
 use SavyApps\LaravelStudio\Http\Middleware\CheckResourcePermission;
 use SavyApps\LaravelStudio\Http\Middleware\EnsureUserCanAccessPanel;
+use SavyApps\LaravelStudio\Services\ActivityService;
 use SavyApps\LaravelStudio\Services\AuthorizationService;
 use SavyApps\LaravelStudio\Services\PanelService;
 
@@ -34,6 +36,11 @@ class LaravelStudioServiceProvider extends ServiceProvider
         // Register AuthorizationService as singleton
         $this->app->singleton(AuthorizationService::class, function ($app) {
             return new AuthorizationService();
+        });
+
+        // Register ActivityService as singleton
+        $this->app->singleton(ActivityService::class, function ($app) {
+            return new ActivityService();
         });
     }
 
@@ -77,6 +84,7 @@ class LaravelStudioServiceProvider extends ServiceProvider
                 MakeFilterCommand::class,
                 MakeActionCommand::class,
                 SyncPermissionsCommand::class,
+                CleanupActivitiesCommand::class,
             ]);
         }
     }
