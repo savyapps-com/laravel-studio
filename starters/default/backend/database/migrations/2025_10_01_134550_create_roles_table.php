@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         // Create roles table only if it doesn't exist
-        if (!Schema::hasTable('roles')) {
+        if (! Schema::hasTable('roles')) {
             Schema::create('roles', function (Blueprint $table) {
                 $table->id();
                 $table->string('name')->unique();
@@ -22,22 +22,22 @@ return new class extends Migration
                 $table->timestamps();
             });
         } else {
-            if (!Schema::hasColumn('roles', 'name')) {
+            if (! Schema::hasColumn('roles', 'name')) {
                 Schema::table('roles', function (Blueprint $table) {
                     $table->string('name')->unique()->after('id');
                 });
             }
-            if (!Schema::hasColumn('roles', 'slug')) {
+            if (! Schema::hasColumn('roles', 'slug')) {
                 Schema::table('roles', function (Blueprint $table) {
                     $table->string('slug')->unique()->after('name');
                 });
             }
-            if (!Schema::hasColumn('roles', 'description')) {
+            if (! Schema::hasColumn('roles', 'description')) {
                 Schema::table('roles', function (Blueprint $table) {
                     $table->text('description')->nullable()->after('slug');
                 });
             }
-            if (!Schema::hasColumn('roles', 'created_at')) {
+            if (! Schema::hasColumn('roles', 'created_at')) {
                 Schema::table('roles', function (Blueprint $table) {
                     $table->timestamps();
                 });

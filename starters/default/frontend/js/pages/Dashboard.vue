@@ -64,7 +64,7 @@
         <h2 class="text-lg font-semibold text-title mb-4">Quick Actions</h2>
         <div class="grid grid-cols-2 gap-3">
           <router-link
-            :to="{ name: 'admin.resources.create', params: { resource: 'users' } }"
+            :to="{ name: 'admin.users', query: { action: 'create' } }"
             class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
             <div class="w-10 h-10 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
@@ -73,7 +73,7 @@
             <span class="text-sm font-medium text-title">Add User</span>
           </router-link>
           <router-link
-            :to="{ name: 'admin.resources.index', params: { resource: 'users' } }"
+            :to="{ name: 'admin.users' }"
             class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
             <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
@@ -82,7 +82,7 @@
             <span class="text-sm font-medium text-title">View Users</span>
           </router-link>
           <router-link
-            :to="{ name: 'admin.resources.index', params: { resource: 'roles' } }"
+            :to="{ name: 'admin.roles' }"
             class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
             <div class="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">

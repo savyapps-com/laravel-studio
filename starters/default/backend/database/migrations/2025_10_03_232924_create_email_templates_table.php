@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // Create email_templates table only if it doesn't exist
-        if (!Schema::hasTable('email_templates')) {
+        if (! Schema::hasTable('email_templates')) {
             Schema::create('email_templates', function (Blueprint $table) {
                 $table->id();
                 $table->string('key')->unique()->comment('Unique identifier like user_welcome, password_reset');
@@ -28,55 +28,52 @@ return new class extends Migration
                 $table->index(['is_active', 'key']);
             });
         } else {
-            if (!Schema::hasColumn('email_templates', 'key')) {
+            if (! Schema::hasColumn('email_templates', 'key')) {
                 Schema::table('email_templates', function (Blueprint $table) {
                     $table->string('key')->unique()->comment('Unique identifier like user_welcome, password_reset')->after('id');
                 });
             }
-            if (!Schema::hasColumn('email_templates', 'name')) {
+            if (! Schema::hasColumn('email_templates', 'name')) {
                 Schema::table('email_templates', function (Blueprint $table) {
                     $table->string('name')->comment('Human-readable name')->after('key');
                 });
             }
-            if (!Schema::hasColumn('email_templates', 'subject_template')) {
+            if (! Schema::hasColumn('email_templates', 'subject_template')) {
                 Schema::table('email_templates', function (Blueprint $table) {
                     $table->text('subject_template')->comment('Blade template for subject')->after('name');
                 });
             }
-            if (!Schema::hasColumn('email_templates', 'body_content')) {
+            if (! Schema::hasColumn('email_templates', 'body_content')) {
                 Schema::table('email_templates', function (Blueprint $table) {
                     $table->longText('body_content')->comment('Complete Blade template with full HTML')->after('subject_template');
                 });
             }
-            if (!Schema::hasColumn('email_templates', 'preview_thumbnail')) {
+            if (! Schema::hasColumn('email_templates', 'preview_thumbnail')) {
                 Schema::table('email_templates', function (Blueprint $table) {
                     $table->text('preview_thumbnail')->nullable()->comment('Cached preview thumbnail')->after('body_content');
                 });
             }
-            if (!Schema::hasColumn('email_templates', 'is_active')) {
+            if (! Schema::hasColumn('email_templates', 'is_active')) {
                 Schema::table('email_templates', function (Blueprint $table) {
                     $table->boolean('is_active')->default(true)->after('preview_thumbnail');
                 });
             }
-            if (!Schema::hasColumn('email_templates', 'created_by')) {
+            if (! Schema::hasColumn('email_templates', 'created_by')) {
                 Schema::table('email_templates', function (Blueprint $table) {
                     $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete()->after('is_active');
                 });
             }
-            if (!Schema::hasColumn('email_templates', 'updated_by')) {
+            if (! Schema::hasColumn('email_templates', 'updated_by')) {
                 Schema::table('email_templates', function (Blueprint $table) {
                     $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete()->after('created_by');
                 });
             }
-            if (!Schema::hasColumn('email_templates', 'created_at')) {
+            if (! Schema::hasColumn('email_templates', 'created_at')) {
                 Schema::table('email_templates', function (Blueprint $table) {
                     $table->timestamps();
                 });
             }
         }
-
-        // Seed default email templates
-        (new \Database\Seeders\EmailTemplatesSeeder)->run();
     }
 
     /**

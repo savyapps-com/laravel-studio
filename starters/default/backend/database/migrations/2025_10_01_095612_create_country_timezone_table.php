@@ -2,7 +2,6 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -13,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // Create country_timezone table only if it doesn't exist
-        if (!Schema::hasTable('country_timezone')) {
+        if (! Schema::hasTable('country_timezone')) {
             Schema::create('country_timezone', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('country_id')->constrained()->onDelete('cascade');
@@ -27,44 +26,36 @@ return new class extends Migration
                 $table->index('is_primary');
             });
         } else {
-            if (!Schema::hasColumn('country_timezone', 'country_id')) {
+            if (! Schema::hasColumn('country_timezone', 'country_id')) {
                 Schema::table('country_timezone', function (Blueprint $table) {
                     $table->foreignId('country_id')->constrained()->onDelete('cascade')->after('id');
                 });
             }
-            if (!Schema::hasColumn('country_timezone', 'timezone_id')) {
+            if (! Schema::hasColumn('country_timezone', 'timezone_id')) {
                 Schema::table('country_timezone', function (Blueprint $table) {
                     $table->foreignId('timezone_id')->constrained()->onDelete('cascade')->after('country_id');
                 });
             }
-            if (!Schema::hasColumn('country_timezone', 'is_primary')) {
+            if (! Schema::hasColumn('country_timezone', 'is_primary')) {
                 Schema::table('country_timezone', function (Blueprint $table) {
                     $table->boolean('is_primary')->default(false)->after('timezone_id');
                 });
             }
-            if (!Schema::hasColumn('country_timezone', 'regions')) {
+            if (! Schema::hasColumn('country_timezone', 'regions')) {
                 Schema::table('country_timezone', function (Blueprint $table) {
                     $table->json('regions')->nullable()->after('is_primary');
                 });
             }
-            if (!Schema::hasColumn('country_timezone', 'notes')) {
+            if (! Schema::hasColumn('country_timezone', 'notes')) {
                 Schema::table('country_timezone', function (Blueprint $table) {
                     $table->text('notes')->nullable()->after('regions');
                 });
             }
-            if (!Schema::hasColumn('country_timezone', 'created_at')) {
+            if (! Schema::hasColumn('country_timezone', 'created_at')) {
                 Schema::table('country_timezone', function (Blueprint $table) {
                     $table->timestamps();
                 });
             }
-        }
-
-        // Seed immediately after table creation for production deployments (skip in testing)
-        if (! app()->environment('testing')) {
-            Artisan::call('db:seed', [
-                '--class' => 'CountryTimezoneSeeder',
-                '--force' => true,
-            ]);
         }
     }
 

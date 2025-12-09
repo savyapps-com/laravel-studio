@@ -11,16 +11,44 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('permissions', function (Blueprint $table) {
-            $table->id();
-            $table->string('name')->unique();
-            $table->string('display_name');
-            $table->string('group')->nullable();
-            $table->text('description')->nullable();
-            $table->timestamps();
+        if (! Schema::hasTable('permissions')) {
+            Schema::create('permissions', function (Blueprint $table) {
+                $table->id();
+                $table->string('name')->unique();
+                $table->string('display_name');
+                $table->string('group')->nullable();
+                $table->text('description')->nullable();
+                $table->timestamps();
 
-            $table->index('group');
-        });
+                $table->index('group');
+            });
+        } else {
+            if (! Schema::hasColumn('permissions', 'name')) {
+                Schema::table('permissions', function (Blueprint $table) {
+                    $table->string('name')->unique()->after('id');
+                });
+            }
+            if (! Schema::hasColumn('permissions', 'display_name')) {
+                Schema::table('permissions', function (Blueprint $table) {
+                    $table->string('display_name')->after('name');
+                });
+            }
+            if (! Schema::hasColumn('permissions', 'group')) {
+                Schema::table('permissions', function (Blueprint $table) {
+                    $table->string('group')->nullable()->after('display_name');
+                });
+            }
+            if (! Schema::hasColumn('permissions', 'description')) {
+                Schema::table('permissions', function (Blueprint $table) {
+                    $table->text('description')->nullable()->after('group');
+                });
+            }
+            if (! Schema::hasColumn('permissions', 'created_at')) {
+                Schema::table('permissions', function (Blueprint $table) {
+                    $table->timestamps();
+                });
+            }
+        }
     }
 
     /**

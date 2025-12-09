@@ -11,48 +11,48 @@ return new class extends Migration
      */
     public function up(): void
     {
-         if (!Schema::hasTable('cache')) {
+        if (! Schema::hasTable('cache')) {
             Schema::create('cache', function (Blueprint $table) {
                 $table->string('key')->primary();
                 $table->mediumText('value');
                 $table->integer('expiration');
             });
         } else {
-            if (!Schema::hasColumn('cache', 'key')) {
+            if (! Schema::hasColumn('cache', 'key')) {
                 Schema::table('cache', function (Blueprint $table) {
                     $table->string('key')->primary()->after('id');
                 });
             }
-            if (!Schema::hasColumn('cache', 'value')) {
+            if (! Schema::hasColumn('cache', 'value')) {
                 Schema::table('cache', function (Blueprint $table) {
                     $table->mediumText('value')->after('key');
                 });
             }
-            if (!Schema::hasColumn('cache', 'expiration')) {
+            if (! Schema::hasColumn('cache', 'expiration')) {
                 Schema::table('cache', function (Blueprint $table) {
                     $table->integer('expiration')->after('value');
                 });
             }
         }
 
-        if (!Schema::hasTable('cache_locks')) {
+        if (! Schema::hasTable('cache_locks')) {
             Schema::create('cache_locks', function (Blueprint $table) {
                 $table->string('key')->primary();
                 $table->string('owner');
                 $table->integer('expiration');
             });
         } else {
-            if (!Schema::hasColumn('cache_locks', 'key')) {
+            if (! Schema::hasColumn('cache_locks', 'key')) {
                 Schema::table('cache_locks', function (Blueprint $table) {
                     $table->string('key')->primary()->after('id');
                 });
             }
-            if (!Schema::hasColumn('cache_locks', 'owner')) {
+            if (! Schema::hasColumn('cache_locks', 'owner')) {
                 Schema::table('cache_locks', function (Blueprint $table) {
                     $table->string('owner')->after('key');
                 });
             }
-            if (!Schema::hasColumn('cache_locks', 'expiration')) {
+            if (! Schema::hasColumn('cache_locks', 'expiration')) {
                 Schema::table('cache_locks', function (Blueprint $table) {
                     $table->integer('expiration')->after('owner');
                 });

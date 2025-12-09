@@ -19,6 +19,7 @@ const routes = [
       { path: 'roles', name: 'admin.roles', component: () => import('@/pages/admin/RolesResource.vue'), meta: { title: 'Roles', auth: 'admin' } },
       { path: 'countries', name: 'admin.countries', component: () => import('@/pages/admin/CountriesResource.vue'), meta: { title: 'Countries', auth: 'admin' } },
       { path: 'timezones', name: 'admin.timezones', component: () => import('@/pages/admin/TimezonesResource.vue'), meta: { title: 'Timezones', auth: 'admin' } },
+      { path: 'activity', name: 'admin.activity', component: () => import('@/pages/admin/Activity.vue'), meta: { title: 'Activity Log', auth: 'admin' } },
       { path: 'email-templates', name: 'admin.email-templates.index', component: () => import('@/pages/admin/EmailTemplates.vue'), meta: { title: 'Email Templates', auth: 'admin' } },
       { path: 'email-templates/create', name: 'admin.email-templates.create', component: () => import('@/pages/admin/EmailTemplateForm.vue'), meta: { title: 'Create Email Template', auth: 'admin' } },
       { path: 'email-templates/:id/edit', name: 'admin.email-templates.edit', component: () => import('@/pages/admin/EmailTemplateForm.vue'), meta: { title: 'Edit Email Template', auth: 'admin' } },
@@ -38,6 +39,7 @@ const routes = [
       // Admin Settings Routes
       {
         path: 'settings',
+        name: 'admin.settings',
         component: SettingsLayout,
         meta: { auth: 'admin' },
         redirect: { name: 'admin.settings.appearance' },

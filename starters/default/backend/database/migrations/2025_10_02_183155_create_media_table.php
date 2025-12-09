@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         // Create media table only if it doesn't exist
-        if (!Schema::hasTable('media')) {
+        if (! Schema::hasTable('media')) {
             Schema::create('media', function (Blueprint $table) {
                 $table->id();
 
@@ -31,77 +31,77 @@ return new class extends Migration
                 $table->nullableTimestamps();
             });
         } else {
-            if (!Schema::hasColumn('media', 'model_type')) {
+            if (! Schema::hasColumn('media', 'model_type')) {
                 Schema::table('media', function (Blueprint $table) {
                     $table->morphs('model');
                 });
             }
-            if (!Schema::hasColumn('media', 'uuid')) {
+            if (! Schema::hasColumn('media', 'uuid')) {
                 Schema::table('media', function (Blueprint $table) {
                     $table->uuid()->nullable()->unique()->after('model_id');
                 });
             }
-            if (!Schema::hasColumn('media', 'collection_name')) {
+            if (! Schema::hasColumn('media', 'collection_name')) {
                 Schema::table('media', function (Blueprint $table) {
                     $table->string('collection_name')->after('uuid');
                 });
             }
-            if (!Schema::hasColumn('media', 'name')) {
+            if (! Schema::hasColumn('media', 'name')) {
                 Schema::table('media', function (Blueprint $table) {
                     $table->string('name')->after('collection_name');
                 });
             }
-            if (!Schema::hasColumn('media', 'file_name')) {
+            if (! Schema::hasColumn('media', 'file_name')) {
                 Schema::table('media', function (Blueprint $table) {
                     $table->string('file_name')->after('name');
                 });
             }
-            if (!Schema::hasColumn('media', 'mime_type')) {
+            if (! Schema::hasColumn('media', 'mime_type')) {
                 Schema::table('media', function (Blueprint $table) {
                     $table->string('mime_type')->nullable()->after('file_name');
                 });
             }
-            if (!Schema::hasColumn('media', 'disk')) {
+            if (! Schema::hasColumn('media', 'disk')) {
                 Schema::table('media', function (Blueprint $table) {
                     $table->string('disk')->after('mime_type');
                 });
             }
-            if (!Schema::hasColumn('media', 'conversions_disk')) {
+            if (! Schema::hasColumn('media', 'conversions_disk')) {
                 Schema::table('media', function (Blueprint $table) {
                     $table->string('conversions_disk')->nullable()->after('disk');
                 });
             }
-            if (!Schema::hasColumn('media', 'size')) {
+            if (! Schema::hasColumn('media', 'size')) {
                 Schema::table('media', function (Blueprint $table) {
                     $table->unsignedBigInteger('size')->after('conversions_disk');
                 });
             }
-            if (!Schema::hasColumn('media', 'manipulations')) {
+            if (! Schema::hasColumn('media', 'manipulations')) {
                 Schema::table('media', function (Blueprint $table) {
                     $table->json('manipulations')->after('size');
                 });
             }
-            if (!Schema::hasColumn('media', 'custom_properties')) {
+            if (! Schema::hasColumn('media', 'custom_properties')) {
                 Schema::table('media', function (Blueprint $table) {
                     $table->json('custom_properties')->after('manipulations');
                 });
             }
-            if (!Schema::hasColumn('media', 'generated_conversions')) {
+            if (! Schema::hasColumn('media', 'generated_conversions')) {
                 Schema::table('media', function (Blueprint $table) {
                     $table->json('generated_conversions')->after('custom_properties');
                 });
             }
-            if (!Schema::hasColumn('media', 'responsive_images')) {
+            if (! Schema::hasColumn('media', 'responsive_images')) {
                 Schema::table('media', function (Blueprint $table) {
                     $table->json('responsive_images')->after('generated_conversions');
                 });
             }
-            if (!Schema::hasColumn('media', 'order_column')) {
+            if (! Schema::hasColumn('media', 'order_column')) {
                 Schema::table('media', function (Blueprint $table) {
                     $table->unsignedInteger('order_column')->nullable()->index()->after('responsive_images');
                 });
             }
-            if (!Schema::hasColumn('media', 'created_at')) {
+            if (! Schema::hasColumn('media', 'created_at')) {
                 Schema::table('media', function (Blueprint $table) {
                     $table->nullableTimestamps();
                 });

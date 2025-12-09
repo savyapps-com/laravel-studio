@@ -4,15 +4,14 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Panels Configuration
+    | Default Panel Configuration (Fallback)
     |--------------------------------------------------------------------------
     |
-    | Define multiple admin panels with their own resources, middleware,
-    | and access control. Each panel requires a specific ROLE (not auth guard).
+    | This is a fallback configuration used when the panels table doesn't exist
+    | or is empty. Panels are now stored in the database and managed dynamically.
+    | Use the Panel Management API or admin interface to create/modify panels.
     |
-    | - 'role': The role name required to access this panel (from roles table)
-    | - 'roles': Array of roles that can access this panel (alternative)
-    | - All panels use the same auth guard (sanctum)
+    | Note: Database panels take precedence over config panels.
     |
     */
 
@@ -20,30 +19,13 @@ return [
         'admin' => [
             'label' => 'Admin Panel',
             'path' => '/admin',
-            'icon' => 'cog',
+            'icon' => 'layout',
             'middleware' => ['api', 'auth:sanctum', 'panel:admin'],
             'role' => 'admin',
             'resources' => [],
             'features' => [],
             'menu' => [
                 ['type' => 'link', 'label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'home'],
-            ],
-            'settings' => [
-                'layout' => 'classic',
-                'theme' => 'light',
-            ],
-        ],
-
-        'user' => [
-            'label' => 'User Dashboard',
-            'path' => '/user',
-            'icon' => 'user',
-            'middleware' => ['api', 'auth:sanctum', 'panel:user'],
-            'role' => 'user',
-            'resources' => [],
-            'features' => [],
-            'menu' => [
-                ['type' => 'link', 'label' => 'Dashboard', 'route' => 'user.dashboard', 'icon' => 'home'],
             ],
             'settings' => [
                 'layout' => 'classic',
@@ -62,7 +44,7 @@ return [
     |
     */
 
-    'panel_priority' => ['admin', 'user'],
+    'panel_priority' => ['admin'],
 
     /*
     |--------------------------------------------------------------------------

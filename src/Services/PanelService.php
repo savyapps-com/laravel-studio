@@ -3,15 +3,62 @@
 namespace SavyApps\LaravelStudio\Services;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
+use SavyApps\LaravelStudio\Models\Panel;
 
 class PanelService
 {
     /**
-     * Get all configured panels.
+     * Cached panels to avoid repeated DB queries.
+     */
+    protected ?array $cachedPanels = null;
+
+    /**
+     * Get all configured panels (from database + config fallback).
      */
     public function getAllPanels(): array
     {
-        return config('studio.panels', []);
+        if ($this->cachedPanels !== null) {
+            return $this->cachedPanels;
+        }
+
+        // Config panels (fallback)
+        $configPanels = config('studio.panels', []);
+
+        // Try to load from database if table exists
+        if ($this->panelsTableExists()) {
+            $dbPanels = Panel::active()->ordered()->get()
+                ->keyBy('key')
+                ->map(fn ($panel) => $panel->toConfig())
+                ->toArray();
+
+            // DB panels take precedence over config
+            $this->cachedPanels = array_merge($configPanels, $dbPanels);
+        } else {
+            $this->cachedPanels = $configPanels;
+        }
+
+        return $this->cachedPanels;
+    }
+
+    /**
+     * Clear cached panels.
+     */
+    public function clearCache(): void
+    {
+        $this->cachedPanels = null;
+    }
+
+    /**
+     * Check if panels table exists.
+     */
+    protected function panelsTableExists(): bool
+    {
+        try {
+            return Schema::hasTable('panels');
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 
     /**
@@ -19,7 +66,21 @@ class PanelService
      */
     public function getPanel(string $key): ?array
     {
-        return config("studio.panels.{$key}");
+        $panels = $this->getAllPanels();
+
+        return $panels[$key] ?? null;
+    }
+
+    /**
+     * Get panel model by key (database panels only).
+     */
+    public function getPanelModel(string $key): ?Panel
+    {
+        if (! $this->panelsTableExists()) {
+            return null;
+        }
+
+        return Panel::findByKey($key);
     }
 
     /**
@@ -29,13 +90,13 @@ class PanelService
     {
         $user = $user ?? Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return [];
         }
 
         return collect($this->getAllPanels())
-            ->filter(fn($config, $key) => $this->userCanAccessPanel($user, $key))
-            ->mapWithKeys(fn($config, $key) => [$key => array_merge($config, ['key' => $key])])
+            ->filter(fn ($config, $key) => $this->userCanAccessPanel($user, $key))
+            ->mapWithKeys(fn ($config, $key) => [$key => array_merge($config, ['key' => $key])])
             ->toArray();
     }
 
@@ -45,7 +106,7 @@ class PanelService
     public function getPanelResources(string $panel): array
     {
         $panelConfig = $this->getPanel($panel);
-        if (!$panelConfig) {
+        if (! $panelConfig) {
             return [];
         }
 
@@ -53,7 +114,7 @@ class PanelService
         $allResources = config('studio.resources', []);
 
         return collect($resourceKeys)
-            ->mapWithKeys(fn($key) => [$key => $allResources[$key] ?? null])
+            ->mapWithKeys(fn ($key) => [$key => $allResources[$key] ?? null])
             ->filter()
             ->toArray();
     }
@@ -64,6 +125,7 @@ class PanelService
     public function panelHasResource(string $panel, string $resource): bool
     {
         $panelConfig = $this->getPanel($panel);
+
         return in_array($resource, $panelConfig['resources'] ?? []);
     }
 
@@ -73,6 +135,7 @@ class PanelService
     public function getPanelMenu(string $panel): array
     {
         $panelConfig = $this->getPanel($panel);
+
         return $this->resolveMenuItems($panelConfig['menu'] ?? [], $panel);
     }
 
@@ -84,6 +147,7 @@ class PanelService
         return collect($items)->map(function ($item) use ($panel) {
             if ($item['type'] === 'resource') {
                 $resourceConfig = config("studio.resources.{$item['resource']}");
+
                 return [
                     'type' => 'link',
                     'label' => $resourceConfig['label'] ?? str($item['resource'])->title()->toString(),
@@ -95,6 +159,7 @@ class PanelService
 
             if ($item['type'] === 'feature') {
                 $featureConfig = config("studio.features.{$item['feature']}");
+
                 return [
                     'type' => 'link',
                     'label' => $featureConfig['label'] ?? str($item['feature'])->title()->toString(),
@@ -119,7 +184,7 @@ class PanelService
     {
         $user = $user ?? Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return null;
         }
 
@@ -133,6 +198,7 @@ class PanelService
 
         // Fallback to first accessible panel
         $accessiblePanels = $this->getAccessiblePanels($user);
+
         return array_key_first($accessiblePanels);
     }
 
@@ -141,12 +207,12 @@ class PanelService
      */
     public function userCanAccessPanel($user, string $panel): bool
     {
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
         $config = $this->getPanel($panel);
-        if (!$config) {
+        if (! $config) {
             return false;
         }
 
@@ -161,11 +227,12 @@ class PanelService
                     return true;
                 }
             }
+
             return false;
         }
 
         // Check if user has custom access method (e.g., canAccessAdminPanel)
-        $method = 'canAccess' . str($panel)->studly() . 'Panel';
+        $method = 'canAccess'.str($panel)->studly().'Panel';
         if (method_exists($user, $method)) {
             return $user->{$method}();
         }
@@ -176,7 +243,7 @@ class PanelService
 
             // Handle collection of Role models
             if (is_object($userRoles) && method_exists($userRoles, 'pluck')) {
-                $roleNames = $userRoles->pluck('name')->toArray();
+                $roleNames = $userRoles->pluck('slug')->merge($userRoles->pluck('name'))->toArray();
                 foreach ($requiredRoles as $role) {
                     if (in_array($role, $roleNames)) {
                         return true;
@@ -206,6 +273,7 @@ class PanelService
             ->flatMap(function ($config) {
                 $role = $config['role'] ?? null;
                 $roles = $config['roles'] ?? [];
+
                 return $role ? array_merge([$role], $roles) : $roles;
             })
             ->unique()
@@ -219,7 +287,7 @@ class PanelService
     public function getPanelFeatures(string $panel): array
     {
         $panelConfig = $this->getPanel($panel);
-        if (!$panelConfig) {
+        if (! $panelConfig) {
             return [];
         }
 
@@ -227,7 +295,7 @@ class PanelService
         $allFeatures = config('studio.features', []);
 
         return collect($featureKeys)
-            ->mapWithKeys(fn($key) => [$key => $allFeatures[$key] ?? null])
+            ->mapWithKeys(fn ($key) => [$key => $allFeatures[$key] ?? null])
             ->filter()
             ->toArray();
     }
@@ -238,6 +306,7 @@ class PanelService
     public function panelHasFeature(string $panel, string $feature): bool
     {
         $panelConfig = $this->getPanel($panel);
+
         return in_array($feature, $panelConfig['features'] ?? []);
     }
 
@@ -247,6 +316,7 @@ class PanelService
     public function getPanelSettings(string $panel): array
     {
         $panelConfig = $this->getPanel($panel);
+
         return $panelConfig['settings'] ?? [];
     }
 
@@ -264,5 +334,76 @@ class PanelService
     public function panelExists(string $panel): bool
     {
         return $this->getPanel($panel) !== null;
+    }
+
+    /**
+     * Create a new panel in the database.
+     */
+    public function createPanel(array $data): Panel
+    {
+        $panel = Panel::create($data);
+        $this->clearCache();
+
+        return $panel;
+    }
+
+    /**
+     * Update a panel in the database.
+     */
+    public function updatePanel(string $key, array $data): ?Panel
+    {
+        $panel = Panel::findByKey($key);
+        if (! $panel) {
+            return null;
+        }
+
+        $panel->update($data);
+        $this->clearCache();
+
+        return $panel->fresh();
+    }
+
+    /**
+     * Delete a panel from the database.
+     */
+    public function deletePanel(string $key): bool
+    {
+        $panel = Panel::findByKey($key);
+        if (! $panel) {
+            return false;
+        }
+
+        $panel->delete();
+        $this->clearCache();
+
+        return true;
+    }
+
+    /**
+     * Toggle panel active status.
+     */
+    public function togglePanel(string $key): ?Panel
+    {
+        $panel = Panel::findByKey($key);
+        if (! $panel) {
+            return null;
+        }
+
+        $panel->update(['is_active' => ! $panel->is_active]);
+        $this->clearCache();
+
+        return $panel->fresh();
+    }
+
+    /**
+     * Get all panels from database (for admin management).
+     */
+    public function getAllPanelsFromDatabase(): array
+    {
+        if (! $this->panelsTableExists()) {
+            return [];
+        }
+
+        return Panel::ordered()->get()->toArray();
     }
 }

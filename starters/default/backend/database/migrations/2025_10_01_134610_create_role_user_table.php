@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // Create role_user table only if it doesn't exist
-        if (!Schema::hasTable('role_user')) {
+        if (! Schema::hasTable('role_user')) {
             Schema::create('role_user', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('role_id')->constrained()->onDelete('cascade');
@@ -23,17 +23,17 @@ return new class extends Migration
                 $table->unique('user_id');
             });
         } else {
-            if (!Schema::hasColumn('role_user', 'role_id')) {
+            if (! Schema::hasColumn('role_user', 'role_id')) {
                 Schema::table('role_user', function (Blueprint $table) {
                     $table->foreignId('role_id')->constrained()->onDelete('cascade')->after('id');
                 });
             }
-            if (!Schema::hasColumn('role_user', 'user_id')) {
+            if (! Schema::hasColumn('role_user', 'user_id')) {
                 Schema::table('role_user', function (Blueprint $table) {
                     $table->foreignId('user_id')->constrained()->onDelete('cascade')->after('role_id');
                 });
             }
-            if (!Schema::hasColumn('role_user', 'created_at')) {
+            if (! Schema::hasColumn('role_user', 'created_at')) {
                 Schema::table('role_user', function (Blueprint $table) {
                     $table->timestamps();
                 });

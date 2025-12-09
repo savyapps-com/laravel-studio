@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('personal_access_tokens')) {
+        if (! Schema::hasTable('personal_access_tokens')) {
             Schema::create('personal_access_tokens', function (Blueprint $table) {
                 $table->id();
                 $table->morphs('tokenable');
@@ -23,42 +23,42 @@ return new class extends Migration
                 $table->timestamps();
             });
         } else {
-            if (!Schema::hasColumn('personal_access_tokens', 'tokenable_type')) {
+            if (! Schema::hasColumn('personal_access_tokens', 'tokenable_type')) {
                 Schema::table('personal_access_tokens', function (Blueprint $table) {
                     $table->string('tokenable_type')->after('id');
                 });
             }
-            if (!Schema::hasColumn('personal_access_tokens', 'tokenable_id')) {
+            if (! Schema::hasColumn('personal_access_tokens', 'tokenable_id')) {
                 Schema::table('personal_access_tokens', function (Blueprint $table) {
                     $table->unsignedBigInteger('tokenable_id')->after('tokenable_type');
                 });
             }
-            if (!Schema::hasColumn('personal_access_tokens', 'name')) {
+            if (! Schema::hasColumn('personal_access_tokens', 'name')) {
                 Schema::table('personal_access_tokens', function (Blueprint $table) {
                     $table->text('name')->after('tokenable_id');
                 });
             }
-            if (!Schema::hasColumn('personal_access_tokens', 'token')) {
+            if (! Schema::hasColumn('personal_access_tokens', 'token')) {
                 Schema::table('personal_access_tokens', function (Blueprint $table) {
                     $table->string('token', 64)->unique()->after('name');
                 });
             }
-            if (!Schema::hasColumn('personal_access_tokens', 'abilities')) {
+            if (! Schema::hasColumn('personal_access_tokens', 'abilities')) {
                 Schema::table('personal_access_tokens', function (Blueprint $table) {
                     $table->text('abilities')->nullable()->after('token');
                 });
             }
-            if (!Schema::hasColumn('personal_access_tokens', 'last_used_at')) {
+            if (! Schema::hasColumn('personal_access_tokens', 'last_used_at')) {
                 Schema::table('personal_access_tokens', function (Blueprint $table) {
                     $table->timestamp('last_used_at')->nullable()->after('abilities');
                 });
             }
-            if (!Schema::hasColumn('personal_access_tokens', 'expires_at')) {
+            if (! Schema::hasColumn('personal_access_tokens', 'expires_at')) {
                 Schema::table('personal_access_tokens', function (Blueprint $table) {
                     $table->timestamp('expires_at')->nullable()->index()->after('last_used_at');
                 });
             }
-            if (!Schema::hasColumn('personal_access_tokens', 'created_at')) {
+            if (! Schema::hasColumn('personal_access_tokens', 'created_at')) {
                 Schema::table('personal_access_tokens', function (Blueprint $table) {
                     $table->timestamps();
                 });

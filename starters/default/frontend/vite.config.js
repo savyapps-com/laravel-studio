@@ -21,6 +21,7 @@ export default defineConfig({
     resolve: {
         alias: {
             '@': '/resources/js',
+            '@core': '/vendor/savyapps-com/laravel-studio/resources/js',
             'laravel-studio': '/vendor/savyapps-com/laravel-studio/resources/js',
         },
     },

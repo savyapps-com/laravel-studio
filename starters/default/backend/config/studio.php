@@ -65,38 +65,68 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Panels Configuration
+    | Default Panel Configuration (Fallback)
     |--------------------------------------------------------------------------
     |
-    | Configure multiple admin panels with different resources, middleware,
-    | and branding. Each panel can have its own navigation and dashboard.
+    | This is a fallback configuration used when the panels table doesn't exist
+    | or is empty. Panels are now stored in the database and managed dynamically.
+    | Use the Panel Management API or admin interface to create/modify panels.
+    |
+    | Note: Database panels take precedence over config panels.
     |
     */
 
     'panels' => [
         'admin' => [
-            'name' => 'Admin Panel',
+            'label' => 'Admin Panel',
             'path' => '/admin',
-            'middleware' => ['auth:sanctum', 'admin'],
+            'icon' => 'layout',
+            'middleware' => ['api', 'auth:sanctum', 'panel:admin'],
+            'role' => 'admin',
             'resources' => ['users', 'roles', 'countries', 'timezones'],
-            'navigation' => [
-                ['label' => 'Dashboard', 'icon' => 'dashboard', 'route' => 'admin.dashboard'],
-                ['label' => 'Users', 'icon' => 'users', 'resource' => 'users'],
-                ['label' => 'Roles', 'icon' => 'shield', 'resource' => 'roles'],
-                ['label' => 'Countries', 'icon' => 'globe', 'resource' => 'countries'],
-                ['label' => 'Timezones', 'icon' => 'clock', 'resource' => 'timezones'],
+            'features' => ['email-templates', 'system-settings'],
+            'menu' => [
+                ['type' => 'link', 'label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'home'],
+                ['type' => 'divider'],
+                ['type' => 'header', 'label' => 'Management'],
+                ['type' => 'resource', 'resource' => 'users'],
+                ['type' => 'resource', 'resource' => 'roles'],
+                ['type' => 'divider'],
+                ['type' => 'header', 'label' => 'System'],
+                ['type' => 'resource', 'resource' => 'countries'],
+                ['type' => 'resource', 'resource' => 'timezones'],
+                ['type' => 'feature', 'feature' => 'email-templates'],
+                ['type' => 'feature', 'feature' => 'system-settings'],
+            ],
+            'settings' => [
+                'layout' => 'classic',
+                'theme' => 'light',
             ],
         ],
-        'user' => [
-            'name' => 'User Panel',
-            'path' => '/user',
-            'middleware' => ['auth:sanctum'],
-            'resources' => [],
-            'navigation' => [
-                ['label' => 'Dashboard', 'icon' => 'dashboard', 'route' => 'user.dashboard'],
-                ['label' => 'Profile', 'icon' => 'user', 'route' => 'user.profile'],
-                ['label' => 'Settings', 'icon' => 'settings', 'route' => 'user.settings'],
-            ],
+    ],
+
+    'panel_priority' => ['admin'],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Features Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Define features that can be enabled/disabled per panel.
+    | Features are non-resource pages or functionality.
+    |
+    */
+
+    'features' => [
+        'email-templates' => [
+            'label' => 'Email Templates',
+            'icon' => 'mail',
+            'route' => 'email-templates.index',
+        ],
+        'system-settings' => [
+            'label' => 'System Settings',
+            'icon' => 'settings',
+            'route' => 'settings.system',
         ],
     ],
 
