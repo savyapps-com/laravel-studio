@@ -56,7 +56,11 @@ class InstallCommand extends Command
 
         // Check and install required dependencies (unless skipped)
         if (! $this->option('skip-dependencies')) {
-            $this->checkAndInstallDependencies();
+            $dependenciesSatisfied = $this->checkAndInstallDependencies();
+
+            if (! $dependenciesSatisfied) {
+                return self::FAILURE;
+            }
         } else {
             $this->components->warn('Skipping dependency check (--skip-dependencies flag used)');
             $this->newLine();
@@ -295,8 +299,10 @@ class InstallCommand extends Command
 
     /**
      * Check and install required dependencies.
+     *
+     * @return bool Returns true if all dependencies are satisfied, false otherwise
      */
-    protected function checkAndInstallDependencies(): void
+    protected function checkAndInstallDependencies(): bool
     {
         try {
             $this->newLine();
@@ -324,12 +330,33 @@ class InstallCommand extends Command
                 $this->newLine();
 
                 if ($this->option('all') || $this->confirm('Install missing composer packages?', true)) {
-                    $this->installComposerPackages($missingPackages);
+                    $success = $this->installComposerPackages($missingPackages);
+
+                    if (! $success) {
+                        $this->components->error('Failed to install required packages. Cannot proceed with installation.');
+                        $this->newLine();
+                        $this->components->info('Please install the required packages manually:');
+                        $this->line('  composer require '.implode(' ', array_map(
+                            fn ($pkg, $ver) => "$pkg:$ver",
+                            array_keys($missingPackages),
+                            array_values($missingPackages)
+                        )));
+                        $this->newLine();
+
+                        return false;
+                    }
                 } else {
-                    $this->addWarning(
-                        'Required packages not installed',
-                        'Run: composer require '.implode(' ', array_keys($missingPackages))
-                    );
+                    $this->components->error('Required packages must be installed to proceed.');
+                    $this->newLine();
+                    $this->components->info('Please install the required packages:');
+                    $this->line('  composer require '.implode(' ', array_map(
+                        fn ($pkg, $ver) => "$pkg:$ver",
+                        array_keys($missingPackages),
+                        array_values($missingPackages)
+                    )));
+                    $this->newLine();
+
+                    return false;
                 }
             } else {
                 $this->components->info('✓ All required composer packages are installed');
@@ -343,12 +370,16 @@ class InstallCommand extends Command
             $this->publishVendorAssets();
 
             $this->newLine();
+
+            return true;
         } catch (\Exception $e) {
             $this->addError(
                 'Failed to check dependencies',
                 $e->getMessage(),
                 'Run: composer dump-autoload && composer install'
             );
+
+            return false;
         }
     }
 
@@ -467,29 +498,45 @@ class InstallCommand extends Command
      */
     protected function isComposerPackageInstalled(string $package): bool
     {
+        // First check composer.lock (most reliable - package is actually installed)
         $composerLock = base_path('composer.lock');
 
-        if (! file_exists($composerLock)) {
-            return false;
-        }
+        if (file_exists($composerLock)) {
+            $lockData = json_decode(file_get_contents($composerLock), true);
 
-        $lockData = json_decode(file_get_contents($composerLock), true);
+            // Check in packages
+            if (isset($lockData['packages'])) {
+                foreach ($lockData['packages'] as $installedPackage) {
+                    if ($installedPackage['name'] === $package) {
+                        return true;
+                    }
+                }
+            }
 
-        // Check in packages
-        if (isset($lockData['packages'])) {
-            foreach ($lockData['packages'] as $installedPackage) {
-                if ($installedPackage['name'] === $package) {
-                    return true;
+            // Check in packages-dev
+            if (isset($lockData['packages-dev'])) {
+                foreach ($lockData['packages-dev'] as $installedPackage) {
+                    if ($installedPackage['name'] === $package) {
+                        return true;
+                    }
                 }
             }
         }
 
-        // Check in packages-dev
-        if (isset($lockData['packages-dev'])) {
-            foreach ($lockData['packages-dev'] as $installedPackage) {
-                if ($installedPackage['name'] === $package) {
-                    return true;
-                }
+        // Fallback: check composer.json (package is required but may not be installed yet)
+        $composerJson = base_path('composer.json');
+
+        if (file_exists($composerJson)) {
+            $jsonData = json_decode(file_get_contents($composerJson), true);
+
+            // Check in require
+            if (isset($jsonData['require'][$package])) {
+                return true;
+            }
+
+            // Check in require-dev
+            if (isset($jsonData['require-dev'][$package])) {
+                return true;
             }
         }
 
@@ -498,8 +545,10 @@ class InstallCommand extends Command
 
     /**
      * Install missing composer packages.
+     *
+     * @return bool Returns true if packages were installed successfully, false otherwise
      */
-    protected function installComposerPackages(array $packages): void
+    protected function installComposerPackages(array $packages): bool
     {
         try {
             $packageStrings = [];
@@ -530,7 +579,7 @@ class InstallCommand extends Command
                     'Run manually: composer require '.$packagesStr
                 );
 
-                return;
+                return false;
             }
 
             // Regenerate autoload files after installing packages
@@ -553,12 +602,16 @@ class InstallCommand extends Command
             $this->newLine();
             $this->components->info('✓ Composer packages installed successfully');
             $this->addSuccess('Composer packages installed successfully');
+
+            return true;
         } catch (\Exception $e) {
             $this->addError(
                 'Failed to install composer packages',
                 $e->getMessage(),
                 'Run manually: composer require spatie/laravel-medialibrary laravel/sanctum'
             );
+
+            return false;
         }
     }
 
