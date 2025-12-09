@@ -193,8 +193,14 @@ const props = defineProps({
   panel: {
     type: String,
     default: null
+  },
+  open: {
+    type: Boolean,
+    default: false
   }
 })
+
+const emit = defineEmits(['update:open', 'select'])
 
 const inputRef = ref(null)
 
@@ -210,14 +216,40 @@ const {
   showRecent,
   selectedIndex,
   flatResults,
-  open,
-  close,
+  open: openSearch,
+  close: closeSearch,
   clearRecentSearches,
   selectRecentSearch,
-  selectResult,
+  selectResult: internalSelectResult,
   handleKeydown,
   getShortcutDisplay
 } = useGlobalSearch({ panel: props.panel })
+
+// Sync external open prop with internal isOpen
+watch(() => props.open, (value) => {
+  if (value && !isOpen.value) {
+    openSearch()
+  } else if (!value && isOpen.value) {
+    closeSearch()
+  }
+})
+
+// Emit update:open when internal state changes
+watch(isOpen, (value) => {
+  emit('update:open', value)
+})
+
+// Wrapper for close that also emits
+const close = () => {
+  closeSearch()
+  emit('update:open', false)
+}
+
+// Wrapper for selectResult that also emits
+const selectResult = (result) => {
+  internalSelectResult(result)
+  emit('select', result)
+}
 
 // Track selected item for highlighting
 const isSelected = (groupKey, resultIndex) => {
@@ -243,7 +275,7 @@ watch(isOpen, async (value) => {
 
 // Expose methods for parent components
 defineExpose({
-  open,
+  open: openSearch,
   close
 })
 </script>
