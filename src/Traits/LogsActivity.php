@@ -98,13 +98,41 @@ trait LogsActivity
     /**
      * Get the description for the activity.
      */
-    protected function getActivityDescription(string $event): ?string
+    protected function getActivityDescription(string $event): string
     {
         if (method_exists($this, 'getActivityDescriptionFor')) {
-            return $this->getActivityDescriptionFor($event);
+            $description = $this->getActivityDescriptionFor($event);
+            if ($description !== null) {
+                return $description;
+            }
         }
 
-        return null; // Use default description from Activity model
+        // Generate default description based on event and model
+        $modelName = class_basename($this);
+        $title = $this->getActivitySubjectTitle();
+
+        return match($event) {
+            'created' => "{$modelName} \"{$title}\" was created",
+            'updated' => "{$modelName} \"{$title}\" was updated",
+            'deleted' => "{$modelName} \"{$title}\" was deleted",
+            'restored' => "{$modelName} \"{$title}\" was restored",
+            default => "{$modelName} \"{$title}\" - {$event}",
+        };
+    }
+
+    /**
+     * Get the title/name of the subject for the activity description.
+     */
+    protected function getActivitySubjectTitle(): string
+    {
+        // Try common title fields
+        foreach (['name', 'title', 'label', 'email', 'id'] as $field) {
+            if (isset($this->{$field})) {
+                return (string) $this->{$field};
+            }
+        }
+
+        return (string) $this->getKey();
     }
 
     /**

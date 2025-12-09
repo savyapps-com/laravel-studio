@@ -11,13 +11,22 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use SavyApps\LaravelStudio\Traits\LogsActivity;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
 class User extends Authenticatable implements HasMedia
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, InteractsWithMedia, Notifiable;
+    use HasApiTokens, HasFactory, InteractsWithMedia, LogsActivity, Notifiable;
+
+    /**
+     * Activity logging configuration.
+     * Logs changes to these attributes automatically.
+     */
+    protected static array $logAttributes = ['name', 'email', 'status'];
+    protected static bool $logOnlyDirty = true;
+    protected static string $logName = 'users';
 
     /**
      * The attributes that are mass assignable.

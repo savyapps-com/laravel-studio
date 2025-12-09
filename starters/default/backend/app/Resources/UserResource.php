@@ -2,6 +2,9 @@
 
 namespace App\Resources;
 
+use SavyApps\LaravelStudio\Cards\PartitionCard;
+use SavyApps\LaravelStudio\Cards\TrendCard;
+use SavyApps\LaravelStudio\Cards\ValueCard;
 use SavyApps\LaravelStudio\Resources\Actions\BulkDeleteAction;
 use SavyApps\LaravelStudio\Resources\Actions\BulkUpdateAction;
 use SavyApps\LaravelStudio\Resources\Fields\BelongsToMany;
@@ -16,6 +19,7 @@ use SavyApps\LaravelStudio\Resources\Filters\BelongsToManyFilter;
 use SavyApps\LaravelStudio\Resources\Filters\SelectFilter;
 use SavyApps\LaravelStudio\Resources\Resource;
 use App\Enums\Status;
+use App\Models\Role;
 use App\Models\User;
 
 class UserResource extends Resource
@@ -168,6 +172,39 @@ class UserResource extends Resource
     public function with(): array
     {
         return ['roles'];
+    }
+
+    /**
+     * Dashboard cards for the users resource.
+     */
+    public function cards(): array
+    {
+        return [
+            ValueCard::make('Total Users')
+                ->value(fn () => User::count())
+                ->icon('users')
+                ->color('blue')
+                ->width('1/4'),
+
+            TrendCard::make('New Users')
+                ->value(fn () => User::where('created_at', '>=', now()->subDays(30))->count())
+                ->previousValue(fn () => User::whereBetween('created_at', [now()->subDays(60), now()->subDays(30)])->count())
+                ->comparisonLabel('vs last 30 days')
+                ->icon('user-plus')
+                ->color('green')
+                ->width('1/4'),
+
+            ValueCard::make('Active Users')
+                ->value(fn () => User::where('status', Status::Active)->count())
+                ->icon('check-circle')
+                ->color('teal')
+                ->width('1/4'),
+
+            PartitionCard::make('Users by Role')
+                ->data(fn () => Role::withCount('users')->get()->pluck('users_count', 'name')->toArray())
+                ->type('donut')
+                ->width('1/4'),
+        ];
     }
 
     /**

@@ -32,18 +32,28 @@
 
         <!-- Right Section -->
         <div class="flex items-center space-x-2 sm:space-x-4">
-          <!-- Search -->
-          <div class="relative hidden md:block">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Icon name="search" :size="16" class="text-muted" />
-            </div>
-            <input
-              v-model="searchQuery"
-              type="text"
-              :placeholder="searchPlaceholder"
-              class="block w-48 xl:w-64 pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-title placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm transition-all duration-200"
+          <!-- Global Search (Cmd+K) -->
+          <div class="hidden md:block">
+            <button
+              @click="openSearch"
+              class="flex items-center gap-2 px-3 py-2 text-sm text-muted bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
             >
+              <Icon name="search" :size="16" />
+              <span class="hidden xl:inline">Search...</span>
+              <kbd class="hidden xl:inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-600 rounded">
+                <span class="text-xs">⌘</span>K
+              </kbd>
+            </button>
           </div>
+
+          <!-- Mobile Search Button -->
+          <button
+            @click="openSearch"
+            class="md:hidden btn-ghost"
+            aria-label="Search"
+          >
+            <Icon name="search" :size="20" />
+          </button>
 
           <!-- Dark Mode Toggle -->
           <DarkModeToggle />
@@ -87,63 +97,73 @@
         </div>
       </div>
     </div>
+
+    <!-- Global Search Palette -->
+    <SearchPalette
+      v-model:open="searchOpen"
+      @select="handleSearchSelect"
+    />
   </header>
 </template>
 
-<script>
-import { ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
+<script setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { SearchPalette } from '@core/index'
 import Icon from '@/components/common/Icon.vue'
 import UserDropdown from './UserDropdown.vue'
 import DarkModeToggle from '@/components/common/DarkModeToggle.vue'
 
-export default {
-  name: 'Navbar',
-  components: {
-    Icon,
-    UserDropdown,
-    DarkModeToggle,
+const props = defineProps({
+  user: {
+    type: Object,
+    required: true
   },
-  emits: ['toggle-sidebar', 'toggle-mobile-sidebar', 'logout', 'search'],
-  props: {
-    user: {
-      type: Object,
-      required: true,
-    },
-    notificationCount: {
-      type: Number,
-      default: 0,
-    },
-    searchPlaceholder: {
-      type: String,
-      default: 'Search...',
-    },
-  },
-  setup(props, { emit }) {
-    const route = useRoute()
-    const searchQuery = ref('')
-    const showNotifications = ref(false)
+  notificationCount: {
+    type: Number,
+    default: 0
+  }
+})
 
-    const pageName = computed(() => {
-      return route.meta?.title || 'Page Name'
-    })
+const emit = defineEmits(['toggle-sidebar', 'toggle-mobile-sidebar', 'logout'])
 
-    const toggleNotifications = () => {
-      showNotifications.value = !showNotifications.value
-    }
+const route = useRoute()
+const router = useRouter()
+const searchOpen = ref(false)
+const showNotifications = ref(false)
 
-    // Watch search query and emit search event
-    const handleSearch = () => {
-      emit('search', searchQuery.value)
-    }
+const pageName = computed(() => {
+  return route.meta?.title || 'Page Name'
+})
 
-    return {
-      searchQuery,
-      showNotifications,
-      pageName,
-      toggleNotifications,
-      handleSearch,
-    }
-  },
+const openSearch = () => {
+  searchOpen.value = true
 }
+
+const toggleNotifications = () => {
+  showNotifications.value = !showNotifications.value
+}
+
+const handleSearchSelect = (result) => {
+  if (result.url) {
+    router.push(result.url)
+  }
+  searchOpen.value = false
+}
+
+// Keyboard shortcut for Cmd+K / Ctrl+K
+const handleKeydown = (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault()
+    searchOpen.value = true
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', handleKeydown)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeydown)
+})
 </script>
