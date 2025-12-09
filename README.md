@@ -455,6 +455,7 @@ class UserResource extends Resource
 |---------|-------------|
 | `php artisan studio:install` | Install Laravel Studio |
 | `php artisan studio:make-resource {name}` | Create a new resource |
+| `php artisan studio:make-panel` | Create a new panel interactively |
 | `php artisan studio:make-action {name}` | Create a custom action |
 | `php artisan studio:make-filter {name}` | Create a custom filter |
 | `php artisan studio:sync-permissions` | Sync permissions to database |
@@ -475,6 +476,50 @@ php artisan studio:install --skip-migrations --skip-seeders --skip-npm
 # Dry run to preview changes
 php artisan studio:install --dry-run
 ```
+
+### Panel Creation
+
+Create admin panels interactively with `studio:make-panel`:
+
+```bash
+# Interactive mode (recommended) - prompts for all options
+php artisan studio:make-panel
+
+# With panel key argument
+php artisan studio:make-panel manager
+
+# Non-interactive with options
+php artisan studio:make-panel support \
+    --label="Support Panel" \
+    --path="/support" \
+    --icon="inbox" \
+    --role="support" \
+    --default \
+    -n
+
+# Overwrite existing panel
+php artisan studio:make-panel admin --force
+```
+
+**Available Options:**
+
+| Option | Description |
+|--------|-------------|
+| `key` | Panel key/slug (argument) |
+| `--label` | Panel display name |
+| `--path` | Frontend URL path (e.g., `/admin`) |
+| `--icon` | Panel icon (25 icons available) |
+| `--role` | Required role for access |
+| `--default` | Set as default panel |
+| `--inactive` | Create as inactive |
+| `--force` | Overwrite existing panel |
+
+**Interactive Features:**
+- Select from registered resources to include
+- Select from available features (Email Templates, System Settings, etc.)
+- Choose from 25 built-in icons
+- Auto-generates menu structure
+- Shows summary before creating
 
 ## API Endpoints
 

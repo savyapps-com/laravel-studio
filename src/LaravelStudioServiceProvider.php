@@ -3,12 +3,13 @@
 namespace SavyApps\LaravelStudio;
 
 use Illuminate\Support\ServiceProvider;
-use SavyApps\LaravelStudio\Console\Commands\InstallCommand;
-use SavyApps\LaravelStudio\Console\Commands\MakeResourceCommand;
-use SavyApps\LaravelStudio\Console\Commands\MakeFilterCommand;
-use SavyApps\LaravelStudio\Console\Commands\MakeActionCommand;
-use SavyApps\LaravelStudio\Console\Commands\SyncPermissionsCommand;
 use SavyApps\LaravelStudio\Console\Commands\CleanupActivitiesCommand;
+use SavyApps\LaravelStudio\Console\Commands\InstallCommand;
+use SavyApps\LaravelStudio\Console\Commands\MakeActionCommand;
+use SavyApps\LaravelStudio\Console\Commands\MakeFilterCommand;
+use SavyApps\LaravelStudio\Console\Commands\MakePanelCommand;
+use SavyApps\LaravelStudio\Console\Commands\MakeResourceCommand;
+use SavyApps\LaravelStudio\Console\Commands\SyncPermissionsCommand;
 use SavyApps\LaravelStudio\Http\Middleware\CheckResourcePermission;
 use SavyApps\LaravelStudio\Http\Middleware\EnsureUserCanAccessPanel;
 use SavyApps\LaravelStudio\Services\ActivityService;
@@ -91,12 +92,13 @@ class LaravelStudioServiceProvider extends ServiceProvider
         // Register Artisan commands
         if ($this->app->runningInConsole()) {
             $this->commands([
-                InstallCommand::class,
-                MakeResourceCommand::class,
-                MakeFilterCommand::class,
-                MakeActionCommand::class,
-                SyncPermissionsCommand::class,
                 CleanupActivitiesCommand::class,
+                InstallCommand::class,
+                MakeActionCommand::class,
+                MakeFilterCommand::class,
+                MakePanelCommand::class,
+                MakeResourceCommand::class,
+                SyncPermissionsCommand::class,
             ]);
         }
     }
