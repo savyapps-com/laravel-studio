@@ -42,12 +42,26 @@ export function useLoginForm() {
 
       // Determine redirect destination based on user permissions
       let redirectTo
+      const defaultDashboard = authStore.user?.can_access_admin_panel
+        ? { name: 'admin.dashboard' }
+        : { name: 'user.dashboard' }
+
       if (route.query.redirect) {
-        redirectTo = route.query.redirect
-      } else if (authStore.user?.can_access_admin_panel) {
-        redirectTo = { name: 'admin.dashboard' }
+        // Validate that the redirect path exists as a route
+        const redirectPath = route.query.redirect
+        const resolvedRoute = router.resolve(redirectPath)
+
+        // Check if the route exists and is not a 404 catch-all
+        if (resolvedRoute.matched.length > 0 &&
+            !resolvedRoute.name?.toString().includes('notFound') &&
+            !resolvedRoute.name?.toString().includes('NotFound')) {
+          redirectTo = redirectPath
+        } else {
+          // Invalid redirect path, use default dashboard
+          redirectTo = defaultDashboard
+        }
       } else {
-        redirectTo = { name: 'user.dashboard' }
+        redirectTo = defaultDashboard
       }
 
       // Redirect to intended route or dashboard

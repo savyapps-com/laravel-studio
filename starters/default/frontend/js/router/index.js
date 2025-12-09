@@ -179,8 +179,13 @@ router.beforeEach(async (to, _from, next) => {
   if (to.meta.auth !== undefined) {
     // Ensure user is authenticated for all protected routes
     if (!authStore.isAuthenticated) {
-      // No token or user, redirect to login
-      next({ name: 'auth.login', query: { redirect: to.fullPath } })
+      // Only store redirect if it's not a 404 catch-all route
+      const isValidRoute = to.matched.length > 0 &&
+        !to.name?.toString().includes('notFound') &&
+        !to.name?.toString().includes('NotFound')
+
+      const query = isValidRoute ? { redirect: to.fullPath } : {}
+      next({ name: 'auth.login', query })
       return
     }
 
