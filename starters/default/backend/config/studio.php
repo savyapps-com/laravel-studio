@@ -21,6 +21,7 @@ return [
         'roles' => \App\Resources\RoleResource::class,
         'countries' => \App\Resources\CountryResource::class,
         'timezones' => \App\Resources\TimezoneResource::class,
+        'panels' => \App\Resources\PanelResource::class,
     ],
 
     /*
