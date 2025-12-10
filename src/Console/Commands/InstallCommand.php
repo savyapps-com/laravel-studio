@@ -498,26 +498,37 @@ class InstallCommand extends Command
      */
     protected function isComposerPackageInstalled(string $package): bool
     {
-        // First check composer.lock (most reliable - package is actually installed)
+        // Quick check - if vendor directory exists, package is installed
+        $vendorPath = base_path("vendor/{$package}");
+        if (is_dir($vendorPath)) {
+            return true;
+        }
+
+        // Check composer.lock (most reliable - package is actually installed)
         $composerLock = base_path('composer.lock');
 
         if (file_exists($composerLock)) {
-            $lockData = json_decode(file_get_contents($composerLock), true);
+            $lockContent = @file_get_contents($composerLock);
+            if ($lockContent !== false) {
+                $lockData = json_decode($lockContent, true);
 
-            // Check in packages
-            if (isset($lockData['packages'])) {
-                foreach ($lockData['packages'] as $installedPackage) {
-                    if ($installedPackage['name'] === $package) {
-                        return true;
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    // Check in packages
+                    if (isset($lockData['packages']) && is_array($lockData['packages'])) {
+                        foreach ($lockData['packages'] as $installedPackage) {
+                            if (isset($installedPackage['name']) && $installedPackage['name'] === $package) {
+                                return true;
+                            }
+                        }
                     }
-                }
-            }
 
-            // Check in packages-dev
-            if (isset($lockData['packages-dev'])) {
-                foreach ($lockData['packages-dev'] as $installedPackage) {
-                    if ($installedPackage['name'] === $package) {
-                        return true;
+                    // Check in packages-dev
+                    if (isset($lockData['packages-dev']) && is_array($lockData['packages-dev'])) {
+                        foreach ($lockData['packages-dev'] as $installedPackage) {
+                            if (isset($installedPackage['name']) && $installedPackage['name'] === $package) {
+                                return true;
+                            }
+                        }
                     }
                 }
             }
@@ -527,16 +538,21 @@ class InstallCommand extends Command
         $composerJson = base_path('composer.json');
 
         if (file_exists($composerJson)) {
-            $jsonData = json_decode(file_get_contents($composerJson), true);
+            $jsonContent = @file_get_contents($composerJson);
+            if ($jsonContent !== false) {
+                $jsonData = json_decode($jsonContent, true);
 
-            // Check in require
-            if (isset($jsonData['require'][$package])) {
-                return true;
-            }
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    // Check in require
+                    if (isset($jsonData['require'][$package])) {
+                        return true;
+                    }
 
-            // Check in require-dev
-            if (isset($jsonData['require-dev'][$package])) {
-                return true;
+                    // Check in require-dev
+                    if (isset($jsonData['require-dev'][$package])) {
+                        return true;
+                    }
+                }
             }
         }
 
