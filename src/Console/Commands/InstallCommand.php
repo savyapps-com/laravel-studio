@@ -434,12 +434,14 @@ class InstallCommand extends Command
 
     /**
      * Publish vendor assets for required packages.
+     * Note: Media library migrations are NOT published here because the starter pack
+     * includes its own media migration with proper Schema::hasTable checks.
      */
     protected function publishVendorAssets(): void
     {
         $this->newLine();
 
-        // Publish Spatie Media Library migrations and config
+        // Publish Spatie Media Library config only (migrations are in starter pack)
         if (! File::exists(config_path('media-library.php'))) {
             $this->components->task('Publishing Spatie Media Library config', function () {
                 $this->call('vendor:publish', [
@@ -451,20 +453,11 @@ class InstallCommand extends Command
             });
         }
 
-        // Check if media-library migrations exist
-        $mediaMigrations = glob(database_path('migrations/*_create_media_table.php'));
-        if (empty($mediaMigrations)) {
-            $this->components->task('Publishing Spatie Media Library migrations', function () {
-                $this->call('vendor:publish', [
-                    '--provider' => 'Spatie\MediaLibrary\MediaLibraryServiceProvider',
-                    '--tag' => 'medialibrary-migrations',
-                ]);
+        // Note: We intentionally DO NOT publish medialibrary-migrations here
+        // The starter pack already includes a more robust media migration
+        // with Schema::hasTable and Schema::hasColumn checks
 
-                return true;
-            });
-        }
-
-        // Publish Laravel Sanctum migrations
+        // Publish Laravel Sanctum config only (migrations are in starter pack)
         $sanctumMigrations = glob(database_path('migrations/*_create_personal_access_tokens_table.php'));
         if (empty($sanctumMigrations)) {
             $this->components->task('Publishing Laravel Sanctum migrations', function () {
