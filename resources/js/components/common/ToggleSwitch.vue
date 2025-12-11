@@ -8,8 +8,8 @@
     :aria-checked="modelValue"
   >
     <span
-      class="toggle-thumb inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200"
-      :class="modelValue ? 'translate-x-6' : 'translate-x-1'"
+      class="toggle-thumb inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200"
+      :class="modelValue ? 'translate-x-[22px]' : 'translate-x-0.5'"
     />
   </button>
 </template>

@@ -1,9 +1,4 @@
-<template>
-  <div class="form-group">
-    <slot />
-  </div>
-</template>
-
-<script setup>
-// Simple container for form fields with consistent spacing
+<script>
+import { FormGroup } from 'laravel-studio'
+export default FormGroup
 </script>

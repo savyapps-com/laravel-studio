@@ -8,7 +8,7 @@
     <div class="relative">
       <input
         v-bind="field"
-        :type="inputType()"
+        :type="inputType"
         :placeholder="placeholder"
         :disabled="disabled"
         :class="[

@@ -1,6 +1,7 @@
 <template>
   <div
     :class="containerClasses"
+    style="z-index: 9999;"
     aria-live="polite"
     aria-atomic="false"
   >
@@ -45,12 +46,12 @@ const { toasts } = storeToRefs(toastStore)
 
 const containerClasses = computed(() => {
   const positions = {
-    'top-right': 'fixed top-4 right-4 z-[9999] pointer-events-none',
-    'top-left': 'fixed top-4 left-4 z-[9999] pointer-events-none',
-    'bottom-right': 'fixed bottom-4 right-4 z-[9999] pointer-events-none',
-    'bottom-left': 'fixed bottom-4 left-4 z-[9999] pointer-events-none',
-    'top-center': 'fixed top-4 left-1/2 -translate-x-1/2 z-[9999] pointer-events-none',
-    'bottom-center': 'fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] pointer-events-none'
+    'top-right': 'fixed top-4 right-4 pointer-events-none',
+    'top-left': 'fixed top-4 left-4 pointer-events-none',
+    'bottom-right': 'fixed bottom-4 right-4 pointer-events-none',
+    'bottom-left': 'fixed bottom-4 left-4 pointer-events-none',
+    'top-center': 'fixed top-4 left-1/2 -translate-x-1/2 pointer-events-none',
+    'bottom-center': 'fixed bottom-4 left-1/2 -translate-x-1/2 pointer-events-none'
   }
   return positions[props.position] || positions['top-right']
 })

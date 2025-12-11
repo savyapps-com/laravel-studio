@@ -247,6 +247,56 @@
       </div>
     </div>
 
+    <!-- Tag Input -->
+    <div v-else-if="field.type === 'tag-input'">
+      <TagInput
+        v-model="modelValue[field.attribute]"
+        :suggestions="field.meta?.suggestions || []"
+        :allow-custom="field.meta?.allowCustom !== false"
+        :max-tags="field.meta?.maxTags || null"
+        :min-tags="field.meta?.minTags || null"
+        :placeholder="field.meta?.placeholder || 'Add a tag...'"
+        :disabled="isFieldDisabled"
+        :case-insensitive="field.meta?.caseInsensitive !== false"
+        :delimiter="field.meta?.delimiter || null"
+        :has-error="!!errors[field.attribute]"
+      />
+    </div>
+
+    <!-- Icon Picker -->
+    <div v-else-if="field.type === 'icon-picker'">
+      <IconPicker
+        v-model="modelValue[field.attribute]"
+        :icons="field.meta?.icons || []"
+        :searchable="field.meta?.searchable !== false"
+        :columns="field.meta?.columns || 6"
+        :preview-size="field.meta?.previewSize || 'md'"
+        :placeholder="field.meta?.placeholder || 'Select an icon...'"
+        :disabled="isFieldDisabled"
+        :has-error="!!errors[field.attribute]"
+      />
+    </div>
+
+    <!-- Multi-Select Server -->
+    <div v-else-if="field.type === 'multi-select-server'">
+      <MultiSelectServer
+        v-model="modelValue[field.attribute]"
+        :endpoint="field.meta?.endpoint || ''"
+        :label-key="field.meta?.labelKey || 'label'"
+        :value-key="field.meta?.valueKey || 'value'"
+        :description-key="field.meta?.descriptionKey || null"
+        :group-by="field.meta?.groupBy || null"
+        :searchable="field.meta?.searchable !== false"
+        :max-selections="field.meta?.maxSelections || null"
+        :min-selections="field.meta?.minSelections || null"
+        :show-tags="field.meta?.showTags !== false"
+        :headers="field.meta?.headers || {}"
+        :placeholder="field.meta?.placeholder || 'Select options...'"
+        :disabled="isFieldDisabled"
+        :has-error="!!errors[field.attribute]"
+      />
+    </div>
+
     <!-- Error Message -->
     <p v-if="errors[field.attribute]" class="mt-1 text-sm text-red-600 dark:text-red-400">
       {{ errors[field.attribute][0] }}
@@ -267,6 +317,9 @@ import Icon from '../common/Icon.vue'
 import ResourceSelectInput from '../form/ResourceSelectInput.vue'
 import ServerSelectInput from '../form/ServerSelectInput.vue'
 import JsonEditor from '../form/JsonEditor.vue'
+import TagInput from '../form/TagInput.vue'
+import IconPicker from '../form/IconPicker.vue'
+import MultiSelectServer from '../form/MultiSelectServer.vue'
 
 const props = defineProps({
   field: {

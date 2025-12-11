@@ -28,26 +28,20 @@ export async function loadValidationRules(ruleNames) {
   // Load uncached rules
   if (rulesToLoad.length > 0) {
     try {
-      // Dynamically import only the rules we need
-      const { defineRule } = await import('vee-validate')
-      const ruleModules = await Promise.all(
-        rulesToLoad.map(async (ruleName) => {
-          try {
-            const module = await import(`@vee-validate/rules/dist/${ruleName}`)
-            return { name: ruleName, rule: module[ruleName] }
-          } catch (error) {
-            console.warn(`Failed to load validation rule: ${ruleName}`, error)
-            return null
-          }
-        })
-      )
+      // Dynamically import vee-validate and all rules
+      const [{ defineRule }, allRules] = await Promise.all([
+        import('vee-validate'),
+        import('@vee-validate/rules')
+      ])
 
       // Define and cache the loaded rules
-      ruleModules.forEach((ruleModule) => {
-        if (ruleModule) {
-          defineRule(ruleModule.name, ruleModule.rule)
-          ruleCache.set(ruleModule.name, ruleModule.rule)
-          loadedRules[ruleModule.name] = ruleModule.rule
+      rulesToLoad.forEach((ruleName) => {
+        if (allRules[ruleName]) {
+          defineRule(ruleName, allRules[ruleName])
+          ruleCache.set(ruleName, allRules[ruleName])
+          loadedRules[ruleName] = allRules[ruleName]
+        } else {
+          console.warn(`Validation rule not found: ${ruleName}`)
         }
       })
     } catch (error) {

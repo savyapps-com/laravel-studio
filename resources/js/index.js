@@ -73,6 +73,9 @@ export { default as FormSuccess } from './components/form/FormSuccess.vue'
 export { default as FormHelpText } from './components/form/FormHelpText.vue'
 export { default as FormSection } from './components/form/FormSection.vue'
 export { default as FormActions } from './components/form/FormActions.vue'
+export { default as TagInput } from './components/form/TagInput.vue'
+export { default as IconPicker } from './components/form/IconPicker.vue'
+export { default as MultiSelectServer } from './components/form/MultiSelectServer.vue'
 
 // Services
 export { resourceService } from './services/resourceService.js'

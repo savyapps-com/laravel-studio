@@ -5,9 +5,12 @@ namespace App\Resources;
 use SavyApps\LaravelStudio\Models\Panel;
 use SavyApps\LaravelStudio\Resources\Actions\BulkDeleteAction;
 use SavyApps\LaravelStudio\Resources\Fields\Boolean;
+use SavyApps\LaravelStudio\Resources\Fields\IconPicker;
 use SavyApps\LaravelStudio\Resources\Fields\Json;
+use SavyApps\LaravelStudio\Resources\Fields\MultiSelectServer;
 use SavyApps\LaravelStudio\Resources\Fields\Number;
 use SavyApps\LaravelStudio\Resources\Fields\Section;
+use SavyApps\LaravelStudio\Resources\Fields\TagInput;
 use SavyApps\LaravelStudio\Resources\Fields\Text;
 use SavyApps\LaravelStudio\Resources\Fields\Textarea;
 use SavyApps\LaravelStudio\Resources\Filters\BooleanFilter;
@@ -37,7 +40,6 @@ class PanelResource extends Resource
             Text::make('Label')->sortable()->searchable(),
             Text::make('Path')->sortable(),
             Text::make('Icon'),
-            Text::make('Role'),
             Number::make('Priority')->sortable(),
             Boolean::make('Active', 'is_active')->sortable()->toggleable(),
             Boolean::make('Default', 'is_default')->sortable()->toggleable(),
@@ -54,7 +56,6 @@ class PanelResource extends Resource
             Text::make('Label'),
             Text::make('Path'),
             Text::make('Icon'),
-            Text::make('Role'),
             Number::make('Priority'),
             Boolean::make('Active', 'is_active'),
             Boolean::make('Default', 'is_default'),
@@ -95,15 +96,15 @@ class PanelResource extends Resource
                         ->help('URL path prefix for the panel')
                         ->cols('col-span-12 md:col-span-6'),
 
-                    Text::make('Icon')
+                    IconPicker::make('Icon')
                         ->rules('nullable|string|max:50')
-                        ->placeholder('e.g., layout, shield, home')
-                        ->help('Icon name for the panel')
+                        ->searchable()
+                        ->help('Icon for the panel')
                         ->cols('col-span-12 md:col-span-6'),
 
                     Number::make('Priority')
                         ->rules('nullable|integer|min:0')
-                        ->default(0)
+                        ->default(100)
                         ->help('Display order (lower = higher priority)')
                         ->cols('col-span-12 md:col-span-6'),
                 ]),
@@ -112,21 +113,19 @@ class PanelResource extends Resource
                 ->description('Configure who can access this panel')
                 ->icon('shield')
                 ->fields([
-                    Text::make('Role')
-                        ->rules('nullable|string|max:50')
-                        ->placeholder('e.g., admin')
-                        ->help('Primary role required to access this panel')
+                    TagInput::make('Roles')
+                        ->rules('nullable|array')
+                        ->suggestions(['admin', 'user', 'manager', 'editor', 'moderator'])
+                        ->allowCustom()
+                        ->help('Roles that can access this panel')
                         ->cols('col-span-12 md:col-span-6'),
 
-                    Json::make('Roles')
+                    TagInput::make('Middleware')
                         ->rules('nullable|array')
-                        ->help('Additional roles that can access this panel (JSON array)')
+                        ->suggestions(['auth', 'verified', 'admin', 'api', 'throttle:60,1'])
+                        ->allowCustom()
+                        ->help('Middleware to apply to this panel')
                         ->cols('col-span-12 md:col-span-6'),
-
-                    Json::make('Middleware')
-                        ->rules('nullable|array')
-                        ->help('Custom middleware to apply (JSON array)')
-                        ->cols('col-span-12'),
                 ]),
 
             Section::make('Panel Content')
@@ -134,15 +133,21 @@ class PanelResource extends Resource
                 ->icon('squares-2x2')
                 ->collapsible()
                 ->fields([
-                    Json::make('Resources')
-                        ->rules('nullable|array')
-                        ->help('Resource keys available in this panel (JSON array)')
-                        ->cols('col-span-12'),
+                    MultiSelectServer::make('Resources')
+                        ->endpoint('/api/admin/panel-management/available-resources')
+                        ->labelKey('label')
+                        ->valueKey('key')
+                        ->descriptionKey('description')
+                        ->help('Resources available in this panel')
+                        ->cols('col-span-12 md:col-span-6'),
 
-                    Json::make('Features')
-                        ->rules('nullable|array')
-                        ->help('Feature keys enabled for this panel (JSON array)')
-                        ->cols('col-span-12'),
+                    MultiSelectServer::make('Features')
+                        ->endpoint('/api/admin/panel-management/available-features')
+                        ->labelKey('label')
+                        ->valueKey('key')
+                        ->descriptionKey('description')
+                        ->help('Features enabled for this panel')
+                        ->cols('col-span-12 md:col-span-6'),
 
                     Json::make('Menu')
                         ->rules('nullable|array')
