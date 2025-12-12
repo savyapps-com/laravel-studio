@@ -68,16 +68,16 @@
 
     <template #links>
       <div class="space-y-2">
-        <router-link :to="{ name: 'auth.login' }" class="auth-link block">
+        <router-link :to="{ name: 'panel.login', params: { panel: currentPanel } }" class="auth-link block">
           Back to Sign In
         </router-link>
       </div>
     </template>
 
     <template #footer>
-      <p class="text-sm text-gray-500 dark:text-gray-400">
+      <p v-if="allowRegistration" class="text-sm text-gray-500 dark:text-gray-400">
         Don't have an account?
-        <router-link :to="{ name: 'auth.register' }" class="auth-link">
+        <router-link :to="{ name: 'panel.register', params: { panel: currentPanel } }" class="auth-link">
           Sign up here
         </router-link>
       </p>
@@ -86,15 +86,34 @@
 </template>
 
 <script setup>
-import { ref, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
 import AuthPage from '@/components/common/AuthPage.vue'
 import Icon from '@/components/common/Icon.vue'
 import FormGroup from '@/components/form/FormGroup.vue'
 import FormLabel from '@/components/form/FormLabel.vue'
 import FormInput from '@/components/form/FormInput.vue'
 import { useForgotPasswordForm } from '@/components/composables/useForgotPasswordForm'
+import { authService } from '@/services/authService'
 
+const route = useRoute()
 const helpText = 'We\'ll send you a secure link to reset your password. Check your spam folder if you don\'t receive it within a few minutes.'
+
+// Get current panel from route params
+const currentPanel = computed(() => route.params.panel || 'admin')
+
+// Panel registration settings
+const allowRegistration = ref(false)
+
+// Fetch panel info to check registration settings
+onMounted(async () => {
+  try {
+    const panelInfo = await authService.getPanelInfo(currentPanel.value)
+    allowRegistration.value = panelInfo.allow_registration || false
+  } catch {
+    allowRegistration.value = false
+  }
+})
 
 const {
   onSubmit,

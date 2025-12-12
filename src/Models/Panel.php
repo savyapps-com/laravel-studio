@@ -21,6 +21,8 @@ class Panel extends Model
         'is_active',
         'is_default',
         'priority',
+        'allow_registration',
+        'default_role',
     ];
 
     protected $casts = [
@@ -33,6 +35,7 @@ class Panel extends Model
         'is_active' => 'boolean',
         'is_default' => 'boolean',
         'priority' => 'integer',
+        'allow_registration' => 'boolean',
     ];
 
     /**
@@ -101,6 +104,8 @@ class Panel extends Model
                 'layout' => 'classic',
                 'theme' => 'light',
             ],
+            'allow_registration' => $this->allow_registration ?? false,
+            'default_role' => $this->default_role,
         ];
     }
 

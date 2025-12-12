@@ -84,6 +84,8 @@ return [
             'icon' => 'layout',
             'middleware' => ['api', 'auth:sanctum', 'panel:admin'],
             'role' => 'admin',
+            'allow_registration' => env('ADMIN_ALLOW_REGISTRATION', false),
+            'default_role' => 'admin',
             'resources' => ['users', 'roles', 'countries', 'timezones'],
             'features' => ['email-templates', 'system-settings'],
             'menu' => [

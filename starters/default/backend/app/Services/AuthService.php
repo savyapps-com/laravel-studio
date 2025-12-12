@@ -5,9 +5,11 @@ namespace App\Services;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class AuthService
 {
@@ -38,16 +40,24 @@ class AuthService
     /**
      * Register a new user with the provided data.
      */
-    public function register(array $userData): array
+    public function register(array $userData, ?string $panelKey = 'admin'): array
     {
+        // Get panel configuration and check if registration is allowed
+        $panelConfig = $this->getPanelConfig($panelKey);
+
+        if (! $panelConfig || ! $panelConfig['allow_registration']) {
+            throw new AccessDeniedHttpException('Registration is disabled for this panel.');
+        }
+
         $user = User::create([
             'name' => $userData['name'],
             'email' => $userData['email'],
             'password' => Hash::make($userData['password']),
         ]);
 
-        // Assign default 'user' role to new registrations
-        $user->assignRole('user');
+        // Assign the panel's default role
+        $defaultRole = $panelConfig['default_role'] ?? 'user';
+        $user->assignRole($defaultRole);
 
         event(new Registered($user));
 
@@ -59,6 +69,60 @@ class AuthService
             'user' => $user,
             'token' => $token,
         ];
+    }
+
+    /**
+     * Get panel configuration from database or config file.
+     * For the admin panel, config file takes precedence (to allow env variable control).
+     * For other panels, database takes precedence.
+     */
+    public function getPanelConfig(string $panelKey): ?array
+    {
+        // For admin panel, config takes precedence (to use ADMIN_ALLOW_REGISTRATION env)
+        if ($panelKey === 'admin') {
+            $configPanel = config("studio.panels.{$panelKey}");
+            if ($configPanel) {
+                return [
+                    'allow_registration' => $configPanel['allow_registration'] ?? false,
+                    'default_role' => $configPanel['default_role'] ?? 'admin',
+                ];
+            }
+        }
+
+        // For other panels, check database first
+        $panel = DB::table('panels')
+            ->where('key', $panelKey)
+            ->where('is_active', true)
+            ->first();
+
+        if ($panel) {
+            return [
+                'allow_registration' => (bool) $panel->allow_registration,
+                'default_role' => $panel->default_role,
+            ];
+        }
+
+        // Fall back to config file for non-admin panels
+        $configPanel = config("studio.panels.{$panelKey}");
+
+        if ($configPanel) {
+            return [
+                'allow_registration' => $configPanel['allow_registration'] ?? false,
+                'default_role' => $configPanel['default_role'] ?? $panelKey,
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * Check if registration is allowed for a panel.
+     */
+    public function isRegistrationAllowed(string $panelKey): bool
+    {
+        $config = $this->getPanelConfig($panelKey);
+
+        return $config && $config['allow_registration'];
     }
 
     /**

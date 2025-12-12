@@ -40,6 +40,8 @@ class PanelsSeeder extends Seeder
                 'is_active' => true,
                 'is_default' => true,
                 'priority' => 1,
+                'allow_registration' => false, // Admin panel registration controlled via config
+                'default_role' => 'admin',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

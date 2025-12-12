@@ -43,6 +43,7 @@ class PanelResource extends Resource
             Number::make('Priority')->sortable(),
             Boolean::make('Active', 'is_active')->sortable()->toggleable(),
             Boolean::make('Default', 'is_default')->sortable()->toggleable(),
+            Boolean::make('Registration', 'allow_registration')->sortable()->toggleable(),
         ];
     }
 
@@ -59,6 +60,8 @@ class PanelResource extends Resource
             Number::make('Priority'),
             Boolean::make('Active', 'is_active'),
             Boolean::make('Default', 'is_default'),
+            Boolean::make('Allow Registration', 'allow_registration'),
+            Text::make('Default Role', 'default_role'),
             Json::make('Roles'),
             Json::make('Middleware'),
             Json::make('Resources'),
@@ -125,6 +128,23 @@ class PanelResource extends Resource
                         ->suggestions(['auth', 'verified', 'admin', 'api', 'throttle:60,1'])
                         ->allowCustom()
                         ->help('Middleware to apply to this panel')
+                        ->cols('col-span-12 md:col-span-6'),
+                ]),
+
+            Section::make('Registration Settings')
+                ->description('Control user registration for this panel')
+                ->icon('user-plus')
+                ->fields([
+                    Boolean::make('Allow Registration', 'allow_registration')
+                        ->rules('boolean')
+                        ->default(false)
+                        ->help('Allow users to self-register for this panel')
+                        ->cols('col-span-12 md:col-span-6'),
+
+                    Text::make('Default Role', 'default_role')
+                        ->rules('nullable|string|max:50')
+                        ->placeholder('e.g., user, member')
+                        ->help('Role automatically assigned to users who register via this panel')
                         ->cols('col-span-12 md:col-span-6'),
                 ]),
 

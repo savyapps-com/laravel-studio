@@ -458,11 +458,11 @@ class InstallCommand extends Command
         // with Schema::hasTable and Schema::hasColumn checks
 
         // Publish Laravel Sanctum config only (migrations are in starter pack)
-        $sanctumMigrations = glob(database_path('migrations/*_create_personal_access_tokens_table.php'));
-        if (empty($sanctumMigrations)) {
-            $this->components->task('Publishing Laravel Sanctum migrations', function () {
+        if (! File::exists(config_path('sanctum.php'))) {
+            $this->components->task('Publishing Laravel Sanctum config', function () {
                 $this->call('vendor:publish', [
                     '--provider' => 'Laravel\Sanctum\SanctumServiceProvider',
+                    '--tag' => 'sanctum-config',
                 ]);
 
                 return true;

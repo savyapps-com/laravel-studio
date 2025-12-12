@@ -27,6 +27,8 @@ return new class extends Migration
                 $table->json('menu')->nullable();
                 $table->json('settings')->nullable();
                 $table->boolean('is_active')->default(true);
+                $table->boolean('allow_registration')->default(false);
+                $table->string('default_role')->nullable();
                 $table->boolean('is_default')->default(false);
                 $table->integer('priority')->default(100);
                 $table->timestamps();
@@ -95,9 +97,19 @@ return new class extends Migration
                     $table->boolean('is_active')->default(true)->after('settings');
                 });
             }
+            if (! Schema::hasColumn('panels', 'allow_registration')) {
+                Schema::table('panels', function (Blueprint $table) {
+                    $table->boolean('allow_registration')->default(false)->after('is_active');
+                });
+            }
+            if (! Schema::hasColumn('panels', 'default_role')) {
+                Schema::table('panels', function (Blueprint $table) {
+                    $table->string('default_role')->nullable()->after('allow_registration');
+                });
+            }
             if (! Schema::hasColumn('panels', 'is_default')) {
                 Schema::table('panels', function (Blueprint $table) {
-                    $table->boolean('is_default')->default(false)->after('is_active');
+                    $table->boolean('is_default')->default(false)->after('default_role');
                 });
             }
             if (! Schema::hasColumn('panels', 'priority')) {
@@ -142,6 +154,8 @@ return new class extends Migration
                     'theme' => 'light',
                 ]),
                 'is_active' => true,
+                'allow_registration' => false,
+                'default_role' => 'admin',
                 'is_default' => true,
                 'priority' => 1,
                 'created_at' => now(),

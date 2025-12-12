@@ -6,7 +6,37 @@ import SettingsLayout from '@/layouts/SettingsLayout.vue'
 import Dashboard from '@/pages/Dashboard.vue'
 
 const routes = [
-  { path: '/login', name: 'auth.login', component: () => import('@/pages/auth/Login.vue'), meta: { title: 'Sign In', guest: true } },
+  // Panel-scoped Auth Routes (guest routes under each panel)
+  {
+    path: '/:panel/login',
+    name: 'panel.login',
+    component: () => import('@/pages/auth/Login.vue'),
+    meta: { title: 'Sign In', guest: true }
+  },
+  {
+    path: '/:panel/register',
+    name: 'panel.register',
+    component: () => import('@/pages/auth/Register.vue'),
+    meta: { title: 'Create Account', guest: true }
+  },
+  {
+    path: '/:panel/forgot-password',
+    name: 'panel.forgot-password',
+    component: () => import('@/pages/auth/ForgotPassword.vue'),
+    meta: { title: 'Reset Password', guest: true }
+  },
+  {
+    path: '/:panel/reset-password',
+    name: 'panel.reset-password',
+    component: () => import('@/pages/auth/ResetPassword.vue'),
+    meta: { title: 'Set New Password', guest: true }
+  },
+  {
+    path: '/:panel/verify-email',
+    name: 'panel.verify-email',
+    component: () => import('@/pages/auth/VerifyEmail.vue'),
+    meta: { title: 'Verify Email', guest: true }
+  },
 
   // Admin Panel Routes
   {
@@ -63,67 +93,25 @@ const routes = [
     ]
   },
 
-  // User Panel Routes
-  {
-    path: '/user',
-    component: AdminLayout,
-    children: [
-      { path: '', name: 'user.dashboard', component: () => import('@/pages/user/Dashboard.vue'), meta: { title: 'Dashboard', auth: 'user' } },
+  // Legacy auth routes - redirect to panel-scoped equivalents
+  { path: '/login', redirect: '/admin/login' },
+  { path: '/auth/register', redirect: '/admin/register' },
+  { path: '/auth/forgot-password', redirect: '/admin/forgot-password' },
+  { path: '/auth/reset-password', redirect: '/admin/reset-password' },
+  { path: '/auth/verify-email', redirect: '/admin/verify-email' },
 
-      // User Profile Routes
-      {
-        path: 'profile',
-        component: ProfileLayout,
-        meta: { auth: 'user' },
-        redirect: { name: 'user.profile.personal' },
-        children: [
-          { path: 'personal', name: 'user.profile.personal', component: () => import('@/pages/user/profile/Profile.vue'), meta: { title: 'Profile', auth: 'user' } },
-          { path: 'security', name: 'user.profile.security', component: () => import('@/pages/user/profile/ChangePassword.vue'), meta: { title: 'Security', auth: 'user' } }
-        ]
-      },
-
-      // User Settings Routes
-      {
-        path: 'settings',
-        component: SettingsLayout,
-        meta: { auth: 'user' },
-        redirect: { name: 'user.settings.appearance' },
-        children: [
-          { path: 'appearance', name: 'user.settings.appearance', component: () => import('@/pages/user/settings/Appearance.vue'), meta: { title: 'Appearance', auth: 'user' } },
-          { path: 'notifications', name: 'user.settings.notifications', component: () => import('@/pages/user/settings/Notifications.vue'), meta: { title: 'Notifications', auth: 'user' } },
-          { path: 'preferences', name: 'user.settings.preferences', component: () => import('@/pages/user/settings/Preferences.vue'), meta: { title: 'Preferences', auth: 'user' } }
-        ]
-      },
-
-      // User Error Pages
-      { path: 'error/404', name: 'user.error.notFound', component: () => import('@/pages/user/errors/NotFound.vue'), meta: { title: '404 - Page Not Found', auth: '' } },
-      { path: 'error/403', name: 'user.error.forbidden', component: () => import('@/pages/user/errors/Forbidden.vue'), meta: { title: '403 - Access Forbidden', auth: '' } },
-      { path: 'error/401', name: 'user.error.unauthorized', component: () => import('@/pages/user/errors/Unauthorized.vue'), meta: { title: '401 - Unauthorized', auth: '' } },
-      { path: 'error/500', name: 'user.error.serverError', component: () => import('@/pages/user/errors/ServerError.vue'), meta: { title: '500 - Server Error', auth: '' } },
-      { path: 'error/network', name: 'user.error.networkError', component: () => import('@/pages/user/errors/NetworkError.vue'), meta: { title: 'Network Error', auth: '' } },
-      { path: 'error/maintenance', name: 'user.error.maintenance', component: () => import('@/pages/user/errors/MaintenanceMode.vue'), meta: { title: 'Under Maintenance', auth: '' } },
-    ]
-  },
-
-  // Auth Routes
-  { path: '/auth/register', name: 'auth.register', component: () => import('@/pages/auth/Register.vue'), meta: { title: 'Create Account', guest: true } },
-  { path: '/auth/forgot-password', name: 'auth.forgot-password', component: () => import('@/pages/auth/ForgotPassword.vue'), meta: { title: 'Reset Password', guest: true } },
-  { path: '/auth/reset-password', name: 'auth.reset-password', component: () => import('@/pages/auth/ResetPassword.vue'), meta: { title: 'Set New Password', guest: true } },
-  { path: '/auth/verify-email', name: 'auth.verify-email', component: () => import('@/pages/auth/VerifyEmail.vue'), meta: { title: 'Verify Email', guest: true } },
-
-  // Root route - redirect to appropriate dashboard
+  // Root route - redirect to appropriate dashboard based on user's default panel
   {
     path: '/',
     name: 'home',
     redirect: () => {
       const authStore = useAuthStore()
       if (authStore.isAuthenticated) {
-        if (authStore.user?.can_access_admin_panel) {
-          return { name: 'admin.dashboard' }
-        }
-        return { name: 'user.dashboard' }
+        // Get user's default panel from their accessible panels
+        const defaultPanel = authStore.user?.default_panel || 'admin'
+        return { name: `${defaultPanel}.dashboard` }
       }
-      return { name: 'auth.login' }
+      return { name: 'panel.login', params: { panel: 'admin' } }
     }
   },
 
@@ -135,29 +123,16 @@ const routes = [
     meta: { title: '404 - Page Not Found', auth: 'admin' }
   },
 
-  // 404 Catch-all for user paths
-  {
-    path: '/user/:pathMatch(.*)*',
-    name: 'user.notFound',
-    component: () => import('@/pages/user/errors/NotFound.vue'),
-    meta: { title: '404 - Page Not Found', auth: 'user' }
-  },
-
-  // 404 Catch-all for all other paths - redirect to appropriate context
+  // 404 Catch-all for all other paths
   {
     path: '/:pathMatch(.*)*',
     name: 'notFound',
-    redirect: (to) => {
-      // Check if user is authenticated and has admin access
+    redirect: () => {
       const authStore = useAuthStore()
       if (authStore.isAuthenticated) {
-        if (authStore.user?.can_access_admin_panel) {
-          return { name: 'admin.error.notFound' }
-        }
-        return { name: 'user.error.notFound' }
+        return { name: 'admin.error.notFound' }
       }
-      // For unauthenticated users, show user 404
-      return { name: 'user.error.notFound' }
+      return { name: 'panel.login', params: { panel: 'admin' } }
     }
   }
 ]
@@ -168,11 +143,12 @@ const router = createRouter({ history: createWebHistory(), routes })
 router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore()
 
+  // Get panel from route params or path
+  const panel = to.params.panel || to.path.match(/^\/([a-z]+)/)?.[1] || 'admin'
+
   // Update document title
   if (to.meta.title) {
-    const suffix = to.path.startsWith('/admin') ? 'Account Panel' :
-                   to.path.startsWith('/user') ? 'User Dashboard' :
-                   'Laravel Starter'
+    const suffix = panel.charAt(0).toUpperCase() + panel.slice(1) + ' Panel'
     document.title = `${to.meta.title} - ${suffix}`
   }
 
@@ -186,7 +162,8 @@ router.beforeEach(async (to, _from, next) => {
         !to.name?.toString().includes('NotFound')
 
       const query = isValidRoute ? { redirect: to.fullPath } : {}
-      next({ name: 'auth.login', query })
+      // Redirect to panel-scoped login
+      next({ name: 'panel.login', params: { panel }, query })
       return
     }
 
@@ -194,23 +171,9 @@ router.beforeEach(async (to, _from, next) => {
     const requiredAuth = to.meta.auth
 
     if (requiredAuth === 'admin') {
-      // Admin-only route - check whitelist
+      // Admin-only route - check if user can access admin panel
       if (!authStore.user?.can_access_admin_panel) {
-        // Regular users trying to access admin routes -> redirect to user 404
-        next({ name: 'user.error.notFound' })
-        return
-      }
-    } else if (requiredAuth === 'user') {
-      // User-only route - users with 'user' role only
-      if (authStore.user?.can_access_admin_panel) {
-        // Admins trying to access user-only routes -> redirect to admin 404
-        next({ name: 'admin.error.notFound' })
-        return
-      }
-
-      // Check if user has 'user' role
-      if (!authStore.user?.is_user) {
-        next({ name: 'user.error.notFound' })
+        next({ name: 'admin.error.forbidden' })
         return
       }
     }
@@ -221,16 +184,14 @@ router.beforeEach(async (to, _from, next) => {
   // Check if route is guest only (login, register, etc.)
   else if (to.meta.guest) {
     if (authStore.isAuthenticated) {
-      // Scenario 3: Logged-in user on dashboard clicks login link - cancel navigation
-      // Scenario 4: Logged-in user directly visits /login in new tab - redirect to dashboard
-
       // Check if navigation was triggered by user action from an existing route
       if (_from.name && !_from.meta?.guest) {
         // Coming from an authenticated route (like dashboard), cancel navigation
         next(false)
       } else {
-        // Direct navigation (new tab/refresh) or from another guest route, redirect to dashboard
-        const redirectTo = to.query.redirect || { name: authStore.user?.can_access_admin_panel ? 'admin.dashboard' : 'user.dashboard' }
+        // Direct navigation (new tab/refresh) or from another guest route, redirect to panel dashboard
+        const defaultPanel = authStore.user?.default_panel || panel
+        const redirectTo = to.query.redirect || { name: `${defaultPanel}.dashboard` }
         next(redirectTo)
       }
     } else {

@@ -26,8 +26,38 @@ class PanelController extends Controller
                 'label' => $config['label'],
                 'path' => $config['path'],
                 'icon' => $config['icon'],
+                'allow_registration' => $config['allow_registration'] ?? false,
+                'default_role' => $config['default_role'] ?? null,
             ])->values(),
             'default' => $this->panelService->getDefaultPanel(),
+        ]);
+    }
+
+    /**
+     * Get public panel information (for login/register pages - no auth required).
+     */
+    public function info(Request $request, string $panel): JsonResponse
+    {
+        $config = $this->panelService->getPanel($panel);
+
+        if (!$config) {
+            return response()->json(['message' => 'Panel not found'], 404);
+        }
+
+        // For admin panel, get allow_registration from config (to use env variable)
+        $allowRegistration = $config['allow_registration'] ?? false;
+        if ($panel === 'admin') {
+            $configPanel = config('studio.panels.admin');
+            if ($configPanel) {
+                $allowRegistration = $configPanel['allow_registration'] ?? false;
+            }
+        }
+
+        return response()->json([
+            'panel' => $panel,
+            'label' => $config['label'],
+            'icon' => $config['icon'],
+            'allow_registration' => $allowRegistration,
         ]);
     }
 
@@ -55,6 +85,8 @@ class PanelController extends Controller
             'resources' => array_keys($this->panelService->getPanelResources($panel)),
             'features' => $config['features'] ?? [],
             'settings' => $config['settings'] ?? [],
+            'allow_registration' => $config['allow_registration'] ?? false,
+            'default_role' => $config['default_role'] ?? null,
         ]);
     }
 
@@ -137,6 +169,8 @@ class PanelController extends Controller
             'resources' => array_keys($this->panelService->getPanelResources($panel)),
             'features' => $config['features'] ?? [],
             'settings' => $config['settings'] ?? [],
+            'allow_registration' => $config['allow_registration'] ?? false,
+            'default_role' => $config['default_role'] ?? null,
         ]);
     }
 }

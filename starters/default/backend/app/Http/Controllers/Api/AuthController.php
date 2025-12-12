@@ -29,7 +29,8 @@ class AuthController extends Controller
      */
     public function register(RegisterRequest $request): JsonResponse
     {
-        $result = $this->authService->register($request->validated());
+        $panelKey = $request->input('panel', 'admin');
+        $result = $this->authService->register($request->validated(), $panelKey);
         $result['user']->load('roles');
 
         return response()->json([
@@ -37,6 +38,20 @@ class AuthController extends Controller
             'user' => new UserResource($result['user']),
             'token' => $result['token'],
         ], 201);
+    }
+
+    /**
+     * Check if registration is allowed for a panel.
+     */
+    public function checkRegistration(Request $request): JsonResponse
+    {
+        $panelKey = $request->input('panel', 'admin');
+        $allowed = $this->authService->isRegistrationAllowed($panelKey);
+
+        return response()->json([
+            'panel' => $panelKey,
+            'allow_registration' => $allowed,
+        ]);
     }
 
     /**

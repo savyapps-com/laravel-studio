@@ -67,16 +67,16 @@
 
     <template #links>
       <div class="space-y-2">
-        <router-link :to="{ name: 'auth.forgot-password' }" class="auth-link block">
+        <router-link :to="{ name: 'panel.forgot-password', params: { panel: currentPanel } }" class="auth-link block">
           Forgot your password?
         </router-link>
       </div>
     </template>
 
     <template #footer>
-      <p class="text-sm text-gray-500 dark:text-gray-400">
+      <p v-if="allowRegistration" class="text-sm text-gray-500 dark:text-gray-400">
         Don't have an account?
-        <router-link :to="{ name: 'auth.register' }" class="auth-link">
+        <router-link :to="{ name: 'panel.register', params: { panel: currentPanel } }" class="auth-link">
           Sign up here
         </router-link>
       </p>
@@ -85,6 +85,8 @@
 </template>
 
 <script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import AuthPage from '@/components/common/AuthPage.vue'
 import Icon from '@/components/common/Icon.vue'
 import FormGroup from '@/components/form/FormGroup.vue'
@@ -94,8 +96,30 @@ import PasswordInput from '@/components/form/PasswordInput.vue'
 import CheckboxInput from '@/components/form/CheckboxInput.vue'
 import FormSuccess from '@/components/form/FormSuccess.vue'
 import { useLoginForm } from '@/components/composables/useLoginForm'
+import { authService } from '@/services/authService'
 
+const route = useRoute()
 const helpText = 'Having trouble signing in? Make sure you\'re using the correct email and password.'
+
+// Get current panel from route params
+const currentPanel = computed(() => route.params.panel || 'admin')
+
+// Panel registration settings
+const allowRegistration = ref(false)
+const panelLoading = ref(true)
+
+// Fetch panel info to check registration settings
+onMounted(async () => {
+  try {
+    const panelInfo = await authService.getPanelInfo(currentPanel.value)
+    allowRegistration.value = panelInfo.allow_registration || false
+  } catch (error) {
+    // If panel info fetch fails, default to not showing registration
+    allowRegistration.value = false
+  } finally {
+    panelLoading.value = false
+  }
+})
 
 const {
   onSubmit,

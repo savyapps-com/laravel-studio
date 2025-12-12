@@ -20,6 +20,14 @@ use SavyApps\LaravelStudio\Http\Controllers\ResourceController;
 |
 */
 
+// Public Panel API Routes - For login/register pages (no auth required)
+Route::middleware(['api'])
+    ->prefix('api/panels')
+    ->name('api.panels.')
+    ->group(function () {
+        Route::get('{panel}/info', [PanelController::class, 'info'])->name('info');
+    });
+
 // Panel API Routes - Accessible to authenticated users
 Route::middleware(['api', 'auth:sanctum'])
     ->prefix('api/panels')

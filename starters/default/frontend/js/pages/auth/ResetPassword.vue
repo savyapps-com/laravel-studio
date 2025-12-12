@@ -159,7 +159,7 @@
 
     <template #links>
       <div v-if="!successMessage" class="space-y-2">
-        <router-link :to="{ name: 'auth.login' }" class="auth-link block">
+        <router-link :to="{ name: 'panel.login', params: { panel: currentPanel } }" class="auth-link block">
           Back to Sign In
         </router-link>
       </div>
@@ -168,7 +168,7 @@
     <template #footer>
       <p v-if="!successMessage" class="text-sm text-gray-500 dark:text-gray-400">
         Remember your password?
-        <router-link :to="{ name: 'auth.login' }" class="auth-link">
+        <router-link :to="{ name: 'panel.login', params: { panel: currentPanel } }" class="auth-link">
           Sign in here
         </router-link>
       </p>
@@ -177,14 +177,18 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import AuthPage from '@/components/common/AuthPage.vue'
 import Icon from '@/components/common/Icon.vue'
 import { useResetPasswordForm } from '@/components/composables/useResetPasswordForm'
 
 const router = useRouter()
+const route = useRoute()
 const helpText = 'Choose a strong password that you haven\'t used before. You\'ll be able to sign in with this new password right away.'
+
+// Get current panel from route params
+const currentPanel = computed(() => route.params.panel || 'admin')
 
 const {
   onSubmit,
@@ -206,7 +210,7 @@ const handleResetPassword = () => {
 }
 
 const redirectToLogin = () => {
-  router.push({ name: 'auth.login' })
+  router.push({ name: 'panel.login', params: { panel: currentPanel.value } })
 }
 
 const togglePassword = () => {

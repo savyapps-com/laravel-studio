@@ -15,6 +15,7 @@ Route::post('/register', [AuthController::class, 'register'])->name('api.registe
 Route::post('/login', [AuthController::class, 'login'])->name('api.login');
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('api.forgot-password');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('api.reset-password');
+Route::get('/check-registration', [AuthController::class, 'checkRegistration'])->name('api.check-registration');
 
 // Public reference data routes
 Route::get('/countries', [CountriesController::class, 'index'])->name('api.countries.index');
