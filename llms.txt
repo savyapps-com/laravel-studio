@@ -1,0 +1,196 @@
+# Laravel Studio
+
+> Free, open-source Laravel Nova alternative for building admin panels with Vue 3.
+
+## Installation
+
+```bash
+composer require savyapps-com/laravel-studio --dev
+composer dump-autoload
+php artisan studio:install --all
+```
+
+## Creating Resources
+
+```bash
+php artisan studio:make-resource UserResource
+```
+
+```php
+namespace App\Resources;
+
+use SavyApps\LaravelStudio\Resources\Resource;
+use SavyApps\LaravelStudio\Resources\Fields\{ID, Text, Email, Boolean, BelongsTo, Section};
+use SavyApps\LaravelStudio\Resources\Filters\{SelectFilter, BooleanFilter};
+use SavyApps\LaravelStudio\Resources\Actions\{BulkDeleteAction, ExportAction};
+
+class UserResource extends Resource
+{
+    public static string $model = \App\Models\User::class;
+    public static string $title = 'name';
+    public static array $search = ['name', 'email'];
+
+    public function indexFields(): array
+    {
+        return [
+            ID::make()->sortable(),
+            Text::make('Name')->sortable()->searchable(),
+            Email::make('Email')->sortable(),
+            Boolean::make('Active')->toggleable(),
+        ];
+    }
+
+    public function formFields(): array
+    {
+        return [
+            Section::make('Details')->fields([
+                Text::make('Name')->rules('required'),
+                Email::make('Email')->rules('required', 'email'),
+            ]),
+        ];
+    }
+
+    public function filters(): array
+    {
+        return [
+            BooleanFilter::make('Active'),
+        ];
+    }
+
+    public function actions(): array
+    {
+        return [
+            BulkDeleteAction::make(),
+            ExportAction::make(),
+        ];
+    }
+}
+```
+
+Register in config/studio.php:
+```php
+'resources' => [
+    'users' => \App\Resources\UserResource::class,
+],
+```
+
+## Field Types (21)
+
+Basic: ID, Text, Email, Password, Number, Boolean, Date, Textarea
+Advanced: Select, JSON, Image, Media, IconPicker, TagInput, MultiSelectServer
+Relationships: BelongsTo, BelongsToMany, HasMany
+Layout: Group, Section
+
+## Common Field Methods
+
+```php
+Field::make('Name')
+    ->sortable()
+    ->searchable()
+    ->rules('required')
+    ->default('value')
+    ->nullable()
+    ->placeholder('text')
+    ->help('Help text')
+    ->cols(6)
+    ->showOnIndex()
+    ->showOnCreate()
+    ->showOnUpdate()
+    ->dependsOn('field')
+    ->showWhen('field', 'value')
+    ->requiredWhen('field', 'value');
+```
+
+## Filters (5)
+
+SelectFilter, BooleanFilter, DateRangeFilter, BelongsToManyFilter
+
+```php
+SelectFilter::make('Status')->options(StatusEnum::class);
+BooleanFilter::make('Active');
+DateRangeFilter::make('Created')->column('created_at');
+```
+
+## Actions
+
+Built-in: BulkDeleteAction, BulkUpdateAction, ExportAction
+
+Custom:
+```php
+php artisan studio:make-action ActivateAction
+```
+
+```php
+class ActivateAction extends Action
+{
+    public static string $label = 'Activate';
+
+    public function handle(Collection $models): array
+    {
+        $models->each->update(['active' => true]);
+        return ['message' => 'Activated', 'count' => $models->count()];
+    }
+}
+```
+
+## Backend Services
+
+ResourceService, PanelService, AuthorizationService, ActivityService, GlobalSearchService, CardService
+
+## Traits
+
+Authorizable (resources), LogsActivity (models), HasPermissions (user), GloballySearchable (resources), ApiResponse (controllers)
+
+## API Endpoints
+
+```
+GET    /api/studio/panels/{panel}/resources/{resource}
+POST   /api/studio/panels/{panel}/resources/{resource}
+GET    /api/studio/panels/{panel}/resources/{resource}/{id}
+PUT    /api/studio/panels/{panel}/resources/{resource}/{id}
+DELETE /api/studio/panels/{panel}/resources/{resource}/{id}
+POST   /api/studio/panels/{panel}/resources/{resource}/bulk/delete
+POST   /api/studio/panels/{panel}/resources/{resource}/bulk/update
+GET    /api/search
+```
+
+## Artisan Commands
+
+```
+studio:install --all          # Install package
+studio:make-resource Name     # Create resource
+studio:make-action Name       # Create action
+studio:make-filter Name       # Create filter
+studio:make-field Name        # Create field type
+studio:make-panel             # Create panel
+studio:sync-permissions       # Sync permissions
+studio:doctor                 # Diagnostics
+```
+
+## Frontend (Vue 3)
+
+Services: resourceService, panelService, authService, searchService, permissionService
+Composables: useToast, useDialog, usePermissions, useGlobalSearch
+Stores: auth, panel, dialog, settings, toast
+
+```javascript
+// API calls
+await resourceService.getIndex('users', { page: 1 })
+await resourceService.create('users', data)
+await resourceService.update('users', id, data)
+await resourceService.delete('users', id)
+
+// Composables
+const { success, error } = useToast()
+const { confirm } = useDialog()
+const { can } = usePermissions()
+```
+
+## Requirements
+
+PHP 8.2+, Laravel 12.x, Vue 3.5+, Node.js 18+, Tailwind CSS 4.0
+
+## Links
+
+- Package: savyapps-com/laravel-studio
+- Namespace: SavyApps\LaravelStudio
