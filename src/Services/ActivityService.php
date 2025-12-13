@@ -50,13 +50,54 @@ class ActivityService
      */
     public function getActivities(array $filters = []): LengthAwarePaginator
     {
-        $query = Activity::query()->with(['subject', 'causer'])->latest();
+        $query = Activity::query()
+            ->with($this->getOptimizedRelations())
+            ->select($this->getActivityColumns())
+            ->latest();
 
         $this->applyFilters($query, $filters);
 
         $perPage = $filters['per_page'] ?? config('studio.activity_log.per_page', 25);
 
         return $query->paginate($perPage);
+    }
+
+    /**
+     * Get optimized relations with selective column loading.
+     */
+    protected function getOptimizedRelations(): array
+    {
+        return [
+            'subject' => function ($query) {
+                // Load only essential columns from polymorphic subject
+                // Most models have id, name, and created_at
+                $query->select(['id', 'created_at']);
+            },
+            'causer' => function ($query) {
+                // For User model, load only id, name, email
+                $query->select(['id', 'name', 'email']);
+            },
+        ];
+    }
+
+    /**
+     * Get columns to load from activities table.
+     */
+    protected function getActivityColumns(): array
+    {
+        return [
+            'id',
+            'log_name',
+            'description',
+            'subject_type',
+            'subject_id',
+            'causer_type',
+            'causer_id',
+            'event',
+            'properties',
+            'batch_uuid',
+            'created_at',
+        ];
     }
 
     /**
@@ -173,7 +214,10 @@ class ActivityService
      */
     public function getRecentActivities(int $limit = 10, ?string $logName = null): \Illuminate\Database\Eloquent\Collection
     {
-        $query = Activity::query()->with(['subject', 'causer'])->latest();
+        $query = Activity::query()
+            ->with($this->getOptimizedRelations())
+            ->select($this->getActivityColumns())
+            ->latest();
 
         if ($logName) {
             $query->inLog($logName);

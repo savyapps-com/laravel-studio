@@ -10,6 +10,26 @@ class Media extends Field
 
     protected array $acceptedTypes = ['image/*'];
 
+    /**
+     * Allowed file extensions for security.
+     * Empty array means no restriction (rely on MIME type only).
+     */
+    protected array $allowedExtensions = [];
+
+    /**
+     * Dangerous extensions that should never be allowed.
+     */
+    protected static array $dangerousExtensions = [
+        'php', 'php3', 'php4', 'php5', 'php7', 'phtml', 'phar',
+        'exe', 'bat', 'cmd', 'com', 'msi', 'dll', 'scr',
+        'js', 'jse', 'vbs', 'vbe', 'wsf', 'wsh',
+        'sh', 'bash', 'csh', 'ksh', 'pl', 'py', 'rb',
+        'htaccess', 'htpasswd', 'ini', 'config',
+        'asp', 'aspx', 'asa', 'asax', 'ascx', 'ashx', 'asmx',
+        'jsp', 'jspx', 'cfm', 'cfc',
+        'svg', // SVG can contain JavaScript
+    ];
+
     protected ?int $maxFiles = null;
 
     protected ?int $maxFileSize = null; // in MB
@@ -82,6 +102,18 @@ class Media extends Field
      */
     public function images(): static
     {
+        $this->allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+        return $this->acceptedTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+    }
+
+    /**
+     * Accept images including SVG (use with caution).
+     */
+    public function imagesWithSvg(): static
+    {
+        $this->allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+
         return $this->acceptedTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']);
     }
 
@@ -90,7 +122,52 @@ class Media extends Field
      */
     public function documents(): static
     {
+        $this->allowedExtensions = ['pdf', 'doc', 'docx'];
+
         return $this->acceptedTypes(['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']);
+    }
+
+    /**
+     * Set allowed file extensions (whitelist).
+     */
+    public function allowedExtensions(array $extensions): static
+    {
+        // Filter out any dangerous extensions
+        $this->allowedExtensions = array_filter(
+            array_map('strtolower', $extensions),
+            fn ($ext) => !in_array(strtolower($ext), static::$dangerousExtensions)
+        );
+        $this->meta(['allowedExtensions' => $this->allowedExtensions]);
+
+        return $this;
+    }
+
+    /**
+     * Check if a file extension is allowed.
+     */
+    public function isExtensionAllowed(string $filename): bool
+    {
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+        // Always reject dangerous extensions
+        if (in_array($extension, static::$dangerousExtensions)) {
+            return false;
+        }
+
+        // If no whitelist specified, allow (except dangerous)
+        if (empty($this->allowedExtensions)) {
+            return true;
+        }
+
+        return in_array($extension, $this->allowedExtensions);
+    }
+
+    /**
+     * Get dangerous extensions list.
+     */
+    public static function getDangerousExtensions(): array
+    {
+        return static::$dangerousExtensions;
     }
 
     /**
@@ -209,6 +286,7 @@ class Media extends Field
             'multiple' => $this->multiple,
             'collection' => $this->collection,
             'acceptedTypes' => $this->acceptedTypes,
+            'allowedExtensions' => $this->allowedExtensions,
             'maxFiles' => $this->maxFiles,
             'maxFileSize' => $this->maxFileSize,
             'previewWidth' => $this->previewWidth,

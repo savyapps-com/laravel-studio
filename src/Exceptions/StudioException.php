@@ -13,6 +13,16 @@ class StudioException extends Exception
 
     protected ?string $errorCode;
 
+    /**
+     * Suggested solution for this error.
+     */
+    protected string $solution = '';
+
+    /**
+     * Documentation link for more information.
+     */
+    protected string $docsLink = '';
+
     public function __construct(
         string $message,
         int $statusCode = 500,
@@ -25,6 +35,47 @@ class StudioException extends Exception
         $this->statusCode = $statusCode;
         $this->errors = $errors;
         $this->errorCode = $errorCode;
+    }
+
+    /**
+     * Create exception with solution guidance.
+     */
+    public static function withSolution(
+        string $message,
+        string $solution,
+        int $statusCode = 500,
+        string $errorCode = 'ERROR'
+    ): static {
+        $exception = new static($message, $statusCode, [], $errorCode);
+        $exception->solution = $solution;
+
+        return $exception;
+    }
+
+    /**
+     * Create exception with documentation link.
+     */
+    public function withDocs(string $docsLink): static
+    {
+        $this->docsLink = $docsLink;
+
+        return $this;
+    }
+
+    /**
+     * Get the suggested solution.
+     */
+    public function getSolution(): string
+    {
+        return $this->solution;
+    }
+
+    /**
+     * Get the documentation link.
+     */
+    public function getDocsLink(): string
+    {
+        return $this->docsLink;
     }
 
     /**
@@ -45,6 +96,119 @@ class StudioException extends Exception
             : "{$resource} not found";
 
         return new static($message, 404, [], 'NOT_FOUND');
+    }
+
+    /**
+     * Create a resource not registered exception.
+     */
+    public static function resourceNotRegistered(string $resource): static
+    {
+        return static::withSolution(
+            "Resource '{$resource}' is not registered",
+            "Add the resource to config/studio.php under 'resources' array:\n" .
+            "  'resources' => [\n" .
+            "      '{$resource}' => [\n" .
+            "          'class' => \\App\\Resources\\" . ucfirst($resource) . "Resource::class,\n" .
+            "      ],\n" .
+            "  ],",
+            404,
+            'RESOURCE_NOT_REGISTERED'
+        );
+    }
+
+    /**
+     * Create a resource not in panel exception.
+     */
+    public static function resourceNotInPanel(string $resource, string $panel): static
+    {
+        return static::withSolution(
+            "Resource '{$resource}' is not available in panel '{$panel}'",
+            "Add the resource to the panel's resources array in config/studio.php:\n" .
+            "  'panels' => [\n" .
+            "      '{$panel}' => [\n" .
+            "          'resources' => ['{$resource}', ...],\n" .
+            "      ],\n" .
+            "  ],",
+            404,
+            'RESOURCE_NOT_IN_PANEL'
+        );
+    }
+
+    /**
+     * Create a panel not found exception.
+     */
+    public static function panelNotFound(string $panel): static
+    {
+        return static::withSolution(
+            "Panel '{$panel}' not found",
+            "Define the panel in config/studio.php:\n" .
+            "  'panels' => [\n" .
+            "      '{$panel}' => [\n" .
+            "          'name' => '" . ucfirst($panel) . " Panel',\n" .
+            "          'roles' => ['admin'],\n" .
+            "          'resources' => [...],\n" .
+            "      ],\n" .
+            "  ],",
+            404,
+            'PANEL_NOT_FOUND'
+        );
+    }
+
+    /**
+     * Create a model not found exception with helpful message.
+     */
+    public static function modelNotFound(string $model): static
+    {
+        $shortName = class_basename($model);
+
+        return static::withSolution(
+            "Model '{$shortName}' not found",
+            "Ensure the model exists at app/Models/{$shortName}.php\n" .
+            "If you haven't run the installer yet: php artisan studio:install --all",
+            404,
+            'MODEL_NOT_FOUND'
+        );
+    }
+
+    /**
+     * Create a missing trait exception.
+     */
+    public static function missingTrait(string $model, string $trait): static
+    {
+        $shortModel = class_basename($model);
+        $shortTrait = class_basename($trait);
+
+        return static::withSolution(
+            "Model '{$shortModel}' is missing required trait '{$shortTrait}'",
+            "Add the trait to your model:\n" .
+            "  use {$trait};\n\n" .
+            "  class {$shortModel} extends Model\n" .
+            "  {\n" .
+            "      use {$shortTrait};\n" .
+            "      ...\n" .
+            "  }",
+            500,
+            'MISSING_TRAIT'
+        );
+    }
+
+    /**
+     * Create a permission denied exception with helpful message.
+     */
+    public static function permissionDenied(string $permission, ?string $resource = null): static
+    {
+        $message = $resource
+            ? "You don't have permission to '{$permission}' on resource '{$resource}'"
+            : "You don't have permission to '{$permission}'";
+
+        return static::withSolution(
+            $message,
+            "Ensure your user has the required permission.\n" .
+            "Run: php artisan studio:sync-permissions\n" .
+            "Then assign the permission to the user's role.",
+            403,
+            'PERMISSION_DENIED'
+        );
     }
 
     /**
@@ -128,7 +292,34 @@ class StudioException extends Exception
             $response['errors'] = $this->errors;
         }
 
+        // Include solution in debug mode for better DX
+        if (config('app.debug') && $this->solution) {
+            $response['solution'] = $this->solution;
+        }
+
+        if (config('app.debug') && $this->docsLink) {
+            $response['docs'] = $this->docsLink;
+        }
+
         return response()->json($response, $this->statusCode);
+    }
+
+    /**
+     * Get formatted message for console output.
+     */
+    public function getConsoleMessage(): string
+    {
+        $output = "[Laravel Studio] {$this->getMessage()}";
+
+        if ($this->solution) {
+            $output .= "\n\nTo fix:\n{$this->solution}";
+        }
+
+        if ($this->docsLink) {
+            $output .= "\n\nDocs: {$this->docsLink}";
+        }
+
+        return $output;
     }
 
     /**

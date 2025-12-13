@@ -4,8 +4,10 @@ namespace SavyApps\LaravelStudio;
 
 use Illuminate\Support\ServiceProvider;
 use SavyApps\LaravelStudio\Console\Commands\CleanupActivitiesCommand;
+use SavyApps\LaravelStudio\Console\Commands\DoctorCommand;
 use SavyApps\LaravelStudio\Console\Commands\InstallCommand;
 use SavyApps\LaravelStudio\Console\Commands\MakeActionCommand;
+use SavyApps\LaravelStudio\Console\Commands\MakeFieldCommand;
 use SavyApps\LaravelStudio\Console\Commands\MakeFilterCommand;
 use SavyApps\LaravelStudio\Console\Commands\MakePanelCommand;
 use SavyApps\LaravelStudio\Console\Commands\MakeResourceCommand;
@@ -97,8 +99,10 @@ class LaravelStudioServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 CleanupActivitiesCommand::class,
+                DoctorCommand::class,
                 InstallCommand::class,
                 MakeActionCommand::class,
+                MakeFieldCommand::class,
                 MakeFilterCommand::class,
                 MakePanelCommand::class,
                 MakeResourceCommand::class,

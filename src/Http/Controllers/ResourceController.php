@@ -2,46 +2,57 @@
 
 namespace SavyApps\LaravelStudio\Http\Controllers;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use SavyApps\LaravelStudio\Exceptions\StudioException;
 use SavyApps\LaravelStudio\Http\Requests\ResourceStoreRequest;
 use SavyApps\LaravelStudio\Http\Requests\ResourceUpdateRequest;
 use SavyApps\LaravelStudio\Services\PanelService;
 use SavyApps\LaravelStudio\Services\ResourceService;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use SavyApps\LaravelStudio\Traits\ApiResponse;
 
 class ResourceController extends Controller
 {
+    use ApiResponse;
+
     public function __construct(
         protected PanelService $panelService
     ) {}
+
     /**
      * Get resource metadata (fields, filters, actions).
      */
     public function meta(Request $request, string $resource): JsonResponse
     {
-        $resourceInstance = $this->resolveResource($resource, $request);
+        try {
+            $resourceInstance = $this->resolveResource($resource, $request);
 
-        // Determine which fields to return based on context
-        $context = $request->query('context', 'index'); // 'index' or 'form'
-        $fields = $context === 'form'
-            ? $resourceInstance->getFormFields()
-            : $resourceInstance->getIndexFields();
+            $context = $request->query('context', 'index');
+            $fields = $context === 'form'
+                ? $resourceInstance->getFormFields()
+                : $resourceInstance->getIndexFields();
 
-        return response()->json([
-            'key' => $resourceInstance::key(),
-            'model' => $resourceInstance::$model,
-            'label' => $resourceInstance::$label,
-            'singularLabel' => $resourceInstance::$singularLabel,
-            'title' => $resourceInstance::$title,
-            'searchable' => $resourceInstance::$searchable,
-            'search' => $resourceInstance::$search,
-            'perPage' => $resourceInstance::$perPage,
-            'fields' => array_map(fn ($f) => $f->toArray(), $fields),
-            'filters' => array_map(fn ($f) => $f->toArray(), $resourceInstance->filters()),
-            'actions' => array_map(fn ($a) => $a->toArray(), $resourceInstance->actions()),
-        ]);
+            return response()->json([
+                'key' => $resourceInstance::key(),
+                'model' => $resourceInstance::$model,
+                'label' => $resourceInstance::$label,
+                'singularLabel' => $resourceInstance::$singularLabel,
+                'title' => $resourceInstance::$title,
+                'searchable' => $resourceInstance::$searchable,
+                'search' => $resourceInstance::$search,
+                'perPage' => $resourceInstance::$perPage,
+                'fields' => array_map(fn ($f) => $f->toArray(), $fields),
+                'filters' => array_map(fn ($f) => $f->toArray(), $resourceInstance->filters()),
+                'actions' => array_map(fn ($a) => $a->toArray(), $resourceInstance->actions()),
+            ]);
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
+        }
     }
 
     /**
@@ -49,16 +60,20 @@ class ResourceController extends Controller
      */
     public function index(Request $request, string $resource): JsonResponse
     {
-        $resourceInstance = $this->resolveResource($resource, $request);
+        try {
+            $resourceInstance = $this->resolveResource($resource, $request);
 
-        // Authorization check
-        $this->authorizeResource($resourceInstance, 'viewAny');
+            $this->authorizeResource($resourceInstance, 'viewAny');
 
-        $service = new ResourceService($resourceInstance);
+            $service = $this->createResourceService($resourceInstance);
+            $data = $service->index($request->all());
 
-        $data = $service->index($request->all());
-
-        return response()->json($data);
+            return response()->json($data);
+        } catch (StudioException $e) {
+            return $this->errorResponse($e->getMessage(), $e->getStatusCode());
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
+        }
     }
 
     /**
@@ -66,18 +81,22 @@ class ResourceController extends Controller
      */
     public function show(Request $request, string $resource, int|string $id): JsonResponse
     {
-        $resourceInstance = $this->resolveResource($resource, $request);
-        $service = new ResourceService($resourceInstance);
+        try {
+            $resourceInstance = $this->resolveResource($resource, $request);
+            $service = $this->createResourceService($resourceInstance);
 
-        $model = $service->show($id);
+            $model = $service->show($id);
 
-        // Authorization check
-        $this->authorizeResource($resourceInstance, 'view', $model);
+            $this->authorizeResource($resourceInstance, 'view', $model);
 
-        // Return full model data with relationships for edit forms
-        return response()->json([
-            'data' => $model->toArray(),
-        ]);
+            return response()->json([
+                'data' => $model->toArray(),
+            ]);
+        } catch (StudioException $e) {
+            return $this->errorResponse($e->getMessage(), $e->getStatusCode());
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
+        }
     }
 
     /**
@@ -85,37 +104,35 @@ class ResourceController extends Controller
      */
     public function store(Request $request, string $resource): JsonResponse
     {
-        $resourceClass = $this->resolveResourceClass($resource, $request);
-        $resourceInstance = $this->resolveResource($resource, $request);
+        try {
+            $resourceClass = $this->resolveResourceClass($resource, $request);
+            $resourceInstance = $this->resolveResource($resource, $request);
 
-        // Authorization check
-        $this->authorizeResource($resourceInstance, 'create');
+            $this->authorizeResource($resourceInstance, 'create');
 
-        // Create and configure the form request with dynamic validation
-        $formRequest = app(ResourceStoreRequest::class);
-        $formRequest->setResource($resourceClass);
+            $formRequest = app(ResourceStoreRequest::class);
+            $formRequest->setResource($resourceClass);
 
-        // Validate using dynamic rules
-        $validator = Validator::make(
-            $request->all(),
-            $formRequest->rules(),
-            $resourceInstance->messages()
-        );
+            $validated = $this->validateRequest(
+                $request->all(),
+                $formRequest->rules(),
+                $resourceInstance->messages()
+            );
 
-        if ($validator->fails()) {
+            $service = $this->createResourceService($resourceInstance);
+            $model = $service->store($validated);
+
             return response()->json([
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422);
+                'message' => $resourceInstance::$singularLabel . ' created successfully',
+                'data' => $resourceInstance->transform($model),
+            ], 201);
+        } catch (ValidationException $e) {
+            return $this->validationErrorResponse($e);
+        } catch (StudioException $e) {
+            return $this->errorResponse($e->getMessage(), $e->getStatusCode());
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
         }
-
-        $service = new ResourceService($resourceInstance);
-        $model = $service->store($validator->validated());
-
-        return response()->json([
-            'message' => $resourceInstance::$singularLabel.' created successfully',
-            'data' => $resourceInstance->transform($model),
-        ], 201);
     }
 
     /**
@@ -123,135 +140,80 @@ class ResourceController extends Controller
      */
     public function update(Request $request, string $resource, int|string $id): JsonResponse
     {
-        $resourceClass = $this->resolveResourceClass($resource, $request);
-        $resourceInstance = $this->resolveResource($resource, $request);
+        try {
+            $resourceClass = $this->resolveResourceClass($resource, $request);
+            $resourceInstance = $this->resolveResource($resource, $request);
 
-        // Get the model for authorization
-        $service = new ResourceService($resourceInstance);
-        $model = $service->show($id);
+            $service = $this->createResourceService($resourceInstance);
+            $model = $service->show($id);
 
-        // Authorization check
-        $this->authorizeResource($resourceInstance, 'update', $model);
+            $this->authorizeResource($resourceInstance, 'update', $model);
 
-        // Create and configure the form request with dynamic validation
-        $formRequest = app(ResourceUpdateRequest::class);
-        $formRequest->setResource($resourceClass);
+            $formRequest = app(ResourceUpdateRequest::class);
+            $formRequest->setResource($resourceClass);
+            $formRequest->setRouteResolver(fn () => $request->route());
 
-        // Set route resolver for accessing route parameters
-        $formRequest->setRouteResolver(function () use ($request) {
-            return $request->route();
-        });
+            $validated = $this->validateRequest(
+                $request->all(),
+                $formRequest->rules(),
+                $resourceInstance->messages()
+            );
 
-        // Validate using dynamic rules (includes unique rule modifications)
-        $validator = Validator::make(
-            $request->all(),
-            $formRequest->rules(),
-            $resourceInstance->messages()
-        );
+            $model = $service->update($id, $validated);
 
-        if ($validator->fails()) {
             return response()->json([
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422);
+                'message' => $resourceInstance::$singularLabel . ' updated successfully',
+                'data' => $resourceInstance->transform($model),
+            ]);
+        } catch (ValidationException $e) {
+            return $this->validationErrorResponse($e);
+        } catch (StudioException $e) {
+            return $this->errorResponse($e->getMessage(), $e->getStatusCode());
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
         }
-
-        $model = $service->update($id, $validator->validated());
-
-        return response()->json([
-            'message' => $resourceInstance::$singularLabel.' updated successfully',
-            'data' => $resourceInstance->transform($model),
-        ]);
     }
 
     /**
      * Partially update resource (for toggles and quick edits).
-     * Accepts key-value pairs without requiring all fields.
-     * Only validates the fields being updated.
      */
     public function patch(Request $request, string $resource, int|string $id): JsonResponse
     {
-        $resourceInstance = $this->resolveResource($resource, $request);
+        try {
+            $resourceInstance = $this->resolveResource($resource, $request);
 
-        // Get model and service for authorization
-        $service = new ResourceService($resourceInstance);
-        $model = $service->show($id);
+            $service = $this->createResourceService($resourceInstance);
+            $model = $service->show($id);
 
-        // Authorization check
-        $this->authorizeResource($resourceInstance, 'update', $model);
+            $this->authorizeResource($resourceInstance, 'update', $model);
 
-        // Get only the fields being updated (before filtering)
-        $fields = $request->all();
+            $fields = $this->filterVisibleFieldsDataForPatch($resourceInstance, $request->all());
 
-        // Filter to only visible fields
-        $fields = $this->filterVisibleFieldsDataForPatch($resourceInstance, $fields);
-
-        if (empty($fields)) {
-            return response()->json([
-                'message' => 'No fields to update',
-            ], 422);
-        }
-
-        // Get all resource rules and filter to only validate fields being updated
-        $allRules = $resourceInstance->rules('update');
-        $rules = [];
-
-        foreach ($fields as $field => $value) {
-            if (isset($allRules[$field])) {
-                $rule = $allRules[$field];
-
-                // Handle unique rules for the specific field being updated
-                if (is_string($rule) && str_contains($rule, 'unique:')) {
-                    if (preg_match('/unique:([^,|]+),/', $rule)) {
-                        $rule = preg_replace(
-                            '/unique:([^,|]+),([^,|]+)/',
-                            "unique:$1,$2,{$id}",
-                            $rule
-                        );
-                    } else {
-                        $rule = preg_replace(
-                            '/unique:([^,|]+)/',
-                            "unique:$1,{$field},{$id}",
-                            $rule
-                        );
-                    }
-                }
-
-                // Remove 'required' constraint for partial updates
-                if (is_string($rule)) {
-                    $rule = str_replace('required|', '', $rule);
-                    $rule = str_replace('|required', '', $rule);
-                    if ($rule === 'required') {
-                        $rule = '';
-                    }
-                }
-
-                if (! empty($rule)) {
-                    $rules[$field] = $rule;
-                }
+            if (empty($fields)) {
+                return $this->errorResponse('No fields to update', 422);
             }
-        }
 
-        // Validate only the fields being updated
-        $validator = Validator::make(
-            $fields,
-            $rules,
-            $resourceInstance->messages()
-        );
+            $rules = $this->buildPatchValidationRules($resourceInstance, $fields, $id);
 
-        if ($validator->fails()) {
+            $validated = $this->validateRequest(
+                $fields,
+                $rules,
+                $resourceInstance->messages()
+            );
+
+            $model = $service->update($id, $validated);
+
             return response()->json([
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422);
+                'message' => $resourceInstance::$singularLabel . ' updated successfully',
+                'data' => $resourceInstance->transform($model),
+            ]);
+        } catch (ValidationException $e) {
+            return $this->validationErrorResponse($e);
+        } catch (StudioException $e) {
+            return $this->errorResponse($e->getMessage(), $e->getStatusCode());
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
         }
-
-        $model = $service->update($id, $validator->validated());
-
-        return response()->json([
-            'message' => $resourceInstance::$singularLabel.' updated successfully',
-            'data' => $resourceInstance->transform($model),
-        ]);
     }
 
     /**
@@ -259,20 +221,24 @@ class ResourceController extends Controller
      */
     public function destroy(Request $request, string $resource, int|string $id): JsonResponse
     {
-        $resourceInstance = $this->resolveResource($resource, $request);
-        $service = new ResourceService($resourceInstance);
+        try {
+            $resourceInstance = $this->resolveResource($resource, $request);
+            $service = $this->createResourceService($resourceInstance);
 
-        // Get model for authorization
-        $model = $service->show($id);
+            $model = $service->show($id);
 
-        // Authorization check
-        $this->authorizeResource($resourceInstance, 'delete', $model);
+            $this->authorizeResource($resourceInstance, 'delete', $model);
 
-        $service->destroy($id);
+            $service->destroy($id);
 
-        return response()->json([
-            'message' => $resourceInstance::$singularLabel.' deleted successfully',
-        ]);
+            return response()->json([
+                'message' => $resourceInstance::$singularLabel . ' deleted successfully',
+            ]);
+        } catch (StudioException $e) {
+            return $this->errorResponse($e->getMessage(), $e->getStatusCode());
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
+        }
     }
 
     /**
@@ -280,26 +246,32 @@ class ResourceController extends Controller
      */
     public function bulkDelete(Request $request, string $resource): JsonResponse
     {
-        $maxBulkIds = config('studio.bulk_operations.max_ids', 1000);
+        try {
+            $maxBulkIds = config('studio.bulk_operations.max_ids', 1000);
 
-        $request->validate([
-            'ids' => "required|array|max:{$maxBulkIds}",
-            'ids.*' => 'required|integer',
-        ]);
+            $request->validate([
+                'ids' => "required|array|max:{$maxBulkIds}",
+                'ids.*' => 'required|integer',
+            ]);
 
-        $resourceInstance = $this->resolveResource($resource, $request);
+            $resourceInstance = $this->resolveResource($resource, $request);
 
-        // Authorization check for bulk delete
-        $this->authorizeResource($resourceInstance, 'bulkDelete');
+            $this->authorizeResource($resourceInstance, 'bulkDelete');
 
-        $service = new ResourceService($resourceInstance);
+            $service = $this->createResourceService($resourceInstance);
+            $count = $service->bulkDestroy($request->input('ids'));
 
-        $count = $service->bulkDestroy($request->input('ids'));
-
-        return response()->json([
-            'message' => "{$count} items deleted successfully",
-            'affected' => $count,
-        ]);
+            return response()->json([
+                'message' => "{$count} items deleted successfully",
+                'affected' => $count,
+            ]);
+        } catch (ValidationException $e) {
+            return $this->validationErrorResponse($e);
+        } catch (StudioException $e) {
+            return $this->errorResponse($e->getMessage(), $e->getStatusCode());
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
+        }
     }
 
     /**
@@ -307,30 +279,36 @@ class ResourceController extends Controller
      */
     public function bulkUpdate(Request $request, string $resource): JsonResponse
     {
-        $maxBulkIds = config('studio.bulk_operations.max_ids', 1000);
+        try {
+            $maxBulkIds = config('studio.bulk_operations.max_ids', 1000);
 
-        $request->validate([
-            'ids' => "required|array|max:{$maxBulkIds}",
-            'ids.*' => 'required|integer',
-            'data' => 'required|array',
-        ]);
+            $request->validate([
+                'ids' => "required|array|max:{$maxBulkIds}",
+                'ids.*' => 'required|integer',
+                'data' => 'required|array',
+            ]);
 
-        $resourceInstance = $this->resolveResource($resource, $request);
+            $resourceInstance = $this->resolveResource($resource, $request);
 
-        // Authorization check for bulk update
-        $this->authorizeResource($resourceInstance, 'bulkUpdate');
+            $this->authorizeResource($resourceInstance, 'bulkUpdate');
 
-        $service = new ResourceService($resourceInstance);
+            $service = $this->createResourceService($resourceInstance);
+            $count = $service->bulkUpdate(
+                $request->input('ids'),
+                $request->input('data')
+            );
 
-        $count = $service->bulkUpdate(
-            $request->input('ids'),
-            $request->input('data')
-        );
-
-        return response()->json([
-            'message' => "{$count} items updated successfully",
-            'affected' => $count,
-        ]);
+            return response()->json([
+                'message' => "{$count} items updated successfully",
+                'affected' => $count,
+            ]);
+        } catch (ValidationException $e) {
+            return $this->validationErrorResponse($e);
+        } catch (StudioException $e) {
+            return $this->errorResponse($e->getMessage(), $e->getStatusCode());
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
+        }
     }
 
     /**
@@ -338,30 +316,36 @@ class ResourceController extends Controller
      */
     public function runAction(Request $request, string $resource, string $action): JsonResponse
     {
-        $maxBulkIds = config('studio.bulk_operations.max_ids', 1000);
+        try {
+            $maxBulkIds = config('studio.bulk_operations.max_ids', 1000);
 
-        $request->validate([
-            'ids' => "required|array|max:{$maxBulkIds}",
-            'ids.*' => 'required|integer',
-        ]);
+            $request->validate([
+                'ids' => "required|array|max:{$maxBulkIds}",
+                'ids.*' => 'required|integer',
+            ]);
 
-        $resourceInstance = $this->resolveResource($resource, $request);
+            $resourceInstance = $this->resolveResource($resource, $request);
 
-        // Authorization check for running action
-        $this->authorizeResource($resourceInstance, 'runAction', $action);
+            $this->authorizeResource($resourceInstance, 'runAction', $action);
 
-        $service = new ResourceService($resourceInstance);
+            $service = $this->createResourceService($resourceInstance);
+            $result = $service->runAction(
+                $action,
+                $request->input('ids'),
+                $request->input('data', [])
+            );
 
-        $result = $service->runAction(
-            $action,
-            $request->input('ids'),
-            $request->input('data', [])
-        );
-
-        return response()->json([
-            'message' => 'Action completed successfully',
-            'result' => $result,
-        ]);
+            return response()->json([
+                'message' => 'Action completed successfully',
+                'result' => $result,
+            ]);
+        } catch (ValidationException $e) {
+            return $this->validationErrorResponse($e);
+        } catch (StudioException $e) {
+            return $this->errorResponse($e->getMessage(), $e->getStatusCode());
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
+        }
     }
 
     /**
@@ -369,19 +353,169 @@ class ResourceController extends Controller
      */
     public function searchRelated(Request $request, string $resource): JsonResponse
     {
-        $request->validate([
-            'query' => 'nullable|string|max:255',
-        ]);
+        try {
+            $request->validate([
+                'query' => 'nullable|string|max:255',
+            ]);
 
-        $resourceInstance = $this->resolveResource($resource, $request);
-        $service = new ResourceService($resourceInstance);
+            $resourceInstance = $this->resolveResource($resource, $request);
+            $service = $this->createResourceService($resourceInstance);
 
-        $data = $service->index([
-            'search' => $request->input('query'),
-            'perPage' => 20,
-        ]);
+            $data = $service->index([
+                'search' => $request->input('query'),
+                'perPage' => 20,
+            ]);
 
-        return response()->json($data);
+            return response()->json($data);
+        } catch (ValidationException $e) {
+            return $this->validationErrorResponse($e);
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Create a ResourceService instance for the given resource.
+     */
+    protected function createResourceService(object $resourceInstance): ResourceService
+    {
+        return new ResourceService($resourceInstance);
+    }
+
+    /**
+     * Validate request data and return validated array.
+     *
+     * @throws ValidationException
+     */
+    protected function validateRequest(array $data, array $rules, array $messages = []): array
+    {
+        $validator = Validator::make($data, $rules, $messages);
+
+        if ($validator->fails()) {
+            throw new ValidationException($validator);
+        }
+
+        return $validator->validated();
+    }
+
+    /**
+     * Build validation rules for PATCH requests.
+     * Handles unique rule modifications and removes required constraints.
+     */
+    protected function buildPatchValidationRules(object $resourceInstance, array $fields, int|string $id): array
+    {
+        $allRules = $resourceInstance->rules('update');
+        $rules = [];
+
+        foreach ($fields as $field => $value) {
+            if (!isset($allRules[$field])) {
+                continue;
+            }
+
+            $rule = $allRules[$field];
+
+            // Handle array of rules
+            if (is_array($rule)) {
+                $rule = $this->processArrayRules($rule, $field, $id);
+            } elseif (is_string($rule)) {
+                $rule = $this->processStringRule($rule, $field, $id);
+            }
+
+            if (!empty($rule)) {
+                $rules[$field] = $rule;
+            }
+        }
+
+        return $rules;
+    }
+
+    /**
+     * Process array-based validation rules for PATCH.
+     */
+    protected function processArrayRules(array $rules, string $field, int|string $id): array
+    {
+        $processed = [];
+
+        foreach ($rules as $rule) {
+            // Skip 'required' for partial updates
+            if ($rule === 'required') {
+                continue;
+            }
+
+            // Handle Rule objects (like Rule::unique())
+            if ($rule instanceof Rule) {
+                $processed[] = $rule;
+                continue;
+            }
+
+            // Handle string rules
+            if (is_string($rule)) {
+                if (str_contains($rule, 'unique:')) {
+                    $rule = $this->modifyUniqueRule($rule, $field, $id);
+                }
+                $processed[] = $rule;
+            } else {
+                $processed[] = $rule;
+            }
+        }
+
+        return $processed;
+    }
+
+    /**
+     * Process string-based validation rule for PATCH.
+     */
+    protected function processStringRule(string $rule, string $field, int|string $id): string
+    {
+        // Handle unique rules
+        if (str_contains($rule, 'unique:')) {
+            $rule = $this->modifyUniqueRule($rule, $field, $id);
+        }
+
+        // Remove 'required' constraint for partial updates
+        $rule = preg_replace('/\brequired\|?/', '', $rule);
+        $rule = preg_replace('/\|?required\b/', '', $rule);
+        $rule = trim($rule, '|');
+
+        return $rule;
+    }
+
+    /**
+     * Modify unique validation rule to ignore current record.
+     */
+    protected function modifyUniqueRule(string $rule, string $field, int|string $id): string
+    {
+        // Match patterns like: unique:table,column or unique:table
+        if (preg_match('/unique:([^,|]+),([^,|]+)/', $rule, $matches)) {
+            // Has table and column specified
+            return preg_replace(
+                '/unique:([^,|]+),([^,|]+)/',
+                "unique:$1,$2,{$id}",
+                $rule
+            );
+        }
+
+        if (preg_match('/unique:([^,|]+)/', $rule, $matches)) {
+            // Only table specified, add field and id
+            return preg_replace(
+                '/unique:([^,|]+)/',
+                "unique:$1,{$field},{$id}",
+                $rule
+            );
+        }
+
+        return $rule;
+    }
+
+    /**
+     * Return a validation error response.
+     */
+    protected function validationErrorResponse(ValidationException $e): JsonResponse
+    {
+        return response()->json([
+            'message' => 'Validation failed',
+            'errors' => $e->errors(),
+        ], 422);
     }
 
     /**
@@ -389,21 +523,16 @@ class ResourceController extends Controller
      */
     protected function resolveResourceClass(string $resourceKey, ?Request $request = null): string
     {
-        // Check if this is a panel-scoped request
         if ($request) {
             $panel = $request->get('_panel') ?? $request->attributes->get('panel');
 
-            if ($panel) {
-                // Verify resource is available in this panel
-                if (!$this->panelService->panelHasResource($panel, $resourceKey)) {
-                    abort(403, "Resource '{$resourceKey}' is not available in panel '{$panel}'");
-                }
+            if ($panel && !$this->panelService->panelHasResource($panel, $resourceKey)) {
+                abort(403, "Resource '{$resourceKey}' is not available in panel '{$panel}'");
             }
         }
 
         $resourceConfig = config("studio.resources.{$resourceKey}");
 
-        // Handle both old format (string) and new format (array with 'class' key)
         $resourceClass = is_array($resourceConfig)
             ? ($resourceConfig['class'] ?? null)
             : $resourceConfig;
@@ -430,16 +559,13 @@ class ResourceController extends Controller
      */
     protected function filterVisibleFieldsDataForPatch(object $resourceInstance, array $data): array
     {
-        // Get visible fields based on form data
         $visibleFields = $resourceInstance->getVisibleFields($data);
 
-        // Extract allowed attributes from visible fields
         $allowedAttributes = [];
         foreach ($visibleFields as $field) {
             $allowedAttributes[] = $field->attribute;
         }
 
-        // Filter data to only include allowed attributes
         return array_intersect_key($data, array_flip($allowedAttributes));
     }
 
@@ -448,7 +574,6 @@ class ResourceController extends Controller
      */
     protected function authorizeResource(object $resourceInstance, string $ability, $model = null): void
     {
-        // Check if resource uses the Authorizable trait
         if (method_exists($resourceInstance, 'authorize')) {
             $resourceInstance::authorize($ability, $model);
         }

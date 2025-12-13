@@ -27,7 +27,6 @@ class FileMapping
             'routes/web.php' => 'routes/web.php',
             'bootstrap/app.php' => 'bootstrap/app.php',
             'config/studio.php' => 'config/studio.php',
-            'config/admin.php' => 'config/admin.php',
         ];
     }
 

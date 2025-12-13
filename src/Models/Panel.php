@@ -2,6 +2,7 @@
 
 namespace SavyApps\LaravelStudio\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
@@ -72,7 +73,7 @@ class Panel extends Model
     /**
      * Scope to filter active panels.
      */
-    public function scopeActive($query)
+    public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
     }
@@ -80,7 +81,7 @@ class Panel extends Model
     /**
      * Scope to filter default panel.
      */
-    public function scopeDefault($query)
+    public function scopeDefault(Builder $query): Builder
     {
         return $query->where('is_default', true);
     }
@@ -88,7 +89,7 @@ class Panel extends Model
     /**
      * Scope to filter panels by role.
      */
-    public function scopeForRole($query, string $role)
+    public function scopeForRole(Builder $query, string $role): Builder
     {
         return $query->where(function ($q) use ($role) {
             $q->where('role', $role)
@@ -99,7 +100,7 @@ class Panel extends Model
     /**
      * Scope to order by priority.
      */
-    public function scopeOrdered($query)
+    public function scopeOrdered(Builder $query): Builder
     {
         return $query->orderBy('priority')->orderBy('label');
     }

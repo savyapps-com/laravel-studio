@@ -169,6 +169,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // manually drop tables or create drop logic if needed
+        Schema::dropIfExists('failed_jobs');
+        Schema::dropIfExists('job_batches');
+        Schema::dropIfExists('jobs');
     }
 };
