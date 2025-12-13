@@ -5,6 +5,8 @@ namespace SavyApps\LaravelStudio\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
+use SavyApps\LaravelStudio\Exceptions\StudioException;
 use SavyApps\LaravelStudio\Models\Permission;
 use SavyApps\LaravelStudio\Services\AuthorizationService;
 
@@ -15,10 +17,68 @@ class PermissionController extends Controller
     ) {}
 
     /**
+     * Check if current user can manage permissions.
+     * Requires super_admin role or permissions.manage permission.
+     */
+    protected function authorizePermissionManagement(): void
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            throw StudioException::unauthorized('Authentication required');
+        }
+
+        // Super admin can do anything
+        if (method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin()) {
+            return;
+        }
+
+        // Check for permissions.manage permission
+        if (method_exists($user, 'hasPermission') && $user->hasPermission('permissions.manage')) {
+            return;
+        }
+
+        throw StudioException::permissionDenied('manage', 'permissions');
+    }
+
+    /**
+     * Check if current user can view permissions (read-only).
+     * Requires admin role or permissions.view permission.
+     */
+    protected function authorizePermissionView(): void
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            throw StudioException::unauthorized('Authentication required');
+        }
+
+        // Super admin can do anything
+        if (method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin()) {
+            return;
+        }
+
+        // Check for admin role
+        if (method_exists($user, 'hasRole') && $user->hasRole('admin')) {
+            return;
+        }
+
+        // Check for permissions.view permission
+        if (method_exists($user, 'hasPermission') && $user->hasPermission('permissions.view')) {
+            return;
+        }
+
+        throw StudioException::permissionDenied('view', 'permissions');
+    }
+
+    /**
      * Get all permissions grouped by group name.
+     * Requires admin role or permissions.view permission.
      */
     public function index(): JsonResponse
     {
+        $this->authorizePermissionView();
+
         return response()->json([
             'grouped' => $this->authorizationService->getGroupedPermissions(),
             'permissions' => $this->authorizationService->getAllPermissions(),
@@ -27,9 +87,12 @@ class PermissionController extends Controller
 
     /**
      * Get permissions for a specific role.
+     * Requires admin role or permissions.view permission.
      */
     public function rolePermissions(Request $request, int $roleId): JsonResponse
     {
+        $this->authorizePermissionView();
+
         $roleModel = config('studio.authorization.models.role', \App\Models\Role::class);
         $role = $roleModel::findOrFail($roleId);
 
@@ -42,9 +105,12 @@ class PermissionController extends Controller
 
     /**
      * Update permissions for a specific role.
+     * Requires super_admin role or permissions.manage permission.
      */
     public function updateRolePermissions(Request $request, int $roleId): JsonResponse
     {
+        $this->authorizePermissionManagement();
+
         $request->validate([
             'permissions' => 'required|array',
             'permissions.*' => 'string',
@@ -64,9 +130,12 @@ class PermissionController extends Controller
 
     /**
      * Sync permissions from resources (API endpoint).
+     * Requires super_admin role or permissions.manage permission.
      */
     public function sync(): JsonResponse
     {
+        $this->authorizePermissionManagement();
+
         $synced = $this->authorizationService->syncPermissions();
 
         return response()->json([

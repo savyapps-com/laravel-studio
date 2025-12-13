@@ -19,8 +19,8 @@ return new class extends Migration
                 $table->foreignId('user_id')->constrained()->onDelete('cascade');
                 $table->timestamps();
 
-                // Ensure a user can only have one role
-                $table->unique('user_id');
+                // Allow users to have multiple roles, but prevent duplicate assignments
+                $table->unique(['role_id', 'user_id']);
             });
         } else {
             if (! Schema::hasColumn('role_user', 'role_id')) {

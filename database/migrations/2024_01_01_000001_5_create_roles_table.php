@@ -57,6 +57,11 @@ return new class extends Migration
     {
         $roles = [
             [
+                'name' => 'Super Admin',
+                'slug' => 'super_admin',
+                'description' => 'Super administrator with unrestricted access - bypasses all permission checks',
+            ],
+            [
                 'name' => 'Admin',
                 'slug' => 'admin',
                 'description' => 'Administrator with full access to all features',

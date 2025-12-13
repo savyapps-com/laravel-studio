@@ -77,76 +77,92 @@ trait Authorizable
 
     /**
      * Can user see the resource list?
+     * By default, checks for {resource}.list permission.
      */
     public static function canViewAny($user): bool
     {
-        return true;
+        return static::checkPermission($user, static::key() . '.list');
     }
 
     /**
      * Can user view a specific record?
+     * By default, checks for {resource}.view permission.
      */
     public static function canView($user, $model): bool
     {
-        return true;
+        return static::checkPermission($user, static::key() . '.view');
     }
 
     /**
      * Can user create new records?
+     * By default, checks for {resource}.create permission.
      */
     public static function canCreate($user): bool
     {
-        return true;
+        return static::checkPermission($user, static::key() . '.create');
     }
 
     /**
      * Can user update a specific record?
+     * By default, checks for {resource}.update permission.
      */
     public static function canUpdate($user, $model): bool
     {
-        return true;
+        return static::checkPermission($user, static::key() . '.update');
     }
 
     /**
      * Can user delete a specific record?
+     * By default, checks for {resource}.delete permission.
      */
     public static function canDelete($user, $model): bool
     {
-        return true;
+        return static::checkPermission($user, static::key() . '.delete');
     }
 
     /**
      * Can user bulk delete records?
+     * By default, checks for {resource}.delete permission.
      */
     public static function canBulkDelete($user): bool
     {
-        return static::canDelete($user, null);
+        return static::checkPermission($user, static::key() . '.delete');
     }
 
     /**
      * Can user bulk update records?
+     * By default, checks for {resource}.update permission.
      */
     public static function canBulkUpdate($user): bool
     {
-        return static::canUpdate($user, null);
+        return static::checkPermission($user, static::key() . '.update');
     }
 
     /**
      * Can user run a specific action?
-     * Override this method for action-level authorization.
+     * By default, checks for {resource}.action.{actionName} or {resource}.update permission.
      */
     public static function canRunAction($user, ?string $actionName = null): bool
     {
-        return true;
+        if ($actionName) {
+            // First try specific action permission
+            $actionPermission = static::key() . '.action.' . $actionName;
+            if (static::checkPermission($user, $actionPermission)) {
+                return true;
+            }
+        }
+
+        // Fall back to update permission
+        return static::checkPermission($user, static::key() . '.update');
     }
 
     /**
      * Can user run a custom action?
-     * Override this method for custom action authorization.
+     * By default, checks for {resource}.{action} permission.
      */
     public static function canCustomAction($user, string $action, $model = null): bool
     {
-        return true;
+        return static::checkPermission($user, static::key() . '.' . $action);
     }
 
     /**
