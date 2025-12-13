@@ -1,0 +1,407 @@
+{
+  "Laravel Studio Resource": {
+    "prefix": ["studio-resource", "ls-resource"],
+    "scope": "php",
+    "body": [
+      "<?php",
+      "",
+      "namespace App\\\\Resources;",
+      "",
+      "use SavyApps\\\\LaravelStudio\\\\Resources\\\\Resource;",
+      "use SavyApps\\\\LaravelStudio\\\\Resources\\\\Fields\\\\{ID, Text, DateTime};",
+      "",
+      "class ${1:Name}Resource extends Resource",
+      "{",
+      "    /**",
+      "     * The model the resource corresponds to.",
+      "     */",
+      "    public static string \\$model = \\\\App\\\\Models\\\\${1:Name}::class;",
+      "",
+      "    /**",
+      "     * The single value that should be used to represent the resource.",
+      "     */",
+      "    public static string \\$title = '${2:name}';",
+      "",
+      "    /**",
+      "     * The columns that should be searched.",
+      "     */",
+      "    public static array \\$search = ['${2:name}'];",
+      "",
+      "    /**",
+      "     * Get the fields displayed by the resource.",
+      "     */",
+      "    public function fields(): array",
+      "    {",
+      "        return [",
+      "            ID::make(),",
+      "            Text::make('${3:Name}', '${2:name}')->sortable()->searchable(),",
+      "            DateTime::make('Created At', 'created_at')->onlyOnIndex(),",
+      "        ];",
+      "    }",
+      "",
+      "    /**",
+      "     * Get the filters available for the resource.",
+      "     */",
+      "    public function filters(): array",
+      "    {",
+      "        return [];",
+      "    }",
+      "",
+      "    /**",
+      "     * Get the actions available for the resource.",
+      "     */",
+      "    public function actions(): array",
+      "    {",
+      "        return [];",
+      "    }",
+      "}"
+    ],
+    "description": "Create a new Laravel Studio resource class"
+  },
+
+  "Laravel Studio Field - Text": {
+    "prefix": ["studio-text", "ls-text"],
+    "scope": "php",
+    "body": [
+      "Text::make('${1:Label}', '${2:attribute}')",
+      "    ->sortable()",
+      "    ->searchable()",
+      "    ->rules('${3:required|max:255}')"
+    ],
+    "description": "Add a Text field"
+  },
+
+  "Laravel Studio Field - Number": {
+    "prefix": ["studio-number", "ls-number"],
+    "scope": "php",
+    "body": [
+      "Number::make('${1:Label}', '${2:attribute}')",
+      "    ->sortable()",
+      "    ->min(${3:0})",
+      "    ->max(${4:100})",
+      "    ->step(${5:1})"
+    ],
+    "description": "Add a Number field"
+  },
+
+  "Laravel Studio Field - Boolean": {
+    "prefix": ["studio-boolean", "ls-boolean"],
+    "scope": "php",
+    "body": [
+      "Boolean::make('${1:Label}', '${2:attribute}')",
+      "    ->sortable()",
+      "    ->default(${3:false})"
+    ],
+    "description": "Add a Boolean field"
+  },
+
+  "Laravel Studio Field - Select": {
+    "prefix": ["studio-select", "ls-select"],
+    "scope": "php",
+    "body": [
+      "Select::make('${1:Label}', '${2:attribute}')",
+      "    ->options([",
+      "        '${3:value1}' => '${4:Label 1}',",
+      "        '${5:value2}' => '${6:Label 2}',",
+      "    ])",
+      "    ->rules('required')"
+    ],
+    "description": "Add a Select field"
+  },
+
+  "Laravel Studio Field - BelongsTo": {
+    "prefix": ["studio-belongsto", "ls-belongsto"],
+    "scope": "php",
+    "body": [
+      "BelongsTo::make('${1:Label}', '${2:relation}', ${3:Resource}Resource::class)",
+      "    ->searchable()",
+      "    ->rules('required')"
+    ],
+    "description": "Add a BelongsTo relationship field"
+  },
+
+  "Laravel Studio Field - HasMany": {
+    "prefix": ["studio-hasmany", "ls-hasmany"],
+    "scope": "php",
+    "body": [
+      "HasMany::make('${1:Label}', '${2:relation}', ${3:Resource}Resource::class)"
+    ],
+    "description": "Add a HasMany relationship field"
+  },
+
+  "Laravel Studio Field - DateTime": {
+    "prefix": ["studio-datetime", "ls-datetime"],
+    "scope": "php",
+    "body": [
+      "DateTime::make('${1:Label}', '${2:attribute}')",
+      "    ->sortable()",
+      "    ->format('${3:Y-m-d H:i:s}')"
+    ],
+    "description": "Add a DateTime field"
+  },
+
+  "Laravel Studio Field - Textarea": {
+    "prefix": ["studio-textarea", "ls-textarea"],
+    "scope": "php",
+    "body": [
+      "Textarea::make('${1:Label}', '${2:attribute}')",
+      "    ->rows(${3:5})",
+      "    ->rules('nullable|max:${4:1000}')"
+    ],
+    "description": "Add a Textarea field"
+  },
+
+  "Laravel Studio Field - Media": {
+    "prefix": ["studio-media", "ls-media"],
+    "scope": "php",
+    "body": [
+      "Media::make('${1:Label}', '${2:collection}')",
+      "    ->images()",
+      "    ->maxFiles(${3:1})",
+      "    ->maxFileSize(${4:5}) // MB"
+    ],
+    "description": "Add a Media (file upload) field"
+  },
+
+  "Laravel Studio DependsOn": {
+    "prefix": ["studio-depends", "ls-depends"],
+    "scope": "php",
+    "body": [
+      "->dependsOn('${1:field}', '${2:value}')"
+    ],
+    "description": "Add conditional visibility based on another field"
+  },
+
+  "Laravel Studio DependsOnAll": {
+    "prefix": ["studio-depends-all", "ls-depends-all"],
+    "scope": "php",
+    "body": [
+      "->dependsOnAll([",
+      "    ['${1:field1}', ${2:true}],",
+      "    ['${3:field2}', ${4:'value'}, '${5:=}'],",
+      "])"
+    ],
+    "description": "Add conditional visibility with AND logic"
+  },
+
+  "Laravel Studio DependsOnAny": {
+    "prefix": ["studio-depends-any", "ls-depends-any"],
+    "scope": "php",
+    "body": [
+      "->dependsOnAny([",
+      "    ['${1:field1}', ${2:true}],",
+      "    ['${3:field2}', ${4:'value'}],",
+      "])"
+    ],
+    "description": "Add conditional visibility with OR logic"
+  },
+
+  "Laravel Studio ShowWhen": {
+    "prefix": ["studio-showwhen", "ls-showwhen"],
+    "scope": "php",
+    "body": [
+      "->showWhen(fn (\\$data) => (\\$data['${1:field}'] ?? null) ${2:===} ${3:'value'})"
+    ],
+    "description": "Add conditional visibility with callback"
+  },
+
+  "Laravel Studio RequiredWhen": {
+    "prefix": ["studio-requiredwhen", "ls-requiredwhen"],
+    "scope": "php",
+    "body": [
+      "->requiredWhen('${1:field}', '${2:value}')"
+    ],
+    "description": "Make field required based on condition"
+  },
+
+  "Laravel Studio Filter": {
+    "prefix": ["studio-filter", "ls-filter"],
+    "scope": "php",
+    "body": [
+      "<?php",
+      "",
+      "namespace App\\\\Resources\\\\Filters;",
+      "",
+      "use SavyApps\\\\LaravelStudio\\\\Resources\\\\Filters\\\\Filter;",
+      "use Illuminate\\\\Database\\\\Eloquent\\\\Builder;",
+      "",
+      "class ${1:Name}Filter extends Filter",
+      "{",
+      "    /**",
+      "     * The displayable name of the filter.",
+      "     */",
+      "    public string \\$name = '${2:Filter Name}';",
+      "",
+      "    /**",
+      "     * Apply the filter to the given query.",
+      "     */",
+      "    public function apply(Builder \\$query, mixed \\$value): Builder",
+      "    {",
+      "        return \\$query->where('${3:column}', \\$value);",
+      "    }",
+      "",
+      "    /**",
+      "     * Get the filter's available options.",
+      "     */",
+      "    public function options(): array",
+      "    {",
+      "        return [",
+      "            '${4:value1}' => '${5:Label 1}',",
+      "            '${6:value2}' => '${7:Label 2}',",
+      "        ];",
+      "    }",
+      "}"
+    ],
+    "description": "Create a new filter class"
+  },
+
+  "Laravel Studio Action": {
+    "prefix": ["studio-action", "ls-action"],
+    "scope": "php",
+    "body": [
+      "<?php",
+      "",
+      "namespace App\\\\Resources\\\\Actions;",
+      "",
+      "use SavyApps\\\\LaravelStudio\\\\Resources\\\\Actions\\\\Action;",
+      "use Illuminate\\\\Support\\\\Collection;",
+      "",
+      "class ${1:Name}Action extends Action",
+      "{",
+      "    /**",
+      "     * The displayable name of the action.",
+      "     */",
+      "    public string \\$name = '${2:Action Name}';",
+      "",
+      "    /**",
+      "     * Perform the action on the given models.",
+      "     */",
+      "    public function handle(Collection \\$models): array",
+      "    {",
+      "        foreach (\\$models as \\$model) {",
+      "            // Perform action on each model",
+      "            ${3:// \\$model->update(['status' => 'processed']);}",
+      "        }",
+      "",
+      "        return [",
+      "            'message' => 'Action completed successfully',",
+      "        ];",
+      "    }",
+      "",
+      "    /**",
+      "     * Get the fields for the action.",
+      "     */",
+      "    public function fields(): array",
+      "    {",
+      "        return [];",
+      "    }",
+      "}"
+    ],
+    "description": "Create a new action class"
+  },
+
+  "Laravel Studio Panel Config": {
+    "prefix": ["studio-panel-config", "ls-panel-config"],
+    "scope": "php",
+    "body": [
+      "'${1:panel-name}' => [",
+      "    'name' => '${2:Panel Name}',",
+      "    'slug' => '${1:panel-name}',",
+      "    'roles' => ['${3:admin}'],",
+      "    'resources' => [",
+      "        '${4:users}',",
+      "        '${5:roles}',",
+      "    ],",
+      "    'registration_enabled' => ${6:false},",
+      "],"
+    ],
+    "description": "Add a panel configuration block"
+  },
+
+  "Laravel Studio Resource Config": {
+    "prefix": ["studio-resource-config", "ls-resource-config"],
+    "scope": "php",
+    "body": [
+      "'${1:resource-name}' => [",
+      "    'class' => \\\\App\\\\Resources\\\\${2:Name}Resource::class,",
+      "    'model' => \\\\App\\\\Models\\\\${2:Name}::class,",
+      "],"
+    ],
+    "description": "Add a resource configuration block"
+  },
+
+  "Laravel Studio Validation Rules": {
+    "prefix": ["studio-rules", "ls-rules"],
+    "scope": "php",
+    "body": [
+      "public function rules(string \\$context): array",
+      "{",
+      "    \\$rules = [",
+      "        '${1:name}' => 'required|string|max:255',",
+      "        '${2:email}' => 'required|email|unique:${3:table},email',",
+      "    ];",
+      "",
+      "    if (\\$context === 'update') {",
+      "        \\$rules['${2:email}'] = 'required|email|unique:${3:table},email,' . request()->route('id');",
+      "    }",
+      "",
+      "    return \\$rules;",
+      "}"
+    ],
+    "description": "Add validation rules method with context-aware logic"
+  },
+
+  "Laravel Studio Index Query": {
+    "prefix": ["studio-index-query", "ls-index-query"],
+    "scope": "php",
+    "body": [
+      "public function indexQuery(Builder \\$query): Builder",
+      "{",
+      "    return \\$query",
+      "        ->with(['${1:relation}'])",
+      "        ->select(['id', '${2:column1}', '${3:column2}', 'created_at']);",
+      "}"
+    ],
+    "description": "Add index query customization"
+  },
+
+  "Laravel Studio With Relations": {
+    "prefix": ["studio-with", "ls-with"],
+    "scope": "php",
+    "body": [
+      "public function with(): array",
+      "{",
+      "    return ['${1:relation1}', '${2:relation2}'];",
+      "}"
+    ],
+    "description": "Define relations to eager load"
+  },
+
+  "Laravel Studio Custom Field Class": {
+    "prefix": ["studio-custom-field", "ls-custom-field"],
+    "scope": "php",
+    "body": [
+      "<?php",
+      "",
+      "namespace App\\\\Resources\\\\Fields;",
+      "",
+      "use SavyApps\\\\LaravelStudio\\\\Resources\\\\Fields\\\\Field;",
+      "",
+      "class ${1:CustomField} extends Field",
+      "{",
+      "    protected function fieldType(): string",
+      "    {",
+      "        return '${2:custom-field}';",
+      "    }",
+      "",
+      "    public function ${3:customOption}(${4:string \\$value}): static",
+      "    {",
+      "        \\$this->meta['${3:customOption}'] = ${5:\\$value};",
+      "",
+      "        return \\$this;",
+      "    }",
+      "}"
+    ],
+    "description": "Create a custom field class"
+  }
+}
