@@ -427,7 +427,10 @@ class InstallCommand extends Command
                 }
                 $this->newLine();
                 $this->components->error('Please run: composer dump-autoload && composer install');
-                exit(1);
+
+                throw new \RuntimeException(
+                    'Required classes could not be loaded: ' . implode(', ', $stillMissing)
+                );
             }
         }
     }

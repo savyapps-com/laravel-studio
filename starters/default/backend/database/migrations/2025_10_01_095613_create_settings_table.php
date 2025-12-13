@@ -118,6 +118,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // manually drop tables or create drop logic if needed
+        Schema::dropIfExists('settings');
     }
 };
