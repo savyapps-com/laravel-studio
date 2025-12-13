@@ -5,7 +5,6 @@ use SavyApps\LaravelStudio\Http\Controllers\ActivityController;
 use SavyApps\LaravelStudio\Http\Controllers\CardController;
 use SavyApps\LaravelStudio\Http\Controllers\GlobalSearchController;
 use SavyApps\LaravelStudio\Http\Controllers\PanelController;
-use SavyApps\LaravelStudio\Http\Controllers\PanelManagementController;
 use SavyApps\LaravelStudio\Http\Controllers\PermissionController;
 use SavyApps\LaravelStudio\Http\Controllers\ResourceController;
 
@@ -38,25 +37,6 @@ Route::middleware(['api', 'auth:sanctum'])
         Route::get('{panel}/menu', [PanelController::class, 'menu'])->name('menu');
         Route::get('{panel}/resources', [PanelController::class, 'resources'])->name('resources');
         Route::post('{panel}/switch', [PanelController::class, 'switch'])->name('switch');
-    });
-
-// Panel Management API Routes - Admin only
-Route::middleware(['api', 'auth:sanctum', 'admin'])
-    ->prefix('api/admin/panel-management')
-    ->name('api.admin.panels.')
-    ->group(function () {
-        Route::get('/', [PanelManagementController::class, 'index'])->name('index');
-        Route::post('/', [PanelManagementController::class, 'store'])->name('store');
-        Route::get('available-resources', [PanelManagementController::class, 'availableResources'])->name('available-resources');
-        Route::get('available-features', [PanelManagementController::class, 'availableFeatures'])->name('available-features');
-        Route::get('{key}', [PanelManagementController::class, 'show'])->name('show');
-        Route::put('{key}', [PanelManagementController::class, 'update'])->name('update');
-        Route::delete('{key}', [PanelManagementController::class, 'destroy'])->name('destroy');
-        Route::post('{key}/toggle', [PanelManagementController::class, 'toggle'])->name('toggle');
-        Route::post('{key}/duplicate', [PanelManagementController::class, 'duplicate'])->name('duplicate');
-        Route::post('{key}/set-default', [PanelManagementController::class, 'setDefault'])->name('set-default');
-        Route::put('{key}/resources', [PanelManagementController::class, 'updateResources'])->name('update-resources');
-        Route::put('{key}/menu', [PanelManagementController::class, 'updateMenu'])->name('update-menu');
     });
 
 // Permission API Routes

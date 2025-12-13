@@ -4,88 +4,34 @@ namespace SavyApps\LaravelStudio\Services;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Schema;
-use SavyApps\LaravelStudio\Models\Panel;
 
 class PanelService
 {
-    protected const CACHE_KEY_ALL_PANELS = 'studio_panels_all';
-    protected const CACHE_KEY_DB_PANELS = 'studio_panels_db';
-
     /**
      * In-memory cached panels to avoid repeated cache lookups within a request.
      */
     protected ?array $cachedPanels = null;
 
     /**
-     * Get all configured panels (from database + config fallback).
+     * Get all configured panels from config file.
      */
     public function getAllPanels(): array
     {
-        // Check in-memory cache first
         if ($this->cachedPanels !== null) {
             return $this->cachedPanels;
         }
 
-        // Config panels (fallback)
-        $configPanels = config('studio.panels', []);
-
-        // Try to load from database if table exists
-        if ($this->panelsTableExists()) {
-            $dbPanels = $this->getCachedDbPanels();
-
-            // DB panels take precedence over config
-            $this->cachedPanels = array_merge($configPanels, $dbPanels);
-        } else {
-            $this->cachedPanels = $configPanels;
-        }
-
+        $this->cachedPanels = config('studio.panels', []);
         return $this->cachedPanels;
     }
 
     /**
-     * Get database panels with persistent caching.
-     */
-    protected function getCachedDbPanels(): array
-    {
-        if (!config('studio.panels_cache.enabled', true)) {
-            return Panel::active()->ordered()->get()
-                ->keyBy('key')
-                ->map(fn ($panel) => $panel->toConfig())
-                ->toArray();
-        }
-
-        $ttl = config('studio.panels_cache.ttl', 3600);
-        $cacheKey = self::CACHE_KEY_DB_PANELS;
-
-        return Cache::remember($cacheKey, $ttl, function () {
-            return Panel::active()->ordered()->get()
-                ->keyBy('key')
-                ->map(fn ($panel) => $panel->toConfig())
-                ->toArray();
-        });
-    }
-
-    /**
-     * Clear cached panels (both in-memory and persistent).
+     * Clear cached panels.
      */
     public function clearCache(): void
     {
         $this->cachedPanels = null;
-        Cache::forget(self::CACHE_KEY_ALL_PANELS);
-        Cache::forget(self::CACHE_KEY_DB_PANELS);
-    }
-
-    /**
-     * Check if panels table exists.
-     */
-    protected function panelsTableExists(): bool
-    {
-        try {
-            return Schema::hasTable('panels');
-        } catch (\Exception $e) {
-            return false;
-        }
+        Cache::forget('config');
     }
 
     /**
@@ -96,18 +42,6 @@ class PanelService
         $panels = $this->getAllPanels();
 
         return $panels[$key] ?? null;
-    }
-
-    /**
-     * Get panel model by key (database panels only).
-     */
-    public function getPanelModel(string $key): ?Panel
-    {
-        if (! $this->panelsTableExists()) {
-            return null;
-        }
-
-        return Panel::findByKey($key);
     }
 
     /**
@@ -366,76 +300,5 @@ class PanelService
     public function panelExists(string $panel): bool
     {
         return $this->getPanel($panel) !== null;
-    }
-
-    /**
-     * Create a new panel in the database.
-     */
-    public function createPanel(array $data): Panel
-    {
-        $panel = Panel::create($data);
-        $this->clearCache();
-
-        return $panel;
-    }
-
-    /**
-     * Update a panel in the database.
-     */
-    public function updatePanel(string $key, array $data): ?Panel
-    {
-        $panel = Panel::findByKey($key);
-        if (! $panel) {
-            return null;
-        }
-
-        $panel->update($data);
-        $this->clearCache();
-
-        return $panel->fresh();
-    }
-
-    /**
-     * Delete a panel from the database.
-     */
-    public function deletePanel(string $key): bool
-    {
-        $panel = Panel::findByKey($key);
-        if (! $panel) {
-            return false;
-        }
-
-        $panel->delete();
-        $this->clearCache();
-
-        return true;
-    }
-
-    /**
-     * Toggle panel active status.
-     */
-    public function togglePanel(string $key): ?Panel
-    {
-        $panel = Panel::findByKey($key);
-        if (! $panel) {
-            return null;
-        }
-
-        $panel->update(['is_active' => ! $panel->is_active]);
-        $this->clearCache();
-
-        return $panel->fresh();
-    }
-
-    /**
-     * Get all panels from database (for admin management).
-     */
-    public function getAllPanelsFromDatabase(): array
-    {
-        if (! $this->panelsTableExists()) {
-            return [];
-        }
-
-        return Panel::ordered()->get()->toArray();
     }
 }

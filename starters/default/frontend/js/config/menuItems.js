@@ -19,7 +19,7 @@ export function getAdminMoreMenuItems() {
 
 // User menu items
 export const userMainMenuItems = [
-  { to: { name: 'user.dashboard' }, icon: 'dashboard', label: 'Dashboard', exactMatch: true },
+  { to: { name: 'panel.dashboard' }, icon: 'dashboard', label: 'Dashboard', exactMatch: true },
 ]
 
 export function getUserMoreMenuItems() {

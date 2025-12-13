@@ -43,7 +43,7 @@ export function useResetPasswordForm() {
 
       // Redirect to login page
       setTimeout(() => {
-        router.push({ name: 'auth.login' })
+        router.push({ name: 'panel.login', params: { panel: 'admin' } })
       }, 2000)
     } catch (error) {
       // Handle validation errors

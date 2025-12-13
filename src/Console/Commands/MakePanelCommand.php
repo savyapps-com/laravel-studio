@@ -4,12 +4,13 @@ namespace SavyApps\LaravelStudio\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
-use SavyApps\LaravelStudio\Models\Panel;
 
 use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\info;
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
+use function Laravel\Prompts\warning;
 
 class MakePanelCommand extends Command
 {
@@ -21,15 +22,12 @@ class MakePanelCommand extends Command
                             {--label= : The panel display name}
                             {--path= : The panel URL path}
                             {--icon= : The panel icon}
-                            {--role= : The required role to access the panel}
-                            {--default : Set as default panel}
-                            {--inactive : Create as inactive}
-                            {--force : Overwrite existing panel}';
+                            {--role= : The required role to access the panel}';
 
     /**
      * The console command description.
      */
-    protected $description = 'Create a new Laravel Studio panel interactively';
+    protected $description = 'Generate panel configuration for config/studio.php';
 
     /**
      * Available icons for selection.
@@ -67,7 +65,7 @@ class MakePanelCommand extends Command
      */
     public function handle(): int
     {
-        $this->components->info('Creating a new Laravel Studio Panel');
+        $this->components->info('Generating Laravel Studio Panel Configuration');
         $this->newLine();
 
         // Get panel key
@@ -79,13 +77,18 @@ class MakePanelCommand extends Command
             return self::FAILURE;
         }
 
-        // Check if panel already exists
-        $existingPanel = Panel::where('key', $key)->first();
-        if ($existingPanel && ! $this->option('force')) {
-            $this->components->error("Panel [{$key}] already exists!");
-            $this->info('Use --force to overwrite.');
+        // Check if panel already exists in config
+        $existingPanels = config('studio.panels', []);
+        if (isset($existingPanels[$key])) {
+            warning("Panel [{$key}] already exists in config/studio.php!");
+            $this->newLine();
 
-            return self::FAILURE;
+            if ($this->input->isInteractive()) {
+                if (! confirm('Continue anyway?', false)) {
+                    $this->components->warn('Panel generation cancelled.');
+                    return self::SUCCESS;
+                }
+            }
         }
 
         // Gather panel details
@@ -96,36 +99,21 @@ class MakePanelCommand extends Command
         $roles = $this->promptForAdditionalRoles($role);
         $resources = $this->promptForResources();
         $features = $this->promptForFeatures();
-        $isDefault = $this->option('default') || $this->promptForDefault();
-        $isActive = ! $this->option('inactive');
-
-        if (! $this->option('inactive') && $this->input->isInteractive()) {
-            $isActive = $this->promptForActive();
-        }
+        $allowRegistration = $this->promptForAllowRegistration();
 
         // Build menu structure
         $menu = $this->buildDefaultMenu($label, $key, $resources, $features);
 
-        // Show summary before creating
-        $this->showSummary($key, $label, $path, $icon, $role, $roles, $resources, $features, $isDefault, $isActive);
-
-        if ($this->input->isInteractive()) {
-            if (! confirm('Create this panel?', true)) {
-                $this->components->warn('Panel creation cancelled.');
-
-                return self::SUCCESS;
-            }
-        }
-
-        // Create or update the panel
-        $panelData = [
-            'key' => $key,
+        // Build panel configuration
+        $panelConfig = [
             'label' => $label,
             'path' => $path,
             'icon' => $icon,
+            'middleware' => ['api', 'auth:sanctum', "panel:{$key}"],
             'role' => $role,
             'roles' => $roles,
-            'middleware' => ['api', 'auth:sanctum', "panel:{$key}"],
+            'allow_registration' => $allowRegistration,
+            'default_role' => $role,
             'resources' => $resources,
             'features' => $features,
             'menu' => $menu,
@@ -133,28 +121,20 @@ class MakePanelCommand extends Command
                 'layout' => 'classic',
                 'theme' => 'light',
             ],
-            'is_active' => $isActive,
-            'is_default' => false, // Set separately to handle other panels
-            'priority' => $this->getNextPriority(),
         ];
 
-        if ($existingPanel) {
-            $existingPanel->update($panelData);
-            $panel = $existingPanel;
-            $this->components->info("Panel [{$key}] updated successfully.");
-        } else {
-            $panel = Panel::create($panelData);
-            $this->components->info("Panel [{$key}] created successfully.");
+        // Show summary
+        $this->showSummary($key, $label, $path, $icon, $role, $roles, $resources, $features, $allowRegistration);
+
+        if ($this->input->isInteractive()) {
+            if (! confirm('Generate configuration?', true)) {
+                $this->components->warn('Panel generation cancelled.');
+                return self::SUCCESS;
+            }
         }
 
-        // Set as default if requested
-        if ($isDefault) {
-            $panel->setAsDefault();
-            $this->components->info("Panel [{$key}] set as default.");
-        }
-
-        // Show next steps
-        $this->showNextSteps($key, $path);
+        // Generate and display config code
+        $this->generateConfigOutput($key, $panelConfig);
 
         return self::SUCCESS;
     }
@@ -335,36 +315,14 @@ class MakePanelCommand extends Command
     }
 
     /**
-     * Prompt for default panel setting.
+     * Prompt for allow registration setting.
      */
-    protected function promptForDefault(): bool
-    {
-        $existingDefault = Panel::where('is_default', true)->first();
-
-        if ($existingDefault) {
-            return confirm(
-                label: "Set as default panel? (Current default: {$existingDefault->label})",
-                default: false,
-                hint: 'Default panel is shown when user logs in'
-            );
-        }
-
-        return confirm(
-            label: 'Set as default panel?',
-            default: true,
-            hint: 'Default panel is shown when user logs in'
-        );
-    }
-
-    /**
-     * Prompt for active status.
-     */
-    protected function promptForActive(): bool
+    protected function promptForAllowRegistration(): bool
     {
         return confirm(
-            label: 'Activate this panel?',
-            default: true,
-            hint: 'Inactive panels are hidden from users'
+            label: 'Allow user registration for this panel?',
+            default: false,
+            hint: 'If enabled, users can self-register for this panel'
         );
     }
 
@@ -508,17 +466,7 @@ class MakePanelCommand extends Command
     }
 
     /**
-     * Get next priority number for ordering.
-     */
-    protected function getNextPriority(): int
-    {
-        $maxPriority = Panel::max('priority') ?? 0;
-
-        return $maxPriority + 10;
-    }
-
-    /**
-     * Show summary before creating.
+     * Show summary before generating.
      */
     protected function showSummary(
         string $key,
@@ -529,8 +477,7 @@ class MakePanelCommand extends Command
         array $roles,
         array $resources,
         array $features,
-        bool $isDefault,
-        bool $isActive
+        bool $allowRegistration
     ): void {
         $this->newLine();
         $this->components->info('Panel Summary:');
@@ -547,8 +494,7 @@ class MakePanelCommand extends Command
                 ['All Roles', implode(', ', $roles) ?: '-'],
                 ['Resources', implode(', ', $resources) ?: 'None'],
                 ['Features', implode(', ', $features) ?: 'None'],
-                ['Default', $isDefault ? 'Yes' : 'No'],
-                ['Active', $isActive ? 'Yes' : 'No'],
+                ['Allow Registration', $allowRegistration ? 'Yes' : 'No'],
             ]
         );
 
@@ -556,24 +502,66 @@ class MakePanelCommand extends Command
     }
 
     /**
-     * Show next steps after creation.
+     * Generate and display configuration output.
      */
-    protected function showNextSteps(string $key, string $path): void
+    protected function generateConfigOutput(string $key, array $config): void
     {
         $this->newLine();
-        $this->components->info('Next steps:');
-        $this->components->bulletList([
-            "Add resources to the panel using the admin UI or Panel Management API",
-            "Configure the panel menu in the database or via API",
-            "Create the frontend route for path: {$path}",
-            "Ensure users have the required role to access this panel",
-        ]);
+        info('Panel configuration generated successfully!');
+        $this->newLine();
+
+        $this->components->info("Add the following to config/studio.php under 'panels' array:");
+        $this->newLine();
+
+        $this->line("<fg=yellow>'{$key}' => [</>");
+        $this->line($this->generateConfigCode($config, 1));
+        $this->line('<fg=yellow>],</>');
 
         $this->newLine();
-        $this->line('<fg=gray>// Access panel via API:</>');
-        $this->line("<fg=yellow>GET /api/panels/{$key}</>");
+        $this->line(str_repeat('-', 80));
         $this->newLine();
-        $this->line('<fg=gray>// Switch to this panel:</>');
-        $this->line("<fg=yellow>POST /api/panels/{$key}/switch</>");
+
+        $this->components->info('Next steps:');
+        $this->components->bulletList([
+            'Copy the above configuration to config/studio.php',
+            "Add '{$key}' to the 'panel_priority' array in config/studio.php",
+            'Run: php artisan config:clear',
+            'Ensure users have the required role to access this panel',
+        ]);
+    }
+
+    /**
+     * Generate PHP array code for panel config.
+     */
+    protected function generateConfigCode(array $config, int $indent = 0): string
+    {
+        $spaces = str_repeat('    ', $indent);
+        $lines = [];
+
+        foreach ($config as $key => $value) {
+            $keyStr = is_numeric($key) ? $key : "'{$key}'";
+
+            if (is_array($value)) {
+                if (empty($value)) {
+                    $lines[] = "{$spaces}{$keyStr} => [],";
+                } else {
+                    $lines[] = "{$spaces}{$keyStr} => [";
+                    $lines[] = $this->generateConfigCode($value, $indent + 1);
+                    $lines[] = "{$spaces}],";
+                }
+            } elseif (is_bool($value)) {
+                $valueStr = $value ? 'true' : 'false';
+                $lines[] = "{$spaces}{$keyStr} => {$valueStr},";
+            } elseif (is_null($value)) {
+                $lines[] = "{$spaces}{$keyStr} => null,";
+            } elseif (is_numeric($value)) {
+                $lines[] = "{$spaces}{$keyStr} => {$value},";
+            } else {
+                $valueStr = "'" . addslashes($value) . "'";
+                $lines[] = "{$spaces}{$keyStr} => {$valueStr},";
+            }
+        }
+
+        return implode("\n", $lines);
     }
 }

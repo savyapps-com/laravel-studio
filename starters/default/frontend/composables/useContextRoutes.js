@@ -24,8 +24,8 @@ export function useContextRoutes() {
       }
     } else {
       return {
-        personal: 'user.profile.personal',
-        security: 'user.profile.security',
+        personal: 'panel.profile.personal',
+        security: 'panel.profile.security',
       }
     }
   })
@@ -35,7 +35,7 @@ export function useContextRoutes() {
     if (isAdminContext.value) {
       return { name: 'admin.dashboard' }
     } else {
-      return { name: 'user.dashboard' }
+      return { name: 'panel.dashboard' }
     }
   })
 
@@ -51,9 +51,9 @@ export function useContextRoutes() {
       }
     } else {
       return {
-        appearance: 'user.settings.appearance',
-        notifications: 'user.settings.notifications',
-        preferences: 'user.settings.preferences',
+        appearance: 'panel.settings.appearance',
+        notifications: 'panel.settings.notifications',
+        preferences: 'panel.settings.preferences',
       }
     }
   })
@@ -71,12 +71,12 @@ export function useContextRoutes() {
       }
     } else {
       return {
-        notFound: 'user.error.notFound',
-        forbidden: 'user.error.forbidden',
-        unauthorized: 'user.error.unauthorized',
-        serverError: 'user.error.serverError',
-        networkError: 'user.error.networkError',
-        maintenance: 'user.error.maintenance',
+        notFound: 'panel.error.notFound',
+        forbidden: 'panel.error.forbidden',
+        unauthorized: 'panel.error.forbidden',
+        serverError: 'panel.error.notFound',
+        networkError: 'panel.error.notFound',
+        maintenance: 'panel.error.notFound',
       }
     }
   })

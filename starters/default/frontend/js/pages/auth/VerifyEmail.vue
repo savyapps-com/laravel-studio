@@ -132,7 +132,7 @@
 
     <template #links>
       <div class="space-y-2">
-        <router-link :to="{ name: 'auth.login' }" class="auth-link block">
+        <router-link :to="{ name: 'panel.login', params: { panel: 'admin' } }" class="auth-link block">
           Back to Sign In
         </router-link>
         <button @click="changeEmail" class="auth-link block">

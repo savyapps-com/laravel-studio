@@ -50,7 +50,7 @@ import Icon from '@/components/common/Icon.vue'
 
 const route = useRoute()
 const authStore = useAuthStore()
-const { settingsRoutes } = useContextRoutes()
+const { settingsRoutes, isAdminContext } = useContextRoutes()
 
 // All available tabs with role requirements
 const allTabs = computed(() => [
@@ -93,9 +93,9 @@ const allTabs = computed(() => [
   }
 ])
 
-// Filter tabs based on user role
+// Filter tabs based on current panel context
 const visibleTabs = computed(() => {
-  const userRole = authStore.user?.is_admin ? 'admin' : 'user'
+  const userRole = isAdminContext.value ? 'admin' : 'user'
   return allTabs.value.filter(tab => tab.roles.includes(userRole))
 })
 

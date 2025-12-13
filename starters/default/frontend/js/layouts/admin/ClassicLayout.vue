@@ -122,10 +122,10 @@ export default {
     const logout = async () => {
       try {
         await authStore.logout()
-        router.push({ name: 'auth.login' })
+        router.push({ name: 'panel.login', params: { panel: 'admin' } })
       } catch (error) {
         console.error('Logout error:', error)
-        router.push({ name: 'auth.login' })
+        router.push({ name: 'panel.login', params: { panel: 'admin' } })
       }
     }
 

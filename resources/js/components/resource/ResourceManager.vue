@@ -214,7 +214,7 @@ async function handleImpersonate(user) {
     toast.success(`Successfully impersonating ${user.name}.`)
 
     // Redirect to user dashboard
-    router.push({ name: 'user.dashboard' })
+    router.push({ name: 'panel.dashboard' })
   } catch (error) {
     console.error('Failed to impersonate user:', error)
     toast.error(error.response?.data?.message || 'Failed to impersonate user.')

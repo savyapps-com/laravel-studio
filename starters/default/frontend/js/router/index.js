@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import AdminLayout from '@/layouts/AdminLayout.vue'
+import DynamicPanelLayout from '@/layouts/DynamicPanelLayout.vue'
 import ProfileLayout from '@/layouts/ProfileLayout.vue'
 import SettingsLayout from '@/layouts/SettingsLayout.vue'
 import Dashboard from '@/pages/Dashboard.vue'
@@ -107,7 +108,11 @@ const routes = [
       if (authStore.isAuthenticated) {
         // Get user's default panel from their accessible panels
         const defaultPanel = authStore.user?.default_panel || 'admin'
-        return { name: `${defaultPanel}.dashboard` }
+        // Admin has its own named route, other panels use the dynamic route
+        if (defaultPanel === 'admin') {
+          return { name: 'admin.dashboard' }
+        }
+        return { name: 'panel.dashboard', params: { panel: defaultPanel } }
       }
       return { name: 'panel.login', params: { panel: 'admin' } }
     }
@@ -119,6 +124,67 @@ const routes = [
     name: 'admin.notFound',
     component: () => import('@/pages/admin/errors/NotFound.vue'),
     meta: { title: '404 - Page Not Found', auth: 'admin' }
+  },
+
+  // Dynamic Panel Routes (for panels other than admin)
+  // These routes handle any panel created via the admin panel management
+  {
+    path: '/:panel',
+    component: DynamicPanelLayout,
+    meta: { auth: 'panel', dynamic: true },
+    children: [
+      // Panel Dashboard
+      {
+        path: '',
+        name: 'panel.dashboard',
+        component: () => import('@/pages/panel/DynamicDashboard.vue'),
+        meta: { title: 'Dashboard', auth: 'panel' }
+      },
+      // Dynamic Resource Routes
+      {
+        path: 'resources/:resource',
+        name: 'panel.resource',
+        component: () => import('@/pages/panel/DynamicResource.vue'),
+        meta: { title: 'Resource', auth: 'panel' }
+      },
+      // Panel Profile
+      {
+        path: 'profile',
+        component: ProfileLayout,
+        meta: { auth: 'panel' },
+        redirect: { name: 'panel.profile.personal' },
+        children: [
+          { path: 'personal', name: 'panel.profile.personal', component: () => import('@/pages/admin/profile/Profile.vue'), meta: { title: 'Profile', auth: 'panel' } },
+          { path: 'security', name: 'panel.profile.security', component: () => import('@/pages/admin/profile/ChangePassword.vue'), meta: { title: 'Security', auth: 'panel' } }
+        ]
+      },
+      // Panel Settings
+      {
+        path: 'settings',
+        name: 'panel.settings',
+        component: SettingsLayout,
+        meta: { auth: 'panel' },
+        redirect: { name: 'panel.settings.appearance' },
+        children: [
+          { path: 'appearance', name: 'panel.settings.appearance', component: () => import('@/pages/admin/settings/Appearance.vue'), meta: { title: 'Appearance', auth: 'panel' } },
+          { path: 'notifications', name: 'panel.settings.notifications', component: () => import('@/pages/admin/settings/Notifications.vue'), meta: { title: 'Notifications', auth: 'panel' } },
+          { path: 'preferences', name: 'panel.settings.preferences', component: () => import('@/pages/admin/settings/Preferences.vue'), meta: { title: 'Preferences', auth: 'panel' } }
+        ]
+      },
+      // Panel Error Pages
+      {
+        path: 'error/404',
+        name: 'panel.error.notFound',
+        component: () => import('@/pages/admin/errors/NotFound.vue'),
+        meta: { title: '404 - Page Not Found', auth: '' }
+      },
+      {
+        path: 'error/403',
+        name: 'panel.error.forbidden',
+        component: () => import('@/pages/admin/errors/Forbidden.vue'),
+        meta: { title: '403 - Access Forbidden', auth: '' }
+      }
+    ]
   },
 
   // 404 Catch-all for all other paths
@@ -174,6 +240,11 @@ router.beforeEach(async (to, _from, next) => {
         next({ name: 'admin.error.forbidden' })
         return
       }
+    } else if (requiredAuth === 'panel') {
+      // Dynamic panel route - panel access is checked by the backend API
+      // when loading panel config. The DynamicPanelLayout will handle
+      // showing access denied errors. Just ensure user is authenticated.
+      // If the panel doesn't exist or user can't access it, the layout will handle it.
     }
     // For requiredAuth === '' (common routes), user is authenticated and any role can access
 
@@ -189,8 +260,14 @@ router.beforeEach(async (to, _from, next) => {
       } else {
         // Direct navigation (new tab/refresh) or from another guest route, redirect to panel dashboard
         const defaultPanel = authStore.user?.default_panel || panel
-        const redirectTo = to.query.redirect || { name: `${defaultPanel}.dashboard` }
-        next(redirectTo)
+        // Use query redirect if available, otherwise go to dashboard
+        if (to.query.redirect) {
+          next(to.query.redirect)
+        } else if (defaultPanel === 'admin') {
+          next({ name: 'admin.dashboard' })
+        } else {
+          next({ name: 'panel.dashboard', params: { panel: defaultPanel } })
+        }
       }
     } else {
       next()

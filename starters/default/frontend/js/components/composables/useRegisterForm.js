@@ -43,7 +43,7 @@ export function useRegisterForm() {
         if (authStore.user?.can_access_admin_panel) {
           router.push({ name: 'admin.dashboard' })
         } else {
-          router.push({ name: 'user.dashboard' })
+          router.push({ name: 'panel.dashboard' })
         }
       }, 1000)
     } catch (error) {

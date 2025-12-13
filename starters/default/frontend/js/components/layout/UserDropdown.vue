@@ -26,27 +26,49 @@
       @click.stop
     >
       <div class="py-2">
-        <router-link
-          :to="{ name: profileRoutes.personal }"
-          @click="closeDropdown"
-          class="block px-4 py-2 text-sm text-title hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-        >
-          View Profile
-        </router-link>
-        <router-link
-          :to="{ name: profileRoutes.security }"
-          @click="closeDropdown"
-          class="block px-4 py-2 text-sm text-title hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-        >
-          Security
-        </router-link>
-        <router-link
-          :to="{ name: settingsRoutes.appearance }"
-          @click="closeDropdown"
-          class="block px-4 py-2 text-sm text-title hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-        >
-          Settings
-        </router-link>
+        <!-- Customer Panel Menu Items -->
+        <template v-if="!isAdminContext">
+          <router-link
+            :to="{ name: profileRoutes.personal }"
+            @click="closeDropdown"
+            class="block px-4 py-2 text-sm text-title hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+          >
+            Profile
+          </router-link>
+          <router-link
+            :to="{ name: settingsRoutes.appearance }"
+            @click="closeDropdown"
+            class="block px-4 py-2 text-sm text-title hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+          >
+            Settings
+          </router-link>
+        </template>
+
+        <!-- Admin Panel Menu Items -->
+        <template v-else>
+          <router-link
+            :to="{ name: profileRoutes.personal }"
+            @click="closeDropdown"
+            class="block px-4 py-2 text-sm text-title hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+          >
+            View Profile
+          </router-link>
+          <router-link
+            :to="{ name: profileRoutes.security }"
+            @click="closeDropdown"
+            class="block px-4 py-2 text-sm text-title hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+          >
+            Security
+          </router-link>
+          <router-link
+            :to="{ name: settingsRoutes.appearance }"
+            @click="closeDropdown"
+            class="block px-4 py-2 text-sm text-title hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+          >
+            Settings
+          </router-link>
+        </template>
+
         <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
         <button
           @click="handleLogout"
@@ -79,7 +101,7 @@ export default {
   },
   setup(props, { emit }) {
     const isOpen = ref(false)
-    const { profileRoutes, settingsRoutes } = useContextRoutes()
+    const { profileRoutes, settingsRoutes, isAdminContext } = useContextRoutes()
 
     const toggleDropdown = () => {
       isOpen.value = !isOpen.value
@@ -98,6 +120,7 @@ export default {
       isOpen,
       profileRoutes,
       settingsRoutes,
+      isAdminContext,
       toggleDropdown,
       closeDropdown,
       handleLogout,

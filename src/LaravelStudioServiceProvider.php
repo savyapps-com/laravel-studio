@@ -11,6 +11,7 @@ use SavyApps\LaravelStudio\Console\Commands\MakeFieldCommand;
 use SavyApps\LaravelStudio\Console\Commands\MakeFilterCommand;
 use SavyApps\LaravelStudio\Console\Commands\MakePanelCommand;
 use SavyApps\LaravelStudio\Console\Commands\MakeResourceCommand;
+use SavyApps\LaravelStudio\Console\Commands\PanelCommand;
 use SavyApps\LaravelStudio\Console\Commands\SyncPermissionsCommand;
 use SavyApps\LaravelStudio\Http\Middleware\CheckResourcePermission;
 use SavyApps\LaravelStudio\Http\Middleware\EnsureUserCanAccessPanel;
@@ -106,6 +107,7 @@ class LaravelStudioServiceProvider extends ServiceProvider
                 MakeFilterCommand::class,
                 MakePanelCommand::class,
                 MakeResourceCommand::class,
+                PanelCommand::class,
                 SyncPermissionsCommand::class,
             ]);
         }

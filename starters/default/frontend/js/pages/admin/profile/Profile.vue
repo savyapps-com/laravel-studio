@@ -97,7 +97,7 @@ const handleLogoutAllSessions = async () => {
 
   try {
     await authStore.logoutAllSessions()
-    router.push({ name: 'auth.login' })
+    router.push({ name: 'panel.login', params: { panel: 'admin' } })
   } catch (error) {
     alert('Failed to logout all sessions. Please try again.')
     isLoggingOut.value = false

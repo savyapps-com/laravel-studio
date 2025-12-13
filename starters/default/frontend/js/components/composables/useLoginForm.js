@@ -44,7 +44,7 @@ export function useLoginForm() {
       let redirectTo
       const defaultDashboard = authStore.user?.can_access_admin_panel
         ? { name: 'admin.dashboard' }
-        : { name: 'user.dashboard' }
+        : { name: 'panel.dashboard' }
 
       if (route.query.redirect) {
         // Validate that the redirect path exists as a route
