@@ -38,9 +38,12 @@ class CardController extends Controller
         $panel = $request->input('panel');
         $cards = $this->cardService->getDashboardCards($panel);
 
-        return $this->collectionResponse($cards, [
-            'panel' => $panel,
-            'total' => count($cards),
+        return response()->json([
+            'data' => $cards,
+            'meta' => [
+                'panel' => $panel,
+                'total' => count($cards),
+            ],
         ]);
     }
 

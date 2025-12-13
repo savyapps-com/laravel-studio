@@ -58,7 +58,7 @@ export default {
     variant: {
       type: String,
       default: 'blue',
-      validator: (value) => ['blue', 'green', 'purple', 'orange', 'red'].includes(value),
+      validator: (value) => ['blue', 'green', 'purple', 'orange', 'red', 'teal'].includes(value),
     },
     trend: {
       type: Object,
@@ -86,6 +86,7 @@ export default {
         purple: 'from-primary-500 to-primary-600',
         orange: 'from-orange-500 to-orange-600',
         red: 'from-red-500 to-red-600',
+        teal: 'from-teal-500 to-teal-600',
       }
       return variants[props.variant] || variants.blue
     })
@@ -97,6 +98,7 @@ export default {
         purple: 'text-purple-100',
         orange: 'text-orange-100',
         red: 'text-red-100',
+        teal: 'text-teal-100',
       }
       return variants[props.variant] || variants.blue
     })

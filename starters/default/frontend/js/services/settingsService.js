@@ -136,54 +136,5 @@ export const settingsService = {
   async getSettingLists(key) {
     const response = await window.axios.get(`/api/settings/lists/${key}`)
     return response.data
-  },
-
-  // ============================================
-  // Reference Data
-  // ============================================
-
-  /**
-   * Get all countries
-   * @param {string} region - Optional region filter
-   * @returns {Promise}
-   */
-  async getCountries(region = null) {
-    const params = region ? { region } : {}
-    const response = await window.axios.get('/api/countries', { params })
-    return response.data
-  },
-
-  /**
-   * Get a specific country by code
-   * @param {string} code - Country code (US, GB, etc.)
-   * @returns {Promise}
-   */
-  async getCountry(code) {
-    const response = await window.axios.get(`/api/countries/${code}`)
-    return response.data
-  },
-
-  /**
-   * Get all timezones
-   * @param {string} region - Optional region filter
-   * @param {number} countryId - Optional country ID filter
-   * @returns {Promise}
-   */
-  async getTimezones(region = null, countryId = null) {
-    const params = {}
-    if (region) params.region = region
-    if (countryId) params.country_id = countryId
-    const response = await window.axios.get('/api/timezones', { params })
-    return response.data
-  },
-
-  /**
-   * Get a specific timezone by ID
-   * @param {number} id - Timezone ID
-   * @returns {Promise}
-   */
-  async getTimezone(id) {
-    const response = await window.axios.get(`/api/timezones/${id}`)
-    return response.data
   }
 }

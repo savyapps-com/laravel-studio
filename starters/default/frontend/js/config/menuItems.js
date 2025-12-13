@@ -5,8 +5,6 @@ export const adminMainMenuItems = [
   { to: { name: 'admin.dashboard' }, icon: 'dashboard', label: 'Dashboard' },
   { to: { name: 'admin.users' }, icon: 'team', label: 'Users' },
   { to: { name: 'admin.roles' }, icon: 'shield', label: 'Roles' },
-  { to: { name: 'admin.countries' }, icon: 'globe', label: 'Countries' },
-  { to: { name: 'admin.timezones' }, icon: 'clock', label: 'Timezones' },
   { to: { name: 'admin.email-templates.index' }, icon: 'mail', label: 'Email Templates' },
   { to: { name: 'admin.panels.index' }, icon: 'squares-2x2', label: 'Panels' },
 ]

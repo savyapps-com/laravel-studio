@@ -22,40 +22,6 @@
           Localization
         </h3>
 
-        <!-- Country -->
-        <div>
-          <label for="country" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Country
-          </label>
-          <select
-            id="country"
-            v-model="formData.country"
-            class="form-select w-full"
-          >
-            <option value="">Select a country</option>
-            <option v-for="country in countries" :key="country.id" :value="country.code">
-              {{ country.flag_emoji }} {{ country.name }}
-            </option>
-          </select>
-        </div>
-
-        <!-- Timezone -->
-        <div>
-          <label for="timezone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Timezone
-          </label>
-          <select
-            id="timezone"
-            v-model="formData.timezone"
-            class="form-select w-full"
-          >
-            <option value="">Select a timezone</option>
-            <option v-for="timezone in timezones" :key="timezone.id" :value="timezone.name">
-              {{ timezone.display_name }} ({{ timezone.offset_formatted }})
-            </option>
-          </select>
-        </div>
-
         <!-- Language -->
         <div>
           <label for="language" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -213,12 +179,8 @@ const { showToast } = useToast()
 const isLoading = ref(true)
 const isSaving = ref(false)
 const showSuccess = ref(false)
-const countries = ref([])
-const timezones = ref([])
 
 const formData = ref({
-  country: 'US',
-  timezone: 'America/New_York',
   language: 'en',
   date_format: 'Y-m-d',
   time_format: 'H:i',
@@ -238,20 +200,11 @@ onMounted(async () => {
   try {
     isLoading.value = true
 
-    // Load countries, timezones, and user preferences
-    await Promise.all([
-      settingsStore.loadCountries(),
-      settingsStore.loadTimezones(),
-      settingsStore.loadUserSettings('preferences')
-    ])
-
-    countries.value = settingsStore.countries
-    timezones.value = settingsStore.timezones
+    // Load user preferences
+    await settingsStore.loadUserSettings('preferences')
 
     // Set form data from store with defaults
     formData.value = {
-      country: settingsStore.userSettings.country || 'US',
-      timezone: settingsStore.userSettings.timezone || 'America/New_York',
       language: settingsStore.userSettings.language || 'en',
       date_format: settingsStore.userSettings.date_format || 'Y-m-d',
       time_format: settingsStore.userSettings.time_format || 'H:i',

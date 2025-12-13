@@ -20,10 +20,10 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'email_verified_at' => $this->email_verified_at,
             'role' => $this->whenLoaded('roles', function () {
-                return $this->role()?->slug;
+                return $this->primaryRole()?->slug;
             }),
             'role_name' => $this->whenLoaded('roles', function () {
-                return $this->role()?->name;
+                return $this->primaryRole()?->name;
             }),
             'is_admin' => $this->whenLoaded('roles', function () {
                 return $this->isAdmin();

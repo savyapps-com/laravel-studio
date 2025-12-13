@@ -115,29 +115,6 @@
               Select your preferred language
             </p>
           </div>
-
-          <!-- Timezone -->
-          <div>
-            <label for="timezone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Timezone
-            </label>
-            <select
-              id="timezone"
-              v-model="form.timezone"
-              class="form-select"
-            >
-              <option
-                v-for="timezone in settingsStore.timezones"
-                :key="timezone.id"
-                :value="timezone.id"
-              >
-                {{ timezone.display_name }} ({{ timezone.offset_formatted }})
-              </option>
-            </select>
-            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-              Your local timezone for displaying dates and times
-            </p>
-          </div>
         </div>
       </div>
 
@@ -180,8 +157,7 @@ const form = ref({
   items_per_page: 25,
   date_format: 'MM/DD/YYYY',
   time_format: '12h',
-  language: 'en',
-  timezone: null
+  language: 'en'
 })
 
 // Check if there are unsaved changes
@@ -191,18 +167,14 @@ const hasChanges = computed(() => {
 
 // Load settings on mount
 onMounted(async () => {
-  await Promise.all([
-    settingsStore.loadUserSettings(),
-    settingsStore.loadTimezones()
-  ])
+  await settingsStore.loadUserSettings()
 
   // Populate form with current settings
   form.value = {
     items_per_page: settingsStore.userSettings.items_per_page || 25,
     date_format: settingsStore.userSettings.date_format || 'MM/DD/YYYY',
     time_format: settingsStore.userSettings.time_format || '12h',
-    language: settingsStore.userSettings.language || 'en',
-    timezone: settingsStore.userSettings.timezone || null
+    language: settingsStore.userSettings.language || 'en'
   }
 
   initialForm.value = { ...form.value }
