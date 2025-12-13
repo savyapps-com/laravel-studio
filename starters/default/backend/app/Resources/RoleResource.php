@@ -2,17 +2,23 @@
 
 namespace App\Resources;
 
+use App\Models\Role;
+use App\Policies\RolePolicy;
 use SavyApps\LaravelStudio\Resources\Actions\BulkDeleteAction;
 use SavyApps\LaravelStudio\Resources\Fields\BelongsToMany;
 use SavyApps\LaravelStudio\Resources\Fields\Section;
 use SavyApps\LaravelStudio\Resources\Fields\Text;
 use SavyApps\LaravelStudio\Resources\Fields\Textarea;
 use SavyApps\LaravelStudio\Resources\Resource;
-use App\Models\Role;
+use SavyApps\LaravelStudio\Traits\Authorizable;
 
 class RoleResource extends Resource
 {
+    use Authorizable;
+
     public static string $model = Role::class;
+
+    public static string $policy = RolePolicy::class;
 
     public static string $label = 'Roles';
 

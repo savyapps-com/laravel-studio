@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use SavyApps\LaravelStudio\Traits\HasPermissions;
 use SavyApps\LaravelStudio\Traits\LogsActivity;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -18,7 +19,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 class User extends Authenticatable implements HasMedia
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, InteractsWithMedia, LogsActivity, Notifiable;
+    use HasApiTokens, HasFactory, HasPermissions, InteractsWithMedia, LogsActivity, Notifiable;
 
     /**
      * Activity logging configuration.
@@ -128,7 +129,7 @@ class User extends Authenticatable implements HasMedia
     }
 
     /**
-     * Get the roles assigned to the user (user can only have one role).
+     * Get the roles assigned to the user.
      */
     public function roles(): BelongsToMany
     {
@@ -137,9 +138,9 @@ class User extends Authenticatable implements HasMedia
     }
 
     /**
-     * Get the user's role (since user can only have one role).
+     * Get the user's primary role (first assigned role).
      */
-    public function role(): ?Role
+    public function primaryRole(): ?Role
     {
         return $this->roles()->first();
     }
@@ -153,15 +154,33 @@ class User extends Authenticatable implements HasMedia
     }
 
     /**
-     * Check if user is an admin.
+     * Check if user has any of the given roles.
      */
-    public function isAdmin(): bool
+    public function hasAnyRole(array $roleSlugs): bool
     {
-        return $this->hasRole('admin');
+        return $this->roles()->whereIn('slug', $roleSlugs)->exists();
     }
 
     /**
-     * Check if user is a regular user (not admin).
+     * Check if user has all of the given roles.
+     */
+    public function hasAllRoles(array $roleSlugs): bool
+    {
+        $roleCount = $this->roles()->whereIn('slug', $roleSlugs)->count();
+
+        return $roleCount === count($roleSlugs);
+    }
+
+    /**
+     * Check if user is an admin (has admin or super_admin role).
+     */
+    public function isAdmin(): bool
+    {
+        return $this->hasAnyRole(['admin', 'super_admin']);
+    }
+
+    /**
+     * Check if user is a regular user (has user role).
      */
     public function isUser(): bool
     {
@@ -170,7 +189,7 @@ class User extends Authenticatable implements HasMedia
 
     /**
      * Check if user can access admin panel.
-     * Requires admin role.
+     * Requires admin or super_admin role.
      */
     public function canAccessAdminPanel(): bool
     {
@@ -202,20 +221,67 @@ class User extends Authenticatable implements HasMedia
     }
 
     /**
-     * Assign a role to the user (replaces existing role).
+     * Assign a role to the user (adds to existing roles).
      */
-    public function assignRole(int|string $role): void
+    public function assignRole(int|string|Role $role): void
     {
-        // Detach existing role first (user can only have one role)
-        $this->roles()->detach();
-
         if (is_string($role)) {
             $role = Role::where('slug', $role)->firstOrFail();
         } elseif (is_int($role)) {
             $role = Role::findOrFail($role);
         }
 
-        $this->roles()->attach($role->id);
+        if (! $this->hasRole($role->slug)) {
+            $this->roles()->attach($role->id);
+        }
+    }
+
+    /**
+     * Assign multiple roles to the user.
+     */
+    public function assignRoles(array $roles): void
+    {
+        foreach ($roles as $role) {
+            $this->assignRole($role);
+        }
+    }
+
+    /**
+     * Remove a role from the user.
+     */
+    public function removeRole(int|string|Role $role): void
+    {
+        if (is_string($role)) {
+            $role = Role::where('slug', $role)->first();
+        } elseif (is_int($role)) {
+            $role = Role::find($role);
+        }
+
+        if ($role) {
+            $this->roles()->detach($role->id);
+        }
+    }
+
+    /**
+     * Sync roles for the user (replaces all existing roles).
+     */
+    public function syncRoles(array $roles): void
+    {
+        $roleIds = [];
+        foreach ($roles as $role) {
+            if (is_string($role)) {
+                $roleModel = Role::where('slug', $role)->first();
+                if ($roleModel) {
+                    $roleIds[] = $roleModel->id;
+                }
+            } elseif (is_int($role)) {
+                $roleIds[] = $role;
+            } elseif ($role instanceof Role) {
+                $roleIds[] = $role->id;
+            }
+        }
+
+        $this->roles()->sync($roleIds);
     }
 
     /**

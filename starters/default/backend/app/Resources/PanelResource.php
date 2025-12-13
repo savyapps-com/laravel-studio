@@ -2,6 +2,7 @@
 
 namespace App\Resources;
 
+use App\Policies\PanelPolicy;
 use SavyApps\LaravelStudio\Models\Panel;
 use SavyApps\LaravelStudio\Resources\Actions\BulkDeleteAction;
 use SavyApps\LaravelStudio\Resources\Fields\Boolean;
@@ -15,10 +16,15 @@ use SavyApps\LaravelStudio\Resources\Fields\Text;
 use SavyApps\LaravelStudio\Resources\Fields\Textarea;
 use SavyApps\LaravelStudio\Resources\Filters\BooleanFilter;
 use SavyApps\LaravelStudio\Resources\Resource;
+use SavyApps\LaravelStudio\Traits\Authorizable;
 
 class PanelResource extends Resource
 {
+    use Authorizable;
+
     public static string $model = Panel::class;
+
+    public static string $policy = PanelPolicy::class;
 
     public static string $label = 'Panels';
 

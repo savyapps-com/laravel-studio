@@ -3,15 +3,78 @@
 namespace SavyApps\LaravelStudio\Traits;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 trait Authorizable
 {
+    /**
+     * The policy class for this resource.
+     * Set this property in your Resource class to use Laravel Policies.
+     *
+     * Example: public static string $policy = \App\Policies\UserPolicy::class;
+     */
+    // public static string $policy;
+
     /**
      * Check if authorization is enabled.
      */
     protected static function authorizationEnabled(): bool
     {
         return config('studio.authorization.enabled', true);
+    }
+
+    /**
+     * Get the policy instance for this resource.
+     * Returns null if no policy is defined.
+     */
+    protected static function getPolicy(): ?object
+    {
+        if (property_exists(static::class, 'policy') && !empty(static::$policy)) {
+            $policyClass = static::$policy;
+            if (class_exists($policyClass)) {
+                return app($policyClass);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Check authorization using policy first, then fall back to permissions.
+     */
+    protected static function authorizeViaPolicy($user, string $ability, $model = null): ?bool
+    {
+        $policy = static::getPolicy();
+
+        if (!$policy) {
+            return null; // No policy, use permission-based check
+        }
+
+        // Map our abilities to standard policy methods
+        $policyMethod = match ($ability) {
+            'viewAny', 'list' => 'viewAny',
+            'view' => 'view',
+            'create' => 'create',
+            'update' => 'update',
+            'delete' => 'delete',
+            'bulkDelete' => 'deleteAny',
+            'bulkUpdate' => 'updateAny',
+            'restore' => 'restore',
+            'forceDelete' => 'forceDelete',
+            default => $ability, // Custom abilities use their name
+        };
+
+        // Check if policy has this method
+        if (!method_exists($policy, $policyMethod)) {
+            return null; // Method not in policy, fall back to permissions
+        }
+
+        // Call policy method with appropriate arguments
+        if (in_array($policyMethod, ['viewAny', 'create', 'deleteAny', 'updateAny'])) {
+            return $policy->$policyMethod($user);
+        }
+
+        return $policy->$policyMethod($user, $model);
     }
 
     /**
@@ -29,6 +92,17 @@ trait Authorizable
             abort(401, 'Unauthenticated');
         }
 
+        // Check policy first (returns null if no policy or method)
+        $policyResult = static::authorizeViaPolicy($user, $ability, $model);
+        if ($policyResult !== null) {
+            if (!$policyResult) {
+                $abilityLabel = str($ability)->headline()->lower();
+                abort(403, "You do not have permission to {$abilityLabel} this resource.");
+            }
+            return;
+        }
+
+        // Fall back to permission-based authorization
         $allowed = match ($ability) {
             'viewAny', 'list' => static::canViewAny($user),
             'view' => static::canView($user, $model),
@@ -62,6 +136,13 @@ trait Authorizable
             return false;
         }
 
+        // Check policy first (returns null if no policy or method)
+        $policyResult = static::authorizeViaPolicy($user, $ability, $model);
+        if ($policyResult !== null) {
+            return $policyResult;
+        }
+
+        // Fall back to permission-based authorization
         return match ($ability) {
             'viewAny', 'list' => static::canViewAny($user),
             'view' => static::canView($user, $model),
@@ -77,76 +158,92 @@ trait Authorizable
 
     /**
      * Can user see the resource list?
+     * By default, checks for {resource}.list permission.
      */
     public static function canViewAny($user): bool
     {
-        return true;
+        return static::checkPermission($user, static::key() . '.list');
     }
 
     /**
      * Can user view a specific record?
+     * By default, checks for {resource}.view permission.
      */
     public static function canView($user, $model): bool
     {
-        return true;
+        return static::checkPermission($user, static::key() . '.view');
     }
 
     /**
      * Can user create new records?
+     * By default, checks for {resource}.create permission.
      */
     public static function canCreate($user): bool
     {
-        return true;
+        return static::checkPermission($user, static::key() . '.create');
     }
 
     /**
      * Can user update a specific record?
+     * By default, checks for {resource}.update permission.
      */
     public static function canUpdate($user, $model): bool
     {
-        return true;
+        return static::checkPermission($user, static::key() . '.update');
     }
 
     /**
      * Can user delete a specific record?
+     * By default, checks for {resource}.delete permission.
      */
     public static function canDelete($user, $model): bool
     {
-        return true;
+        return static::checkPermission($user, static::key() . '.delete');
     }
 
     /**
      * Can user bulk delete records?
+     * By default, checks for {resource}.delete permission.
      */
     public static function canBulkDelete($user): bool
     {
-        return static::canDelete($user, null);
+        return static::checkPermission($user, static::key() . '.delete');
     }
 
     /**
      * Can user bulk update records?
+     * By default, checks for {resource}.update permission.
      */
     public static function canBulkUpdate($user): bool
     {
-        return static::canUpdate($user, null);
+        return static::checkPermission($user, static::key() . '.update');
     }
 
     /**
      * Can user run a specific action?
-     * Override this method for action-level authorization.
+     * By default, checks for {resource}.action.{actionName} or {resource}.update permission.
      */
     public static function canRunAction($user, ?string $actionName = null): bool
     {
-        return true;
+        if ($actionName) {
+            // First try specific action permission
+            $actionPermission = static::key() . '.action.' . $actionName;
+            if (static::checkPermission($user, $actionPermission)) {
+                return true;
+            }
+        }
+
+        // Fall back to update permission
+        return static::checkPermission($user, static::key() . '.update');
     }
 
     /**
      * Can user run a custom action?
-     * Override this method for custom action authorization.
+     * By default, checks for {resource}.{action} permission.
      */
     public static function canCustomAction($user, string $action, $model = null): bool
     {
-        return true;
+        return static::checkPermission($user, static::key() . '.' . $action);
     }
 
     /**

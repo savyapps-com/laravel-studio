@@ -2,6 +2,10 @@
 
 namespace App\Resources;
 
+use App\Enums\Status;
+use App\Models\Role;
+use App\Models\User;
+use App\Policies\UserPolicy;
 use SavyApps\LaravelStudio\Cards\PartitionCard;
 use SavyApps\LaravelStudio\Cards\TrendCard;
 use SavyApps\LaravelStudio\Cards\ValueCard;
@@ -18,13 +22,15 @@ use SavyApps\LaravelStudio\Resources\Fields\Text;
 use SavyApps\LaravelStudio\Resources\Filters\BelongsToManyFilter;
 use SavyApps\LaravelStudio\Resources\Filters\SelectFilter;
 use SavyApps\LaravelStudio\Resources\Resource;
-use App\Enums\Status;
-use App\Models\Role;
-use App\Models\User;
+use SavyApps\LaravelStudio\Traits\Authorizable;
 
 class UserResource extends Resource
 {
+    use Authorizable;
+
     public static string $model = User::class;
+
+    public static string $policy = UserPolicy::class;
 
     public static string $label = 'Users';
 

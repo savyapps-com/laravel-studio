@@ -243,6 +243,11 @@ class PanelService
             return false;
         }
 
+        // Super admin can access ALL panels
+        if (method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin()) {
+            return true;
+        }
+
         // Get required role(s) from config
         $requiredRole = $config['role'] ?? null;
         $requiredRoles = $config['roles'] ?? ($requiredRole ? [$requiredRole] : [$panel]);

@@ -19,22 +19,31 @@ class DatabaseSeeder extends Seeder
             EmailTemplatesSeeder::class,
         ]);
 
-        $users = ['admin', 'user'];
+        // Create default users with roles
+        $users = [
+            'admin' => 'admin',
+            'user' => 'user',
+        ];
 
-        foreach ($users as $role) {
+        foreach ($users as $name => $roleSlug) {
             $user = User::firstOrCreate(
-                ['email' => "{$role}@app.com"],
+                ['email' => "{$name}@app.com"],
                 [
-                    'name' => ucfirst($role),
+                    'name' => ucfirst($name),
                     'password' => bcrypt('password'),
                     'email_verified_at' => now(),
                 ]
             );
 
             // Assign role to user (if not already assigned)
-            if (!$user->hasRole($role)) {
-                $user->assignRole($role);
+            if (! $user->hasRole($roleSlug)) {
+                $user->assignRole($roleSlug);
             }
         }
+
+        // Seed permissions and assign to roles (includes super admin user)
+        $this->call([
+            PermissionSeeder::class,
+        ]);
     }
 }
