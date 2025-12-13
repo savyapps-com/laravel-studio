@@ -6,7 +6,7 @@ class IconPicker extends Field
 {
     protected array $icons = [];
 
-    protected bool $searchable = true;
+    public bool $searchable = true;
 
     protected function fieldType(): string
     {

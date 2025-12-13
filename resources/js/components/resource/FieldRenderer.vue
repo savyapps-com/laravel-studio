@@ -9,6 +9,7 @@
   >
     <div v-show="isFieldVisible" class="form-group">
     <label
+      v-if="field.type !== 'boolean'"
       :for="field.attribute"
       class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
     >
@@ -129,18 +130,22 @@
       </p>
     </div>
 
-    <!-- Boolean (Checkbox) -->
-    <div v-else-if="field.type === 'boolean'" class="flex items-center">
-      <input
-        :id="field.attribute"
-        v-model="modelValue[field.attribute]"
-        type="checkbox"
+    <!-- Boolean (Toggle Switch) -->
+    <div v-else-if="field.type === 'boolean'" class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div class="flex-1">
+        <label :for="field.attribute" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+          {{ field.label }}
+          <span v-if="isFieldRequired" class="text-red-500">*</span>
+        </label>
+        <p v-if="field.meta?.helpText" class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+          {{ field.meta.helpText }}
+        </p>
+      </div>
+      <ToggleSwitch
+        :model-value="modelValue[field.attribute]"
+        @update:model-value="modelValue[field.attribute] = $event"
         :disabled="isFieldDisabled"
-        class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
       />
-      <label :for="field.attribute" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
-        {{ field.meta?.trueLabel || 'Yes' }}
-      </label>
     </div>
 
     <!-- Date -->
@@ -302,8 +307,8 @@
       {{ errors[field.attribute][0] }}
     </p>
 
-    <!-- Help Text -->
-    <p v-if="field.meta?.helpText" class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+    <!-- Help Text (not for boolean fields, they have it inline) -->
+    <p v-if="field.meta?.helpText && field.type !== 'boolean'" class="mt-1 text-sm text-gray-500 dark:text-gray-400">
       {{ field.meta.helpText }}
     </p>
     </div>
@@ -314,6 +319,7 @@
 import { computed } from 'vue'
 import MediaUpload from '../form/MediaUpload.vue'
 import Icon from '../common/Icon.vue'
+import ToggleSwitch from '../common/ToggleSwitch.vue'
 import ResourceSelectInput from '../form/ResourceSelectInput.vue'
 import ServerSelectInput from '../form/ServerSelectInput.vue'
 import JsonEditor from '../form/JsonEditor.vue'

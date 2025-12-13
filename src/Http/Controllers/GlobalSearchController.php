@@ -6,9 +6,12 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use SavyApps\LaravelStudio\Services\GlobalSearchService;
+use SavyApps\LaravelStudio\Traits\ApiResponse;
 
 class GlobalSearchController extends Controller
 {
+    use ApiResponse;
+
     public function __construct(
         protected GlobalSearchService $searchService
     ) {}
@@ -19,10 +22,10 @@ class GlobalSearchController extends Controller
     public function search(Request $request): JsonResponse
     {
         $request->validate([
-            'q' => 'required|string|min:1',
-            'panel' => 'nullable|string',
-            'resources' => 'nullable|array',
-            'resources.*' => 'string',
+            'q' => 'required|string|min:1|max:255',
+            'panel' => 'nullable|string|max:100',
+            'resources' => 'nullable|array|max:50',
+            'resources.*' => 'string|max:100',
         ]);
 
         $query = $request->input('q');
@@ -103,13 +106,11 @@ class GlobalSearchController extends Controller
         $user = $request->user();
 
         if (!$user) {
-            return response()->json(['message' => 'Unauthenticated'], 401);
+            return $this->unauthorizedResponse();
         }
 
         $this->searchService->clearRecentSearches($user->id);
 
-        return response()->json([
-            'message' => 'Recent searches cleared',
-        ]);
+        return $this->successResponse(null, 'Recent searches cleared');
     }
 }

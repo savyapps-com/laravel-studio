@@ -38,7 +38,7 @@ class PanelManagementController extends Controller
         $validator = Validator::make($request->all(), [
             'key' => 'required|string|max:255|unique:panels,key|alpha_dash',
             'label' => 'required|string|max:255',
-            'path' => 'required|string|max:255',
+            'path' => ['required', 'string', 'max:255', 'regex:/^\/[a-z0-9\-\/]*$/i'],
             'icon' => 'nullable|string|max:255',
             'role' => 'nullable|string|max:255',
             'roles' => 'nullable|array',
@@ -117,7 +117,7 @@ class PanelManagementController extends Controller
         $validator = Validator::make($request->all(), [
             'key' => 'sometimes|string|max:255|alpha_dash|unique:panels,key,'.$panel->id,
             'label' => 'sometimes|string|max:255',
-            'path' => 'sometimes|string|max:255',
+            'path' => ['sometimes', 'string', 'max:255', 'regex:/^\/[a-z0-9\-\/]*$/i'],
             'icon' => 'nullable|string|max:255',
             'role' => 'nullable|string|max:255',
             'roles' => 'nullable|array',

@@ -15,9 +15,6 @@ class DatabaseSeeder extends Seeder
     {
         // Seed reference data first
         $this->call([
-            CountriesSeeder::class,
-            TimezonesSeeder::class,
-            CountryTimezoneSeeder::class,
             SettingListsSeeder::class,
             EmailTemplatesSeeder::class,
         ]);

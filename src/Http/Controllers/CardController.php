@@ -5,10 +5,14 @@ namespace SavyApps\LaravelStudio\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Gate;
 use SavyApps\LaravelStudio\Services\CardService;
+use SavyApps\LaravelStudio\Traits\ApiResponse;
 
 class CardController extends Controller
 {
+    use ApiResponse;
+
     public function __construct(
         protected CardService $cardService
     ) {}
@@ -20,9 +24,8 @@ class CardController extends Controller
     {
         $cards = $this->cardService->getResourceCards($resource);
 
-        return response()->json([
+        return $this->collectionResponse($cards, [
             'resource' => $resource,
-            'cards' => $cards,
             'total' => count($cards),
         ]);
     }
@@ -35,9 +38,8 @@ class CardController extends Controller
         $panel = $request->input('panel');
         $cards = $this->cardService->getDashboardCards($panel);
 
-        return response()->json([
+        return $this->collectionResponse($cards, [
             'panel' => $panel,
-            'cards' => $cards,
             'total' => count($cards),
         ]);
     }
@@ -50,12 +52,10 @@ class CardController extends Controller
         $card = $this->cardService->getCardData($resource, $cardKey);
 
         if (!$card) {
-            return response()->json([
-                'message' => 'Card not found',
-            ], 404);
+            return $this->notFoundResponse('Card', $cardKey);
         }
 
-        return response()->json($card);
+        return $this->successResponse($card);
     }
 
     /**
@@ -66,12 +66,10 @@ class CardController extends Controller
         $card = $this->cardService->refreshCard($resource, $cardKey);
 
         if (!$card) {
-            return response()->json([
-                'message' => 'Card not found',
-            ], 404);
+            return $this->notFoundResponse('Card', $cardKey);
         }
 
-        return response()->json($card);
+        return $this->successResponse($card, 'Card refreshed');
     }
 
     /**
@@ -81,9 +79,7 @@ class CardController extends Controller
     {
         $types = $this->cardService->getCardTypes();
 
-        return response()->json([
-            'types' => $types,
-        ]);
+        return $this->successResponse(['types' => $types]);
     }
 
     /**
@@ -93,21 +89,28 @@ class CardController extends Controller
     {
         $this->cardService->clearResourceCardCache($resource);
 
-        return response()->json([
-            'message' => 'Card cache cleared',
-            'resource' => $resource,
-        ]);
+        return $this->successResponse(['resource' => $resource], 'Card cache cleared');
     }
 
     /**
      * Clear all card caches.
      */
-    public function clearAllCaches(): JsonResponse
+    public function clearAllCaches(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if (!$user) {
+            return $this->unauthorizedResponse();
+        }
+
+        $superAdminRole = config('studio.authorization.super_admin_role', 'super_admin');
+        $isSuperAdmin = method_exists($user, 'hasRole') && $user->hasRole($superAdminRole);
+
+        if (!$isSuperAdmin && !Gate::allows('manage-cards')) {
+            return $this->forbiddenResponse('Unauthorized to clear all card caches');
+        }
+
         $this->cardService->clearAllCardCaches();
 
-        return response()->json([
-            'message' => 'All card caches cleared',
-        ]);
+        return $this->successResponse(null, 'All card caches cleared');
     }
 }

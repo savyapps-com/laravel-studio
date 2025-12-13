@@ -13,7 +13,6 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'admin' => \App\Http\Middleware\EnsureUserCanAccessAdminPanel::class,
             'panel' => \App\Http\Middleware\EnsurePanelAccess::class,
             'token.query' => \App\Http\Middleware\TokenFromQueryParameter::class,
         ]);

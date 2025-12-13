@@ -3,13 +3,17 @@
 namespace SavyApps\LaravelStudio\Services;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use SavyApps\LaravelStudio\Models\Panel;
 
 class PanelService
 {
+    protected const CACHE_KEY_ALL_PANELS = 'studio_panels_all';
+    protected const CACHE_KEY_DB_PANELS = 'studio_panels_db';
+
     /**
-     * Cached panels to avoid repeated DB queries.
+     * In-memory cached panels to avoid repeated cache lookups within a request.
      */
     protected ?array $cachedPanels = null;
 
@@ -18,6 +22,7 @@ class PanelService
      */
     public function getAllPanels(): array
     {
+        // Check in-memory cache first
         if ($this->cachedPanels !== null) {
             return $this->cachedPanels;
         }
@@ -27,10 +32,7 @@ class PanelService
 
         // Try to load from database if table exists
         if ($this->panelsTableExists()) {
-            $dbPanels = Panel::active()->ordered()->get()
-                ->keyBy('key')
-                ->map(fn ($panel) => $panel->toConfig())
-                ->toArray();
+            $dbPanels = $this->getCachedDbPanels();
 
             // DB panels take precedence over config
             $this->cachedPanels = array_merge($configPanels, $dbPanels);
@@ -42,11 +44,36 @@ class PanelService
     }
 
     /**
-     * Clear cached panels.
+     * Get database panels with persistent caching.
+     */
+    protected function getCachedDbPanels(): array
+    {
+        if (!config('studio.panels_cache.enabled', true)) {
+            return Panel::active()->ordered()->get()
+                ->keyBy('key')
+                ->map(fn ($panel) => $panel->toConfig())
+                ->toArray();
+        }
+
+        $ttl = config('studio.panels_cache.ttl', 3600);
+        $cacheKey = self::CACHE_KEY_DB_PANELS;
+
+        return Cache::remember($cacheKey, $ttl, function () {
+            return Panel::active()->ordered()->get()
+                ->keyBy('key')
+                ->map(fn ($panel) => $panel->toConfig())
+                ->toArray();
+        });
+    }
+
+    /**
+     * Clear cached panels (both in-memory and persistent).
      */
     public function clearCache(): void
     {
         $this->cachedPanels = null;
+        Cache::forget(self::CACHE_KEY_ALL_PANELS);
+        Cache::forget(self::CACHE_KEY_DB_PANELS);
     }
 
     /**

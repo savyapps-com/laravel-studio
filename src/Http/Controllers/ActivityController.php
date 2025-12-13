@@ -7,9 +7,12 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use SavyApps\LaravelStudio\Models\Activity;
 use SavyApps\LaravelStudio\Services\ActivityService;
+use SavyApps\LaravelStudio\Traits\ApiResponse;
 
 class ActivityController extends Controller
 {
+    use ApiResponse;
+
     public function __construct(
         protected ActivityService $activityService
     ) {}
@@ -94,7 +97,7 @@ class ActivityController extends Controller
         $user = $request->user();
 
         if (!$user) {
-            return response()->json(['message' => 'Unauthenticated'], 401);
+            return $this->unauthorizedResponse();
         }
 
         $filters = $request->only([

@@ -10,19 +10,24 @@ class ResourceControllerTest extends TestCase
     /** @test */
     public function it_returns_resource_metadata(): void
     {
+        $this->actingAsTestUser(['admin']);
+
         $response = $this->getJson('/api/resources/test-resources/meta');
 
         $response->assertOk()
             ->assertJsonStructure([
-                'fields',
-                'filters',
-                'actions',
+                'data' => [
+                    'fields',
+                    'filters',
+                    'actions',
+                ],
             ]);
     }
 
     /** @test */
     public function it_lists_resources(): void
     {
+        $this->actingAsTestUser(['admin']);
         TestModel::factory()->count(5)->create();
 
         $response = $this->getJson('/api/resources/test-resources');
@@ -41,6 +46,7 @@ class ResourceControllerTest extends TestCase
     /** @test */
     public function it_shows_single_resource(): void
     {
+        $this->actingAsTestUser(['admin']);
         $model = TestModel::create([
             'name' => 'Test User',
             'email' => 'test@example.com',
@@ -50,16 +56,15 @@ class ResourceControllerTest extends TestCase
         $response = $this->getJson("/api/resources/test-resources/{$model->id}");
 
         $response->assertOk()
-            ->assertJson([
-                'id' => $model->id,
-                'name' => 'Test User',
-                'email' => 'test@example.com',
-            ]);
+            ->assertJsonPath('data.id', $model->id)
+            ->assertJsonPath('data.name', 'Test User')
+            ->assertJsonPath('data.email', 'test@example.com');
     }
 
     /** @test */
     public function it_creates_resource(): void
     {
+        $this->actingAsTestUser(['admin']);
         $data = [
             'name' => 'New User',
             'email' => 'new@example.com',
@@ -70,10 +75,8 @@ class ResourceControllerTest extends TestCase
         $response = $this->postJson('/api/resources/test-resources', $data);
 
         $response->assertCreated()
-            ->assertJson([
-                'name' => 'New User',
-                'email' => 'new@example.com',
-            ]);
+            ->assertJsonPath('data.name', 'New User')
+            ->assertJsonPath('data.email', 'new@example.com');
 
         $this->assertDatabaseHas('test_models', [
             'name' => 'New User',
@@ -84,6 +87,8 @@ class ResourceControllerTest extends TestCase
     /** @test */
     public function it_validates_required_fields_on_create(): void
     {
+        $this->actingAsTestUser(['admin']);
+
         $response = $this->postJson('/api/resources/test-resources', []);
 
         $response->assertStatus(422)
@@ -93,6 +98,7 @@ class ResourceControllerTest extends TestCase
     /** @test */
     public function it_updates_resource(): void
     {
+        $this->actingAsTestUser(['admin']);
         $model = TestModel::create([
             'name' => 'Old Name',
             'email' => 'old@example.com',
@@ -106,10 +112,8 @@ class ResourceControllerTest extends TestCase
         ]);
 
         $response->assertOk()
-            ->assertJson([
-                'name' => 'Updated Name',
-                'email' => 'updated@example.com',
-            ]);
+            ->assertJsonPath('data.name', 'Updated Name')
+            ->assertJsonPath('data.email', 'updated@example.com');
 
         $this->assertDatabaseHas('test_models', [
             'id' => $model->id,
@@ -120,6 +124,7 @@ class ResourceControllerTest extends TestCase
     /** @test */
     public function it_patches_resource(): void
     {
+        $this->actingAsTestUser(['admin']);
         $model = TestModel::create([
             'name' => 'Test User',
             'email' => 'test@example.com',
@@ -141,6 +146,7 @@ class ResourceControllerTest extends TestCase
     /** @test */
     public function it_deletes_resource(): void
     {
+        $this->actingAsTestUser(['admin']);
         $model = TestModel::create([
             'name' => 'Test User',
             'email' => 'test@example.com',
@@ -159,6 +165,7 @@ class ResourceControllerTest extends TestCase
     /** @test */
     public function it_bulk_deletes_resources(): void
     {
+        $this->actingAsTestUser(['admin']);
         $models = TestModel::factory()->count(3)->create();
         $ids = $models->pluck('id')->toArray();
 
@@ -176,6 +183,7 @@ class ResourceControllerTest extends TestCase
     /** @test */
     public function it_searches_resources(): void
     {
+        $this->actingAsTestUser(['admin']);
         TestModel::create([
             'name' => 'John Doe',
             'email' => 'john@example.com',
@@ -200,11 +208,12 @@ class ResourceControllerTest extends TestCase
     /** @test */
     public function it_sorts_resources(): void
     {
+        $this->actingAsTestUser(['admin']);
         TestModel::create(['name' => 'Charlie', 'email' => 'charlie@example.com', 'status' => 'active']);
         TestModel::create(['name' => 'Alice', 'email' => 'alice@example.com', 'status' => 'active']);
         TestModel::create(['name' => 'Bob', 'email' => 'bob@example.com', 'status' => 'active']);
 
-        $response = $this->getJson('/api/resources/test-resources?sortBy=name&sortDirection=asc');
+        $response = $this->getJson('/api/resources/test-resources?sort=name&direction=asc');
 
         $response->assertOk();
 
@@ -215,6 +224,7 @@ class ResourceControllerTest extends TestCase
     /** @test */
     public function it_filters_resources(): void
     {
+        $this->actingAsTestUser(['admin']);
         TestModel::create(['name' => 'Active User', 'email' => 'active@example.com', 'status' => 'active']);
         TestModel::create(['name' => 'Inactive User', 'email' => 'inactive@example.com', 'status' => 'inactive']);
 
@@ -230,6 +240,7 @@ class ResourceControllerTest extends TestCase
     /** @test */
     public function it_paginates_resources(): void
     {
+        $this->actingAsTestUser(['admin']);
         TestModel::factory()->count(25)->create();
 
         $response = $this->getJson('/api/resources/test-resources?perPage=10');
@@ -244,6 +255,8 @@ class ResourceControllerTest extends TestCase
     /** @test */
     public function it_returns_404_for_nonexistent_resource(): void
     {
+        $this->actingAsTestUser(['admin']);
+
         $response = $this->getJson('/api/resources/nonexistent-resource/meta');
 
         $response->assertNotFound();

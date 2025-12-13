@@ -6,9 +6,12 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use SavyApps\LaravelStudio\Services\PanelService;
+use SavyApps\LaravelStudio\Traits\ApiResponse;
 
 class PanelController extends Controller
 {
+    use ApiResponse;
+
     public function __construct(
         protected PanelService $panelService
     ) {}
@@ -41,17 +44,11 @@ class PanelController extends Controller
         $config = $this->panelService->getPanel($panel);
 
         if (!$config) {
-            return response()->json(['message' => 'Panel not found'], 404);
+            return $this->notFoundResponse('Panel', $panel);
         }
 
-        // For admin panel, get allow_registration from config (to use env variable)
+        // Get allow_registration from database panel config (database takes precedence)
         $allowRegistration = $config['allow_registration'] ?? false;
-        if ($panel === 'admin') {
-            $configPanel = config('studio.panels.admin');
-            if ($configPanel) {
-                $allowRegistration = $configPanel['allow_registration'] ?? false;
-            }
-        }
 
         return response()->json([
             'panel' => $panel,
@@ -69,11 +66,11 @@ class PanelController extends Controller
         $config = $this->panelService->getPanel($panel);
 
         if (!$config) {
-            return response()->json(['message' => 'Panel not found'], 404);
+            return $this->notFoundResponse('Panel', $panel);
         }
 
         if (!$this->panelService->userCanAccessPanel($request->user(), $panel)) {
-            return response()->json(['message' => 'Access denied'], 403);
+            return $this->forbiddenResponse('Access denied to this panel');
         }
 
         return response()->json([
@@ -98,16 +95,14 @@ class PanelController extends Controller
         $config = $this->panelService->getPanel($panel);
 
         if (!$config) {
-            return response()->json(['message' => 'Panel not found'], 404);
+            return $this->notFoundResponse('Panel', $panel);
         }
 
         if (!$this->panelService->userCanAccessPanel($request->user(), $panel)) {
-            return response()->json(['message' => 'Access denied'], 403);
+            return $this->forbiddenResponse('Access denied to this panel');
         }
 
-        return response()->json([
-            'menu' => $this->panelService->getPanelMenu($panel),
-        ]);
+        return $this->successResponse(['menu' => $this->panelService->getPanelMenu($panel)]);
     }
 
     /**
@@ -118,11 +113,11 @@ class PanelController extends Controller
         $config = $this->panelService->getPanel($panel);
 
         if (!$config) {
-            return response()->json(['message' => 'Panel not found'], 404);
+            return $this->notFoundResponse('Panel', $panel);
         }
 
         if (!$this->panelService->userCanAccessPanel($request->user(), $panel)) {
-            return response()->json(['message' => 'Access denied'], 403);
+            return $this->forbiddenResponse('Access denied to this panel');
         }
 
         $resources = $this->panelService->getPanelResources($panel);
@@ -145,19 +140,23 @@ class PanelController extends Controller
         $config = $this->panelService->getPanel($panel);
 
         if (!$config) {
-            return response()->json(['message' => 'Panel not found'], 404);
+            return $this->notFoundResponse('Panel', $panel);
         }
 
         if (!$this->panelService->userCanAccessPanel($request->user(), $panel)) {
-            return response()->json([
-                'message' => 'Access denied',
-                'available_panels' => collect($this->panelService->getAccessiblePanels())
-                    ->map(fn($config, $key) => [
-                        'key' => $key,
-                        'label' => $config['label'],
-                        'path' => $config['path'],
-                    ])->values(),
-            ], 403);
+            return $this->errorResponse(
+                'Access denied',
+                403,
+                [
+                    'available_panels' => collect($this->panelService->getAccessiblePanels())
+                        ->map(fn($config, $key) => [
+                            'key' => $key,
+                            'label' => $config['label'],
+                            'path' => $config['path'],
+                        ])->values(),
+                ],
+                'FORBIDDEN'
+            );
         }
 
         return response()->json([

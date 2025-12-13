@@ -185,7 +185,15 @@ class ResourceService
             throw new \InvalidArgumentException("Action not found: {$actionKey}");
         }
 
-        $models = $this->baseQuery()->whereIn('id', $ids)->get();
+        // Eager load relationships to prevent N+1 queries in action handlers
+        $query = $this->baseQuery()->whereIn('id', $ids);
+
+        $with = $this->getRelationshipsToLoad();
+        if (!empty($with)) {
+            $query->with($with);
+        }
+
+        $models = $query->get();
 
         return $action->handle($models, $data);
     }
@@ -238,11 +246,38 @@ class ResourceService
 
     /**
      * Apply sorting to query.
+     * Only allows sorting on columns marked as sortable in the resource fields.
      */
     protected function applySort(Builder $query, string $column, string $direction = 'asc'): void
     {
+        // Validate column against allowed sortable fields to prevent SQL injection
+        $allowedColumns = $this->getSortableColumns();
+
+        if (!in_array($column, $allowedColumns, true)) {
+            // Fall back to default sorting if column is not allowed
+            $query->orderBy('id', 'desc');
+            return;
+        }
+
         $direction = strtolower($direction) === 'desc' ? 'desc' : 'asc';
         $query->orderBy($column, $direction);
+    }
+
+    /**
+     * Get list of sortable column names from resource fields.
+     */
+    protected function getSortableColumns(): array
+    {
+        $fields = $this->resource->flattenFields($this->resource->getIndexFields());
+        $sortableColumns = ['id', 'created_at', 'updated_at']; // Always allow these
+
+        foreach ($fields as $field) {
+            if ($field->sortable) {
+                $sortableColumns[] = $field->attribute;
+            }
+        }
+
+        return array_unique($sortableColumns);
     }
 
     /**

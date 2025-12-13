@@ -2,12 +2,10 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CommentController;
-use App\Http\Controllers\Api\CountriesController;
 use App\Http\Controllers\Api\EmailTemplateController;
 use App\Http\Controllers\Api\ImpersonationController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\SettingsController;
-use App\Http\Controllers\Api\TimezonesController;
 use App\Http\Controllers\Api\UserSettingsController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,12 +14,6 @@ Route::post('/login', [AuthController::class, 'login'])->name('api.login');
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('api.forgot-password');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('api.reset-password');
 Route::get('/check-registration', [AuthController::class, 'checkRegistration'])->name('api.check-registration');
-
-// Public reference data routes
-Route::get('/countries', [CountriesController::class, 'index'])->name('api.countries.index');
-Route::get('/countries/{code}', [CountriesController::class, 'show'])->name('api.countries.show');
-Route::get('/timezones', [TimezonesController::class, 'index'])->name('api.timezones.index');
-Route::get('/timezones/{id}', [TimezonesController::class, 'show'])->name('api.timezones.show');
 
 // Public invitation routes (for unauthenticated users)
 Route::post('/check-email', [AuthController::class, 'checkEmail'])->name('api.check-email');
@@ -38,12 +30,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Impersonation routes
     Route::get('/impersonation/status', [ImpersonationController::class, 'status'])->name('api.impersonation.status');
     Route::post('/impersonation/stop', [ImpersonationController::class, 'stopImpersonating'])->name('api.impersonation.stop');
-    Route::middleware('admin')->post('/impersonation/{userId}', [ImpersonationController::class, 'impersonate'])->name('api.impersonation.start');
+    Route::middleware('panel:admin')->post('/impersonation/{userId}', [ImpersonationController::class, 'impersonate'])->name('api.impersonation.start');
 
 
 
     // Settings routes (admin-only for global settings)
-    Route::middleware('admin')->group(function () {
+    Route::middleware('panel:admin')->group(function () {
         Route::get('/settings', [SettingsController::class, 'index'])->name('api.settings.index');
         Route::get('/settings/groups', [SettingsController::class, 'groups'])->name('api.settings.groups');
         Route::get('/settings/{key}', [SettingsController::class, 'show'])->name('api.settings.show');
@@ -62,7 +54,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/user/settings/{key}', [UserSettingsController::class, 'updateSingle'])->name('api.user.settings.update-single');
 
     // Email template routes (admin-only)
-    Route::middleware('admin')->prefix('email-templates')->name('api.email-templates.')->group(function () {
+    Route::middleware('panel:admin')->prefix('email-templates')->name('api.email-templates.')->group(function () {
         Route::get('/', [EmailTemplateController::class, 'index'])->name('index');
         Route::post('/', [EmailTemplateController::class, 'store'])->name('store');
         Route::get('/{template}', [EmailTemplateController::class, 'show'])->name('show');

@@ -19,8 +19,6 @@ return [
     'resources' => [
         'users' => \App\Resources\UserResource::class,
         'roles' => \App\Resources\RoleResource::class,
-        'countries' => \App\Resources\CountryResource::class,
-        'timezones' => \App\Resources\TimezoneResource::class,
         'panels' => \App\Resources\PanelResource::class,
     ],
 
@@ -34,7 +32,7 @@ return [
     |
     */
 
-    'middleware' => ['api', 'auth:sanctum', 'admin'],
+    'middleware' => ['api', 'auth:sanctum', 'panel:admin'],
 
     /*
     |--------------------------------------------------------------------------
@@ -86,7 +84,7 @@ return [
             'role' => 'admin',
             'allow_registration' => env('ADMIN_ALLOW_REGISTRATION', false),
             'default_role' => 'admin',
-            'resources' => ['users', 'roles', 'countries', 'timezones'],
+            'resources' => ['users', 'roles', 'panels'],
             'features' => ['email-templates', 'system-settings'],
             'menu' => [
                 ['type' => 'link', 'label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'home'],
@@ -96,8 +94,6 @@ return [
                 ['type' => 'resource', 'resource' => 'roles'],
                 ['type' => 'divider'],
                 ['type' => 'header', 'label' => 'System'],
-                ['type' => 'resource', 'resource' => 'countries'],
-                ['type' => 'resource', 'resource' => 'timezones'],
                 ['type' => 'feature', 'feature' => 'email-templates'],
                 ['type' => 'feature', 'feature' => 'system-settings'],
             ],

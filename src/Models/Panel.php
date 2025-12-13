@@ -3,9 +3,40 @@
 namespace SavyApps\LaravelStudio\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Panel extends Model
 {
+    /**
+     * Cache keys used by PanelService.
+     */
+    protected const CACHE_KEY_ALL_PANELS = 'studio_panels_all';
+    protected const CACHE_KEY_DB_PANELS = 'studio_panels_db';
+
+    /**
+     * Boot the model and register event listeners.
+     */
+    protected static function booted(): void
+    {
+        // Clear panel cache when any panel is created, updated, or deleted
+        static::saved(function () {
+            static::clearPanelCache();
+        });
+
+        static::deleted(function () {
+            static::clearPanelCache();
+        });
+    }
+
+    /**
+     * Clear panel cache.
+     */
+    public static function clearPanelCache(): void
+    {
+        Cache::forget(self::CACHE_KEY_ALL_PANELS);
+        Cache::forget(self::CACHE_KEY_DB_PANELS);
+    }
+
     protected $fillable = [
         'key',
         'label',

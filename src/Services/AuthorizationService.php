@@ -2,12 +2,17 @@
 
 namespace SavyApps\LaravelStudio\Services;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use SavyApps\LaravelStudio\Models\Permission;
 
 class AuthorizationService
 {
+    protected const CACHE_KEY_PERMISSIONS = 'studio.permissions.all';
+    protected const CACHE_KEY_GROUPED = 'studio.permissions.grouped';
+
     /**
      * Register gates for all permissions.
      */
@@ -23,17 +28,65 @@ class AuthorizationService
         }
 
         try {
-            Permission::all()->each(function ($permission) {
-                Gate::define($permission->name, function ($user) use ($permission) {
+            // Use cached permissions to avoid N+1 query on every request
+            $permissions = $this->getCachedPermissions();
+
+            foreach ($permissions as $permission) {
+                $permissionName = $permission['name'];
+                Gate::define($permissionName, function ($user) use ($permissionName) {
                     if (method_exists($user, 'hasPermission')) {
-                        return $user->hasPermission($permission->name);
+                        return $user->hasPermission($permissionName);
                     }
                     return false;
                 });
-            });
+            }
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Database not available during migrations or initial setup - this is expected
+            Log::debug('Laravel Studio: Could not register permission gates - database may not be ready', [
+                'error' => $e->getMessage(),
+            ]);
         } catch (\Exception $e) {
-            // Silently fail if database is not available
+            // Unexpected error - log as warning for investigation
+            Log::warning('Laravel Studio: Failed to register permission gates', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
+    }
+
+    /**
+     * Get cached permissions list.
+     */
+    protected function getCachedPermissions(): array
+    {
+        if (!config('studio.authorization.cache.enabled', true)) {
+            return Permission::select(['id', 'name', 'display_name', 'group'])
+                ->orderBy('group')
+                ->orderBy('name')
+                ->get()
+                ->toArray();
+        }
+
+        $ttl = config('studio.authorization.cache.ttl', 3600);
+        $cacheKey = config('studio.authorization.cache.prefix', 'studio_permissions_') . 'all';
+
+        return Cache::remember($cacheKey, $ttl, function () {
+            return Permission::select(['id', 'name', 'display_name', 'group'])
+                ->orderBy('group')
+                ->orderBy('name')
+                ->get()
+                ->toArray();
+        });
+    }
+
+    /**
+     * Clear all permission caches.
+     */
+    public function clearPermissionCaches(): void
+    {
+        $prefix = config('studio.authorization.cache.prefix', 'studio_permissions_');
+        Cache::forget($prefix . 'all');
+        Cache::forget($prefix . 'grouped');
     }
 
     /**
@@ -87,14 +140,11 @@ class AuthorizationService
     }
 
     /**
-     * Get all permissions as flat array.
+     * Get all permissions as flat array (cached).
      */
     public function getAllPermissions(): array
     {
-        return Permission::orderBy('group')
-            ->orderBy('name')
-            ->get()
-            ->toArray();
+        return $this->getCachedPermissions();
     }
 
     /**
@@ -118,13 +168,10 @@ class AuthorizationService
         $role->permissions()->sync($permissionIds);
 
         // Clear cache for all users with this role
-        if (method_exists($role, 'users')) {
-            $role->users->each(function ($user) {
-                if (method_exists($user, 'clearPermissionCache')) {
-                    $user->clearPermissionCache();
-                }
-            });
-        }
+        $this->clearRoleUsersCaches($role);
+
+        // Clear permission caches
+        $this->clearPermissionCaches();
     }
 
     /**
@@ -136,9 +183,8 @@ class AuthorizationService
         $role->permissions()->syncWithoutDetaching($permissionIds);
 
         // Clear cache
-        if (method_exists($role, 'users')) {
-            $role->users->each(fn($user) => $user->clearPermissionCache());
-        }
+        $this->clearRoleUsersCaches($role);
+        $this->clearPermissionCaches();
     }
 
     /**
@@ -150,9 +196,28 @@ class AuthorizationService
         $role->permissions()->detach($permissionIds);
 
         // Clear cache
-        if (method_exists($role, 'users')) {
-            $role->users->each(fn($user) => $user->clearPermissionCache());
+        $this->clearRoleUsersCaches($role);
+        $this->clearPermissionCaches();
+    }
+
+    /**
+     * Clear permission caches for all users with a given role.
+     * Uses chunking to avoid memory issues with large user bases.
+     */
+    protected function clearRoleUsersCaches($role): void
+    {
+        if (!method_exists($role, 'users')) {
+            return;
         }
+
+        // Use chunking to avoid loading all users at once
+        $role->users()->chunk(100, function ($users) {
+            foreach ($users as $user) {
+                if (method_exists($user, 'clearPermissionCache')) {
+                    $user->clearPermissionCache();
+                }
+            }
+        });
     }
 
     /**

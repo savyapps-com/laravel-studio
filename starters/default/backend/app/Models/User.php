@@ -170,13 +170,11 @@ class User extends Authenticatable implements HasMedia
 
     /**
      * Check if user can access admin panel.
-     * Requires both admin role AND user ID to be in the whitelist.
+     * Requires admin role.
      */
     public function canAccessAdminPanel(): bool
     {
-        $allowedAdminIds = config('admin.id', []);
-
-        return $this->isAdmin() && in_array($this->id, $allowedAdminIds);
+        return $this->isAdmin();
     }
 
     /**

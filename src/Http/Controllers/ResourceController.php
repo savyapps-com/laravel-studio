@@ -280,8 +280,10 @@ class ResourceController extends Controller
      */
     public function bulkDelete(Request $request, string $resource): JsonResponse
     {
+        $maxBulkIds = config('studio.bulk_operations.max_ids', 1000);
+
         $request->validate([
-            'ids' => 'required|array',
+            'ids' => "required|array|max:{$maxBulkIds}",
             'ids.*' => 'required|integer',
         ]);
 
@@ -305,8 +307,10 @@ class ResourceController extends Controller
      */
     public function bulkUpdate(Request $request, string $resource): JsonResponse
     {
+        $maxBulkIds = config('studio.bulk_operations.max_ids', 1000);
+
         $request->validate([
-            'ids' => 'required|array',
+            'ids' => "required|array|max:{$maxBulkIds}",
             'ids.*' => 'required|integer',
             'data' => 'required|array',
         ]);
@@ -334,8 +338,10 @@ class ResourceController extends Controller
      */
     public function runAction(Request $request, string $resource, string $action): JsonResponse
     {
+        $maxBulkIds = config('studio.bulk_operations.max_ids', 1000);
+
         $request->validate([
-            'ids' => 'required|array',
+            'ids' => "required|array|max:{$maxBulkIds}",
             'ids.*' => 'required|integer',
         ]);
 

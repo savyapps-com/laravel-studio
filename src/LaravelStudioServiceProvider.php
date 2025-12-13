@@ -17,6 +17,7 @@ use SavyApps\LaravelStudio\Services\AuthorizationService;
 use SavyApps\LaravelStudio\Services\CardService;
 use SavyApps\LaravelStudio\Services\GlobalSearchService;
 use SavyApps\LaravelStudio\Services\PanelService;
+use SavyApps\LaravelStudio\Support\ConfigValidator;
 
 class LaravelStudioServiceProvider extends ServiceProvider
 {
@@ -62,6 +63,9 @@ class LaravelStudioServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Validate configuration (in non-production, logs warnings; throws on critical errors)
+        $this->validateConfiguration();
+
         // Register middleware aliases
         $this->registerMiddleware();
 
@@ -139,5 +143,37 @@ class LaravelStudioServiceProvider extends ServiceProvider
                 // Silently fail if database is not ready
             }
         });
+    }
+
+    /**
+     * Validate the package configuration.
+     *
+     * Validates configuration values and logs warnings for non-critical issues.
+     * Throws an exception for critical configuration errors.
+     */
+    protected function validateConfiguration(): void
+    {
+        // Skip validation during testing unless explicitly enabled
+        if ($this->app->runningUnitTests() && !config('studio.validate_config_in_tests', false)) {
+            return;
+        }
+
+        // Skip validation if explicitly disabled
+        if (!config('studio.validate_config', true)) {
+            return;
+        }
+
+        try {
+            $validator = new ConfigValidator();
+            $validator->validate();
+        } catch (\InvalidArgumentException $e) {
+            // Re-throw critical errors
+            throw $e;
+        } catch (\Exception $e) {
+            // Log but don't crash for unexpected validation errors
+            \Illuminate\Support\Facades\Log::warning(
+                'Laravel Studio configuration validation failed unexpectedly: ' . $e->getMessage()
+            );
+        }
     }
 }

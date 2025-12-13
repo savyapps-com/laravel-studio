@@ -18,7 +18,7 @@ class PanelsSeeder extends Seeder
                 'role' => 'admin',
                 'roles' => json_encode(['admin']),
                 'middleware' => json_encode(['admin']),
-                'resources' => json_encode(['users', 'roles', 'countries', 'timezones']),
+                'resources' => json_encode(['users', 'roles', 'panels']),
                 'features' => json_encode(['email-templates', 'system-settings']),
                 'menu' => json_encode([
                     ['type' => 'link', 'label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'home'],
@@ -28,8 +28,6 @@ class PanelsSeeder extends Seeder
                     ['type' => 'resource', 'resource' => 'roles'],
                     ['type' => 'divider'],
                     ['type' => 'header', 'label' => 'System'],
-                    ['type' => 'resource', 'resource' => 'countries'],
-                    ['type' => 'resource', 'resource' => 'timezones'],
                     ['type' => 'feature', 'feature' => 'email-templates'],
                     ['type' => 'feature', 'feature' => 'system-settings'],
                 ]),

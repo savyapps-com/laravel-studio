@@ -2,10 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Country;
 use App\Models\Setting;
 use App\Models\SettingList;
-use App\Models\Timezone;
 use Illuminate\Database\Seeder;
 
 class SettingsSeeder extends Seeder
@@ -15,8 +13,6 @@ class SettingsSeeder extends Seeder
         // Get default references
         $defaultTheme = SettingList::where('key', 'themes')->where('value', 'ocean')->first();
         $defaultLayout = SettingList::where('key', 'admin_layouts')->where('value', 'classic')->first();
-        $defaultCountry = Country::where('code', 'US')->first();
-        $defaultTimezone = Timezone::where('name', 'America/New_York')->first();
         $defaultDateFormat = SettingList::where('key', 'date_formats')->where('value', 'Y-m-d')->first();
         $defaultTimeFormat = SettingList::where('key', 'time_formats')->where('value', 'H:i:s')->first();
         $defaultLanguage = SettingList::where('key', 'languages')->where('value', 'en')->first();
@@ -61,42 +57,6 @@ class SettingsSeeder extends Seeder
             ],
 
             // Localization Group
-            [
-                'key' => 'default_timezone',
-                'value' => 'America/New_York',
-                'type' => 'reference',
-                'group' => 'localization',
-                'scope' => 'global',
-                'label' => 'Default Timezone',
-                'description' => 'Default timezone for new users',
-                'icon' => 'clock',
-                'is_public' => true,
-                'is_encrypted' => false,
-                'validation_rules' => ['required'],
-                'settable_type' => null,
-                'settable_id' => null,
-                'referenceable_type' => $defaultTimezone ? Timezone::class : null,
-                'referenceable_id' => $defaultTimezone?->id,
-                'order' => 1,
-            ],
-            [
-                'key' => 'default_country',
-                'value' => 'US',
-                'type' => 'reference',
-                'group' => 'localization',
-                'scope' => 'global',
-                'label' => 'Default Country',
-                'description' => 'Default country for new users',
-                'icon' => 'flag',
-                'is_public' => true,
-                'is_encrypted' => false,
-                'validation_rules' => ['required'],
-                'settable_type' => null,
-                'settable_id' => null,
-                'referenceable_type' => $defaultCountry ? Country::class : null,
-                'referenceable_id' => $defaultCountry?->id,
-                'order' => 2,
-            ],
             [
                 'key' => 'default_date_format',
                 'value' => 'Y-m-d',
