@@ -171,6 +171,37 @@ class ActivateUsersAction extends Action
 | `GloballySearchable` | Resource | Global search |
 | `ApiResponse` | Controller | Standard responses |
 
+## Permission System
+
+Permissions are defined as constants in `SavyApps\LaravelStudio\Enums\Permission`:
+
+```php
+use SavyApps\LaravelStudio\Enums\Permission;
+
+// Use constants instead of strings (prevents typos)
+Permission::USERS_LIST;      // 'users.list'
+Permission::USERS_CREATE;    // 'users.create'
+Permission::ROLES_MANAGE;    // 'roles.manage'
+
+// Validation
+Permission::isValid('users.create');  // true
+```
+
+Role model is in the package (not app/Models):
+
+```php
+use SavyApps\LaravelStudio\Models\Role;
+
+Role::SUPER_ADMIN;  // 'super_admin'
+Role::ADMIN;        // 'admin'
+Role::USER;         // 'user'
+
+$role->hasPermission('users.create');
+$role->isSystemRole();  // Protected from deletion
+```
+
+RBAC can be disabled entirely with `STUDIO_AUTH_ENABLED=false`.
+
 ## Backend Services
 
 - `ResourceService` - CRUD operations

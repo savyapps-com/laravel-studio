@@ -93,7 +93,7 @@ class PermissionController extends Controller
     {
         $this->authorizePermissionView();
 
-        $roleModel = config('studio.authorization.models.role', \App\Models\Role::class);
+        $roleModel = config('studio.authorization.models.role', \SavyApps\LaravelStudio\Models\Role::class);
         $role = $roleModel::findOrFail($roleId);
 
         return response()->json([
@@ -116,7 +116,7 @@ class PermissionController extends Controller
             'permissions.*' => 'string',
         ]);
 
-        $roleModel = config('studio.authorization.models.role', \App\Models\Role::class);
+        $roleModel = config('studio.authorization.models.role', \SavyApps\LaravelStudio\Models\Role::class);
         $role = $roleModel::findOrFail($roleId);
 
         $this->authorizationService->syncRolePermissions($role, $request->input('permissions'));

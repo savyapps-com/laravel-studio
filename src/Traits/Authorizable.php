@@ -4,7 +4,32 @@ namespace SavyApps\LaravelStudio\Traits;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use SavyApps\LaravelStudio\Enums\Permission as PermissionEnum;
 
+/**
+ * Trait for adding authorization capabilities to Resource classes.
+ *
+ * This trait provides policy-based RBAC for Laravel Studio resources.
+ * Authorization flow:
+ * 1. Check if RBAC is enabled globally
+ * 2. Check policy first (if defined)
+ * 3. Fall back to permission-based checks
+ *
+ * Features:
+ * - Policy-first authorization
+ * - Permission-based fallback
+ * - Super admin bypass
+ * - Global RBAC toggle
+ *
+ * @example
+ * class ProductResource extends Resource
+ * {
+ *     use Authorizable;
+ *
+ *     // Optional: specify a policy class
+ *     public static string $policy = ProductPolicy::class;
+ * }
+ */
 trait Authorizable
 {
     /**
@@ -17,6 +42,8 @@ trait Authorizable
 
     /**
      * Check if authorization is enabled.
+     *
+     * @return bool
      */
     protected static function authorizationEnabled(): bool
     {
@@ -26,6 +53,8 @@ trait Authorizable
     /**
      * Get the policy instance for this resource.
      * Returns null if no policy is defined.
+     *
+     * @return object|null
      */
     protected static function getPolicy(): ?object
     {
@@ -41,6 +70,11 @@ trait Authorizable
 
     /**
      * Check authorization using policy first, then fall back to permissions.
+     *
+     * @param mixed $user The authenticated user
+     * @param string $ability The ability to check
+     * @param mixed $model The model instance (if applicable)
+     * @return bool|null Null if policy doesn't handle this ability
      */
     protected static function authorizeViaPolicy($user, string $ability, $model = null): ?bool
     {
@@ -61,6 +95,7 @@ trait Authorizable
             'bulkUpdate' => 'updateAny',
             'restore' => 'restore',
             'forceDelete' => 'forceDelete',
+            'export' => 'export',
             default => $ability, // Custom abilities use their name
         };
 
@@ -70,7 +105,7 @@ trait Authorizable
         }
 
         // Call policy method with appropriate arguments
-        if (in_array($policyMethod, ['viewAny', 'create', 'deleteAny', 'updateAny'])) {
+        if (in_array($policyMethod, ['viewAny', 'create', 'deleteAny', 'updateAny', 'export'])) {
             return $policy->$policyMethod($user);
         }
 
@@ -79,6 +114,10 @@ trait Authorizable
 
     /**
      * Authorize an action, throw exception if denied.
+     *
+     * @param string $ability The ability to authorize
+     * @param mixed $model The model instance (if applicable)
+     * @throws \Symfony\Component\HttpKernel\Exception\HttpException
      */
     public static function authorize(string $ability, $model = null): void
     {
@@ -99,6 +138,7 @@ trait Authorizable
                 $abilityLabel = str($ability)->headline()->lower();
                 abort(403, "You do not have permission to {$abilityLabel} this resource.");
             }
+
             return;
         }
 
@@ -112,6 +152,7 @@ trait Authorizable
             'bulkDelete' => static::canBulkDelete($user),
             'bulkUpdate' => static::canBulkUpdate($user),
             'runAction' => static::canRunAction($user, $model), // $model is action name here
+            'export' => static::canExport($user),
             default => static::canCustomAction($user, $ability, $model),
         };
 
@@ -123,6 +164,10 @@ trait Authorizable
 
     /**
      * Check authorization without throwing exception.
+     *
+     * @param string $ability The ability to check
+     * @param mixed $model The model instance (if applicable)
+     * @return bool
      */
     public static function can(string $ability, $model = null): bool
     {
@@ -152,6 +197,7 @@ trait Authorizable
             'bulkDelete' => static::canBulkDelete($user),
             'bulkUpdate' => static::canBulkUpdate($user),
             'runAction' => static::canRunAction($user, $model), // $model is action name here
+            'export' => static::canExport($user),
             default => static::canCustomAction($user, $ability, $model),
         };
     }
@@ -159,6 +205,9 @@ trait Authorizable
     /**
      * Can user see the resource list?
      * By default, checks for {resource}.list permission.
+     *
+     * @param mixed $user
+     * @return bool
      */
     public static function canViewAny($user): bool
     {
@@ -168,6 +217,10 @@ trait Authorizable
     /**
      * Can user view a specific record?
      * By default, checks for {resource}.view permission.
+     *
+     * @param mixed $user
+     * @param mixed $model
+     * @return bool
      */
     public static function canView($user, $model): bool
     {
@@ -177,6 +230,9 @@ trait Authorizable
     /**
      * Can user create new records?
      * By default, checks for {resource}.create permission.
+     *
+     * @param mixed $user
+     * @return bool
      */
     public static function canCreate($user): bool
     {
@@ -186,6 +242,10 @@ trait Authorizable
     /**
      * Can user update a specific record?
      * By default, checks for {resource}.update permission.
+     *
+     * @param mixed $user
+     * @param mixed $model
+     * @return bool
      */
     public static function canUpdate($user, $model): bool
     {
@@ -195,6 +255,10 @@ trait Authorizable
     /**
      * Can user delete a specific record?
      * By default, checks for {resource}.delete permission.
+     *
+     * @param mixed $user
+     * @param mixed $model
+     * @return bool
      */
     public static function canDelete($user, $model): bool
     {
@@ -203,25 +267,65 @@ trait Authorizable
 
     /**
      * Can user bulk delete records?
-     * By default, checks for {resource}.delete permission.
+     * By default, checks for {resource}.bulk.delete permission.
+     *
+     * @param mixed $user
+     * @return bool
      */
     public static function canBulkDelete($user): bool
     {
+        // Try bulk-specific permission first
+        if (static::checkPermission($user, static::key() . '.bulk.delete')) {
+            return true;
+        }
+
+        // Fall back to regular delete permission
         return static::checkPermission($user, static::key() . '.delete');
     }
 
     /**
      * Can user bulk update records?
-     * By default, checks for {resource}.update permission.
+     * By default, checks for {resource}.bulk.update permission.
+     *
+     * @param mixed $user
+     * @return bool
      */
     public static function canBulkUpdate($user): bool
     {
+        // Try bulk-specific permission first
+        if (static::checkPermission($user, static::key() . '.bulk.update')) {
+            return true;
+        }
+
+        // Fall back to regular update permission
         return static::checkPermission($user, static::key() . '.update');
+    }
+
+    /**
+     * Can user export records?
+     * By default, checks for {resource}.export permission.
+     *
+     * @param mixed $user
+     * @return bool
+     */
+    public static function canExport($user): bool
+    {
+        // Try export permission first
+        if (static::checkPermission($user, static::key() . '.export')) {
+            return true;
+        }
+
+        // Fall back to list permission
+        return static::checkPermission($user, static::key() . '.list');
     }
 
     /**
      * Can user run a specific action?
      * By default, checks for {resource}.action.{actionName} or {resource}.update permission.
+     *
+     * @param mixed $user
+     * @param string|null $actionName
+     * @return bool
      */
     public static function canRunAction($user, ?string $actionName = null): bool
     {
@@ -240,6 +344,11 @@ trait Authorizable
     /**
      * Can user run a custom action?
      * By default, checks for {resource}.{action} permission.
+     *
+     * @param mixed $user
+     * @param string $action
+     * @param mixed $model
+     * @return bool
      */
     public static function canCustomAction($user, string $action, $model = null): bool
     {
@@ -249,6 +358,8 @@ trait Authorizable
     /**
      * Get permissions defined by this resource.
      * Override in Resource class to define custom permissions.
+     *
+     * @return array<string, string> Permission name => Display name
      */
     public static function permissions(): array
     {
@@ -268,6 +379,8 @@ trait Authorizable
     /**
      * Get the permission group name for this resource.
      * Used for organizing permissions in the UI.
+     *
+     * @return string
      */
     public static function permissionGroup(): string
     {
@@ -276,6 +389,10 @@ trait Authorizable
 
     /**
      * Helper to check permission using user's hasPermission method.
+     *
+     * @param mixed $user
+     * @param string $permission
+     * @return bool
      */
     protected static function checkPermission($user, string $permission): bool
     {

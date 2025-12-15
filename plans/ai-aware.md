@@ -2,7 +2,7 @@
 
 **Status:** Implementation Complete ✅
 
-**Last Updated:** December 2024 (Post-simplification)
+**Last Updated:** December 2024 (Post-RBAC refactoring)
 
 ---
 
@@ -44,18 +44,33 @@ Make Laravel Studio easily understandable by AI coding assistants (Claude, Curso
 
 ---
 
-## Recent Updates (Simplification)
+## Recent Updates (RBAC Refactoring)
 
-The following changes were made to simplify the package configuration:
+The following changes were made to improve the RBAC system:
 
 | Change | Before | After |
 |--------|--------|-------|
-| Cache TTL Settings | 5 separate caches | 1 unified cache (`STUDIO_CACHE_TTL`) |
-| Install Command Flags | 10 flags | 3 flags (`--all`, `--force`, `--dry-run`) |
-| Authorization Options | 2 options | 1 option (removed `register_gates`) |
-| Middleware Aliases | 4 (2 + 2 legacy) | 2 (`panel`, `permission`) |
-| Activity Log Options | 8 options | 2 options (`enabled`, `cleanup_days`) |
-| Features Config | Hardcoded routes | Removed entirely |
+| Role Model | `App\Models\Role` (starters) | `SavyApps\LaravelStudio\Models\Role` (package) |
+| Permission Constants | String literals prone to typos | `SavyApps\LaravelStudio\Enums\Permission` enum |
+| Policies | Per-starter implementation | Package policies (`StudioPolicy`, `UserPolicy`, `RolePolicy`, `PermissionPolicy`) |
+| Cache Clearing | Manual | Auto-clear via `RoleObserver` and `PermissionObserver` |
+| RBAC Toggle | N/A | `STUDIO_AUTH_ENABLED=false` disables all checks |
+| System Roles | Deletable | Protected (`Role::isSystemRole()`) |
+
+### New Package Components
+
+| Component | Purpose |
+|-----------|---------|
+| `src/Enums/Permission.php` | Type-safe permission constants |
+| `src/Models/Role.php` | Centralized Role model with system role constants |
+| `src/Policies/StudioPolicy.php` | Base policy with RBAC toggle and super admin bypass |
+| `src/Policies/UserPolicy.php` | User authorization policy |
+| `src/Policies/RolePolicy.php` | Role authorization policy |
+| `src/Policies/PermissionPolicy.php` | Permission authorization policy |
+| `src/Observers/RoleObserver.php` | Auto-clear cache on role changes |
+| `src/Observers/PermissionObserver.php` | Auto-clear cache on permission changes |
+| `src/Exceptions/InvalidPermissionException.php` | Thrown when invalid permission used |
+| `database/factories/RoleFactory.php` | Role factory for testing |
 
 AI context files have been updated to reflect these changes.
 

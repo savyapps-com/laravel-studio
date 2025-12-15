@@ -518,20 +518,31 @@ These are automatically applied to routes but can be customized in config:
 
 ## Models
 
-The package includes 2 Eloquent models:
+The package includes 3 Eloquent models:
 
-### Activity Model
+### Role Model
 
-Stores activity logs with full audit trail:
+Manages roles with user and permission relationships:
 
 ```php
-// Fields: user_id, subject_type, subject_id, event, changes, ip_address, user_agent, timestamps
+use SavyApps\LaravelStudio\Models\Role;
 
-// Query recent activities
-$activities = Activity::latest()->limit(10)->get();
+// System role constants
+Role::SUPER_ADMIN;  // 'super_admin'
+Role::ADMIN;        // 'admin'
+Role::USER;         // 'user'
 
-// Activities for a specific model
-$userActivities = Activity::forSubject($user)->get();
+// Relationships
+$role->users();       // BelongsToMany User
+$role->permissions(); // BelongsToMany Permission
+
+// Permission checking
+$role->hasPermission('users.create');
+$role->givePermission('users.create');
+$role->revokePermission('users.create');
+
+// System role protection (protected from deletion)
+$role->isSystemRole();  // true for super_admin, admin, user
 ```
 
 ### Permission Model
@@ -539,11 +550,55 @@ $userActivities = Activity::forSubject($user)->get();
 Manages permissions with role relationships:
 
 ```php
-// Fields: name, description, timestamps
+use SavyApps\LaravelStudio\Models\Permission;
+
+// Fields: name, display_name, group, description, timestamps
 // Relations: belongsToMany Role via role_permissions
 
 $permission = Permission::where('name', 'users.create')->first();
 $rolesWithPermission = $permission->roles;
+```
+
+### Permission Enum (Type-Safe Constants)
+
+All permissions are defined as constants to prevent typos:
+
+```php
+use SavyApps\LaravelStudio\Enums\Permission;
+
+// Use constants instead of strings
+Permission::USERS_LIST;      // 'users.list'
+Permission::USERS_CREATE;    // 'users.create'
+Permission::ROLES_MANAGE;    // 'roles.manage'
+
+// Validation
+Permission::isValid('users.create');  // true
+Permission::isValid('invalid.perm');  // false
+
+// Get all permissions
+Permission::all();           // ['users.list' => 'List Users', ...]
+Permission::grouped();       // Grouped by resource
+
+// Get permissions by role level
+Permission::forSuperAdmin(); // All permissions
+Permission::forAdmin();      // All except permissions.manage
+Permission::forUser();       // Limited read-only permissions
+```
+
+### Activity Model
+
+Stores activity logs with full audit trail:
+
+```php
+use SavyApps\LaravelStudio\Models\Activity;
+
+// Fields: user_id, subject_type, subject_id, event, changes, ip_address, user_agent, timestamps
+
+// Query recent activities
+$activities = Activity::latest()->limit(10)->get();
+
+// Activities for a specific model
+$userActivities = Activity::forSubject($user)->get();
 ```
 
 ---
@@ -988,19 +1043,22 @@ toastStore.add({ type: 'success', message: 'Saved!' })
 
 ## Database Migrations
 
-The package includes 5 migrations:
+The package includes 6 migrations:
 
-1. **`create_roles_table`** - Roles with name, timestamps
-2. **`create_permissions_table`** - Permissions with name, description
+1. **`create_roles_table`** - Roles with name, slug, description, is_system, timestamps
+2. **`create_permissions_table`** - Permissions with name, display_name, group, description
 3. **`create_role_permissions_table`** - Pivot table for role-permission relationships
-4. **`create_activities_table`** - Activity logging with all audit fields
-5. **`add_performance_indexes`** - Indexes for query optimization
+4. **`create_role_user_table`** - Pivot table for user-role relationships
+5. **`create_activities_table`** - Activity logging with all audit fields
+6. **`add_performance_indexes`** - Indexes for query optimization
 
 Run migrations:
 
 ```bash
 php artisan migrate
 ```
+
+**Note:** Cache is automatically cleared when roles or permissions are created, updated, or deleted via model observers.
 
 ---
 
@@ -1011,7 +1069,8 @@ The package includes a default starter template in `/starters/default/`:
 ### Backend Starter
 - Complete Laravel 12 application structure
 - Example resources: `UserResource`, `RoleResource`, `PanelResource`
-- Example models: User, Role, Setting, SettingList, EmailTemplate
+- Example models: User, Setting, SettingList, EmailTemplate
+- Role model is in the package (`SavyApps\LaravelStudio\Models\Role`)
 - Service layer examples
 - Full directory structure
 
@@ -1087,14 +1146,19 @@ return [
         'chunk_size' => env('STUDIO_BULK_CHUNK_SIZE', 100),
     ],
 
-    // Authorization
+    // Authorization (RBAC can be disabled entirely)
     'authorization' => [
-        'enabled' => env('STUDIO_AUTH_ENABLED', true),
+        'enabled' => env('STUDIO_AUTH_ENABLED', true),  // Global RBAC toggle
         'super_admin_role' => env('STUDIO_SUPER_ADMIN_ROLE', 'super_admin'),
         'models' => [
             'user' => \App\Models\User::class,
-            'role' => \App\Models\Role::class,
-            'permission' => \SavyApps\LaravelStudio\Models\Permission::class,
+            'role' => \SavyApps\LaravelStudio\Models\Role::class,  // Package model
+            'permission' => \SavyApps\LaravelStudio\Models\Permission::class,  // Package model
+        ],
+        'policies' => [
+            'user' => \SavyApps\LaravelStudio\Policies\UserPolicy::class,
+            'role' => \SavyApps\LaravelStudio\Policies\RolePolicy::class,
+            'permission' => \SavyApps\LaravelStudio\Policies\PermissionPolicy::class,
         ],
     ],
 

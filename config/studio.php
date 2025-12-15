@@ -170,8 +170,15 @@ return [
         // Model classes (can be overridden if using custom models)
         'models' => [
             'user' => \App\Models\User::class,
-            'role' => \App\Models\Role::class,
+            'role' => \SavyApps\LaravelStudio\Models\Role::class,
             'permission' => \SavyApps\LaravelStudio\Models\Permission::class,
+        ],
+
+        // Policy classes for authorization
+        'policies' => [
+            'user' => \SavyApps\LaravelStudio\Policies\UserPolicy::class,
+            'role' => \SavyApps\LaravelStudio\Policies\RolePolicy::class,
+            'permission' => \SavyApps\LaravelStudio\Policies\PermissionPolicy::class,
         ],
     ],
 

@@ -20,7 +20,7 @@ class Permission extends Model
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(
-            config('studio.authorization.models.role', \App\Models\Role::class),
+            config('studio.authorization.models.role', Role::class),
             'role_permissions'
         );
     }

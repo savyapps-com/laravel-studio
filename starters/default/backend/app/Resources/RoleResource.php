@@ -2,8 +2,8 @@
 
 namespace App\Resources;
 
-use App\Models\Role;
-use App\Policies\RolePolicy;
+use SavyApps\LaravelStudio\Models\Role;
+use SavyApps\LaravelStudio\Policies\RolePolicy;
 use SavyApps\LaravelStudio\Resources\Actions\BulkDeleteAction;
 use SavyApps\LaravelStudio\Resources\Fields\BelongsToMany;
 use SavyApps\LaravelStudio\Resources\Fields\Section;

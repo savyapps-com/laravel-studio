@@ -2,13 +2,21 @@
 
 namespace Database\Seeders;
 
-use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use SavyApps\LaravelStudio\Enums\Permission as PermissionEnum;
 use SavyApps\LaravelStudio\Models\Permission;
+use SavyApps\LaravelStudio\Models\Role;
 use SavyApps\LaravelStudio\Services\AuthorizationService;
 
+/**
+ * Seeder for permissions and role assignments.
+ *
+ * This seeder:
+ * 1. Syncs permissions from the Permission enum
+ * 2. Assigns appropriate permissions to each role
+ * 3. Creates a super admin user
+ */
 class PermissionSeeder extends Seeder
 {
     /**
@@ -16,7 +24,7 @@ class PermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        // First, sync permissions from resources
+        // First, sync permissions from enum and resources
         $this->syncPermissions();
 
         // Then assign permissions to roles
@@ -27,7 +35,7 @@ class PermissionSeeder extends Seeder
     }
 
     /**
-     * Sync permissions from registered resources.
+     * Sync permissions from Permission enum and registered resources.
      */
     protected function syncPermissions(): void
     {
@@ -35,64 +43,41 @@ class PermissionSeeder extends Seeder
             $authService = app(AuthorizationService::class);
             $synced = $authService->syncPermissions();
 
-            $this->command->info('Synced ' . count($synced) . ' permissions from resources.');
+            $this->command->info('Synced ' . count($synced) . ' permissions.');
         } catch (\Exception $e) {
-            $this->command->warn('Could not sync permissions from resources: ' . $e->getMessage());
+            $this->command->warn('Could not sync permissions from service: ' . $e->getMessage());
 
-            // Fall back to creating base permissions manually
+            // Fall back to creating base permissions from enum
             $this->createBasePermissions();
         }
     }
 
     /**
-     * Create base permissions if resource sync fails.
+     * Create base permissions from the Permission enum.
      */
     protected function createBasePermissions(): void
     {
-        $basePermissions = [
-            // User permissions
-            ['name' => 'users.list', 'display_name' => 'View Users List', 'group' => 'Users'],
-            ['name' => 'users.view', 'display_name' => 'View User Details', 'group' => 'Users'],
-            ['name' => 'users.create', 'display_name' => 'Create User', 'group' => 'Users'],
-            ['name' => 'users.update', 'display_name' => 'Update User', 'group' => 'Users'],
-            ['name' => 'users.delete', 'display_name' => 'Delete User', 'group' => 'Users'],
+        $count = 0;
 
-            // Role permissions
-            ['name' => 'roles.list', 'display_name' => 'View Roles List', 'group' => 'Roles'],
-            ['name' => 'roles.view', 'display_name' => 'View Role Details', 'group' => 'Roles'],
-            ['name' => 'roles.create', 'display_name' => 'Create Role', 'group' => 'Roles'],
-            ['name' => 'roles.update', 'display_name' => 'Update Role', 'group' => 'Roles'],
-            ['name' => 'roles.delete', 'display_name' => 'Delete Role', 'group' => 'Roles'],
-
-            // Permission management
-            ['name' => 'permissions.view', 'display_name' => 'View Permissions', 'group' => 'Permissions'],
-            ['name' => 'permissions.manage', 'display_name' => 'Manage Permissions', 'group' => 'Permissions'],
-
-            // Settings permissions
-            ['name' => 'settings.list', 'display_name' => 'View Settings', 'group' => 'Settings'],
-            ['name' => 'settings.update', 'display_name' => 'Update Settings', 'group' => 'Settings'],
-
-            // Activity log permissions
-            ['name' => 'activities.list', 'display_name' => 'View Activity Log', 'group' => 'Activities'],
-            ['name' => 'activities.view', 'display_name' => 'View Activity Details', 'group' => 'Activities'],
-        ];
-
-        foreach ($basePermissions as $permission) {
-            Permission::firstOrCreate(
-                ['name' => $permission['name']],
-                [
-                    'display_name' => $permission['display_name'],
-                    'group' => $permission['group'],
-                    'description' => null,
-                ]
-            );
+        foreach (PermissionEnum::grouped() as $group => $permissions) {
+            foreach ($permissions as $name => $displayName) {
+                Permission::firstOrCreate(
+                    ['name' => $name],
+                    [
+                        'display_name' => $displayName,
+                        'group' => $group,
+                        'description' => null,
+                    ]
+                );
+                $count++;
+            }
         }
 
-        $this->command->info('Created ' . count($basePermissions) . ' base permissions.');
+        $this->command->info("Created {$count} base permissions from Permission enum.");
     }
 
     /**
-     * Assign permissions to roles.
+     * Assign permissions to roles based on the Permission enum.
      */
     protected function assignPermissionsToRoles(): void
     {
@@ -105,38 +90,44 @@ class PermissionSeeder extends Seeder
         }
 
         // Get roles
-        $superAdminRole = Role::where('slug', 'super_admin')->first();
-        $adminRole = Role::where('slug', 'admin')->first();
-        $userRole = Role::where('slug', 'user')->first();
+        $superAdminRole = Role::where('slug', Role::SUPER_ADMIN)->first();
+        $adminRole = Role::where('slug', Role::ADMIN)->first();
+        $userRole = Role::where('slug', Role::USER)->first();
 
         // Super admin gets all permissions (though they bypass checks anyway)
         if ($superAdminRole) {
-            $superAdminRole->permissions()->sync($allPermissions->pluck('id')->toArray());
-            $this->command->info('Assigned all permissions to Super Admin role.');
+            $superAdminPermissions = PermissionEnum::forSuperAdmin();
+            $permissionIds = $allPermissions
+                ->whereIn('name', $superAdminPermissions)
+                ->pluck('id')
+                ->toArray();
+
+            $superAdminRole->permissions()->sync($permissionIds);
+            $this->command->info('Assigned ' . count($permissionIds) . ' permissions to Super Admin role.');
         }
 
         // Admin gets all permissions except permission management
         if ($adminRole) {
-            $adminPermissions = $allPermissions->filter(function ($permission) {
-                // Admin can do everything except manage permissions
-                return $permission->name !== 'permissions.manage';
-            });
+            $adminPermissions = PermissionEnum::forAdmin();
+            $permissionIds = $allPermissions
+                ->whereIn('name', $adminPermissions)
+                ->pluck('id')
+                ->toArray();
 
-            $adminRole->permissions()->sync($adminPermissions->pluck('id')->toArray());
-            $this->command->info('Assigned ' . $adminPermissions->count() . ' permissions to Admin role.');
+            $adminRole->permissions()->sync($permissionIds);
+            $this->command->info('Assigned ' . count($permissionIds) . ' permissions to Admin role.');
         }
 
         // User gets limited read-only permissions
         if ($userRole) {
-            $userPermissions = $allPermissions->filter(function ($permission) {
-                // Users can only view their own profile
-                return in_array($permission->name, [
-                    'users.view', // View own profile
-                ]);
-            });
+            $userPermissions = PermissionEnum::forUser();
+            $permissionIds = $allPermissions
+                ->whereIn('name', $userPermissions)
+                ->pluck('id')
+                ->toArray();
 
-            $userRole->permissions()->sync($userPermissions->pluck('id')->toArray());
-            $this->command->info('Assigned ' . $userPermissions->count() . ' permissions to User role.');
+            $userRole->permissions()->sync($permissionIds);
+            $this->command->info('Assigned ' . count($permissionIds) . ' permissions to User role.');
         }
     }
 
@@ -157,8 +148,8 @@ class PermissionSeeder extends Seeder
         );
 
         // Assign super_admin role
-        if (! $user->hasRole('super_admin')) {
-            $user->assignRole('super_admin');
+        if (!$user->hasRole(Role::SUPER_ADMIN)) {
+            $user->assignRole(Role::SUPER_ADMIN);
             $this->command->info("Created/updated super admin user: {$superAdminEmail}");
         }
     }

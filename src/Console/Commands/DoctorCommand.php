@@ -228,17 +228,18 @@ class DoctorCommand extends Command
     protected function checkRequiredModels(): void
     {
         $this->runCheck('Required Models', function () {
+            // User model is in the app, Role and Permission are in the package
             $requiredModels = [
-                'App\Models\User' => 'User.php',
-                'App\Models\Role' => 'Role.php',
-                'App\Models\Permission' => 'Permission.php',
+                'App\Models\User' => 'User model (app/Models/User.php)',
+                'SavyApps\LaravelStudio\Models\Role' => 'Role model (package)',
+                'SavyApps\LaravelStudio\Models\Permission' => 'Permission model (package)',
             ];
 
             $missingModels = [];
 
-            foreach ($requiredModels as $class => $file) {
+            foreach ($requiredModels as $class => $description) {
                 if (! class_exists($class)) {
-                    $missingModels[] = $file;
+                    $missingModels[] = $description;
                 }
             }
 
@@ -246,7 +247,7 @@ class DoctorCommand extends Command
                 return [
                     'status' => 'fail',
                     'message' => 'Missing models: ' . implode(', ', $missingModels),
-                    'solution' => 'Run: php artisan studio:install --all',
+                    'solution' => 'Ensure the package is properly installed. Run: composer dump-autoload',
                 ];
             }
 

@@ -2,6 +2,7 @@
 
 namespace SavyApps\LaravelStudio;
 
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use SavyApps\LaravelStudio\Console\Commands\CleanupActivitiesCommand;
 use SavyApps\LaravelStudio\Console\Commands\DoctorCommand;
@@ -15,6 +16,13 @@ use SavyApps\LaravelStudio\Console\Commands\PanelCommand;
 use SavyApps\LaravelStudio\Console\Commands\SyncPermissionsCommand;
 use SavyApps\LaravelStudio\Http\Middleware\CheckResourcePermission;
 use SavyApps\LaravelStudio\Http\Middleware\EnsureUserCanAccessPanel;
+use SavyApps\LaravelStudio\Models\Permission;
+use SavyApps\LaravelStudio\Models\Role;
+use SavyApps\LaravelStudio\Observers\PermissionObserver;
+use SavyApps\LaravelStudio\Observers\RoleObserver;
+use SavyApps\LaravelStudio\Policies\PermissionPolicy;
+use SavyApps\LaravelStudio\Policies\RolePolicy;
+use SavyApps\LaravelStudio\Policies\UserPolicy;
 use SavyApps\LaravelStudio\Services\ActivityService;
 use SavyApps\LaravelStudio\Services\AuthorizationService;
 use SavyApps\LaravelStudio\Services\CardService;
@@ -31,7 +39,7 @@ class LaravelStudioServiceProvider extends ServiceProvider
     {
         // Merge package config with application config
         $this->mergeConfigFrom(
-            __DIR__.'/../config/studio.php',
+            __DIR__ . '/../config/studio.php',
             'studio'
         );
 
@@ -72,28 +80,34 @@ class LaravelStudioServiceProvider extends ServiceProvider
         // Register middleware aliases
         $this->registerMiddleware();
 
+        // Register model observers
+        $this->registerObservers();
+
+        // Register policies
+        $this->registerPolicies();
+
         // Load package routes
-        $this->loadRoutesFrom(__DIR__.'/../routes/api.php');
+        $this->loadRoutesFrom(__DIR__ . '/../routes/api.php');
 
         // Load package migrations
-        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
 
         // Register authorization gates
         $this->registerAuthorizationGates();
 
         // Publish configuration file
         $this->publishes([
-            __DIR__.'/../config/studio.php' => config_path('studio.php'),
+            __DIR__ . '/../config/studio.php' => config_path('studio.php'),
         ], 'studio-config');
 
         // Publish compiled frontend assets
         $this->publishes([
-            __DIR__.'/../dist' => public_path('vendor/laravel-studio'),
+            __DIR__ . '/../dist' => public_path('vendor/laravel-studio'),
         ], 'studio-assets');
 
         // Publish migrations
         $this->publishes([
-            __DIR__.'/../database/migrations' => database_path('migrations'),
+            __DIR__ . '/../database/migrations' => database_path('migrations'),
         ], 'studio-migrations');
 
         // Register Artisan commands
@@ -125,6 +139,51 @@ class LaravelStudioServiceProvider extends ServiceProvider
 
         // Register permission middleware alias
         $router->aliasMiddleware('permission', CheckResourcePermission::class);
+    }
+
+    /**
+     * Register model observers for cache invalidation.
+     */
+    protected function registerObservers(): void
+    {
+        // Only register observers if authorization is enabled
+        if (!config('studio.authorization.enabled', true)) {
+            return;
+        }
+
+        Role::observe(RoleObserver::class);
+        Permission::observe(PermissionObserver::class);
+    }
+
+    /**
+     * Register authorization policies.
+     */
+    protected function registerPolicies(): void
+    {
+        // Only register policies if authorization is enabled
+        if (!config('studio.authorization.enabled', true)) {
+            return;
+        }
+
+        // Register policies from config or use defaults
+        $policies = config('studio.authorization.policies', []);
+
+        // Register Role policy
+        $roleModel = config('studio.authorization.models.role', Role::class);
+        $rolePolicy = $policies['role'] ?? RolePolicy::class;
+        Gate::policy($roleModel, $rolePolicy);
+
+        // Register Permission policy
+        $permissionModel = config('studio.authorization.models.permission', Permission::class);
+        $permissionPolicy = $policies['permission'] ?? PermissionPolicy::class;
+        Gate::policy($permissionModel, $permissionPolicy);
+
+        // Register User policy if a user model is configured
+        $userModel = config('studio.authorization.models.user');
+        if ($userModel && class_exists($userModel)) {
+            $userPolicy = $policies['user'] ?? UserPolicy::class;
+            Gate::policy($userModel, $userPolicy);
+        }
     }
 
     /**

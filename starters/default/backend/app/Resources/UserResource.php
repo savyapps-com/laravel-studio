@@ -3,9 +3,9 @@
 namespace App\Resources;
 
 use App\Enums\Status;
-use App\Models\Role;
 use App\Models\User;
-use App\Policies\UserPolicy;
+use SavyApps\LaravelStudio\Models\Role;
+use SavyApps\LaravelStudio\Policies\UserPolicy;
 use SavyApps\LaravelStudio\Cards\PartitionCard;
 use SavyApps\LaravelStudio\Cards\TrendCard;
 use SavyApps\LaravelStudio\Cards\ValueCard;
@@ -160,7 +160,7 @@ class UserResource extends Resource
                 ->column('status'),
 
             BelongsToManyFilter::make('Role')
-                ->options(fn () => \App\Models\Role::pluck('name', 'id')->toArray())
+                ->options(fn () => Role::pluck('name', 'id')->toArray())
                 ->relationship('roles'),
         ];
     }

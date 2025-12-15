@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use SavyApps\LaravelStudio\Models\Role;
 use SavyApps\LaravelStudio\Traits\HasPermissions;
 use SavyApps\LaravelStudio\Traits\LogsActivity;
 use Spatie\MediaLibrary\HasMedia;

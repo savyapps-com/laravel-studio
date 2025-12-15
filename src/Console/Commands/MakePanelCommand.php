@@ -332,7 +332,7 @@ class MakePanelCommand extends Command
     protected function getExistingRoles(): array
     {
         try {
-            $roleClass = config('studio.authorization.models.role', 'App\\Models\\Role');
+            $roleClass = config('studio.authorization.models.role', \SavyApps\LaravelStudio\Models\Role::class);
 
             if (! class_exists($roleClass)) {
                 return [];

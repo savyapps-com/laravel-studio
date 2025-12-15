@@ -6,8 +6,23 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use SavyApps\LaravelStudio\Enums\Permission as PermissionEnum;
 use SavyApps\LaravelStudio\Models\Permission;
 
+/**
+ * Service for managing authorization, permissions, and role caching.
+ *
+ * This service handles:
+ * - Permission syncing from resources and Permission enum
+ * - Laravel Gate registration
+ * - Permission caching
+ * - Role permission management
+ *
+ * @example
+ * $authService = app(AuthorizationService::class);
+ * $authService->syncPermissions();
+ * $authService->syncRolePermissions($role, ['users.create', 'users.update']);
+ */
 class AuthorizationService
 {
     protected const CACHE_KEY_PERMISSIONS = 'studio.permissions.all';
@@ -15,6 +30,8 @@ class AuthorizationService
 
     /**
      * Register gates for all permissions.
+     *
+     * @return void
      */
     public function registerGates(): void
     {
@@ -33,6 +50,7 @@ class AuthorizationService
                     if (method_exists($user, 'hasPermission')) {
                         return $user->hasPermission($permissionName);
                     }
+
                     return false;
                 });
             }
@@ -52,6 +70,8 @@ class AuthorizationService
 
     /**
      * Get cached permissions list.
+     *
+     * @return array
      */
     protected function getCachedPermissions(): array
     {
@@ -77,6 +97,8 @@ class AuthorizationService
 
     /**
      * Clear all permission caches.
+     *
+     * @return void
      */
     public function clearPermissionCaches(): void
     {
@@ -86,12 +108,47 @@ class AuthorizationService
     }
 
     /**
+     * Sync base permissions from the Permission enum.
+     *
+     * This creates all permissions defined in the Permission enum,
+     * ensuring a consistent set of base permissions.
+     *
+     * @return array<string> List of synced permission names
+     */
+    public function syncBasePermissions(): array
+    {
+        $synced = [];
+
+        foreach (PermissionEnum::grouped() as $group => $permissions) {
+            foreach ($permissions as $name => $displayName) {
+                Permission::updateOrCreate(
+                    ['name' => $name],
+                    [
+                        'display_name' => $displayName,
+                        'group' => $group,
+                    ]
+                );
+                $synced[] = $name;
+            }
+        }
+
+        $this->clearPermissionCaches();
+
+        return $synced;
+    }
+
+    /**
      * Sync permissions from all registered resources.
+     *
+     * @return array<string> List of synced permission names
      */
     public function syncPermissions(): array
     {
+        // First sync base permissions from the enum
+        $synced = $this->syncBasePermissions();
+
+        // Then sync from registered resources
         $resources = config('studio.resources', []);
-        $synced = [];
 
         foreach ($resources as $key => $resourceConfig) {
             // Handle both old format (string) and new format (array with 'class' key)
@@ -120,15 +177,22 @@ class AuthorizationService
                         'group' => $group,
                     ]
                 );
-                $synced[] = $name;
+
+                if (!in_array($name, $synced)) {
+                    $synced[] = $name;
+                }
             }
         }
+
+        $this->clearPermissionCaches();
 
         return $synced;
     }
 
     /**
      * Get all permissions grouped for UI display.
+     *
+     * @return array
      */
     public function getGroupedPermissions(): array
     {
@@ -137,6 +201,8 @@ class AuthorizationService
 
     /**
      * Get all permissions as flat array (cached).
+     *
+     * @return array
      */
     public function getAllPermissions(): array
     {
@@ -145,6 +211,9 @@ class AuthorizationService
 
     /**
      * Get permissions for a specific role.
+     *
+     * @param mixed $role
+     * @return array<string>
      */
     public function getRolePermissions($role): array
     {
@@ -157,6 +226,10 @@ class AuthorizationService
 
     /**
      * Sync permissions to a role.
+     *
+     * @param mixed $role
+     * @param array<string> $permissionNames
+     * @return void
      */
     public function syncRolePermissions($role, array $permissionNames): void
     {
@@ -172,6 +245,10 @@ class AuthorizationService
 
     /**
      * Add permissions to a role.
+     *
+     * @param mixed $role
+     * @param array<string> $permissionNames
+     * @return void
      */
     public function addPermissionsToRole($role, array $permissionNames): void
     {
@@ -185,6 +262,10 @@ class AuthorizationService
 
     /**
      * Remove permissions from a role.
+     *
+     * @param mixed $role
+     * @param array<string> $permissionNames
+     * @return void
      */
     public function removePermissionsFromRole($role, array $permissionNames): void
     {
@@ -199,8 +280,11 @@ class AuthorizationService
     /**
      * Clear permission caches for all users with a given role.
      * Uses chunking to avoid memory issues with large user bases.
+     *
+     * @param mixed $role
+     * @return void
      */
-    protected function clearRoleUsersCaches($role): void
+    public function clearRoleUsersCaches($role): void
     {
         if (!method_exists($role, 'users')) {
             return;
@@ -218,6 +302,9 @@ class AuthorizationService
 
     /**
      * Get permissions for a specific resource.
+     *
+     * @param string $resourceKey
+     * @return array
      */
     public function getResourcePermissions(string $resourceKey): array
     {
@@ -229,11 +316,13 @@ class AuthorizationService
     }
 
     /**
-     * Clean up orphaned permissions not defined in any resource.
+     * Clean up orphaned permissions not defined in any resource or the base enum.
+     *
+     * @return int Number of deleted permissions
      */
     public function cleanOrphanedPermissions(): int
     {
-        $definedPermissions = collect();
+        $definedPermissions = collect(PermissionEnum::names());
         $resources = config('studio.resources', []);
 
         foreach ($resources as $key => $resourceConfig) {
@@ -254,11 +343,15 @@ class AuthorizationService
 
         $deleted = Permission::whereNotIn('name', $definedPermissions->unique())->delete();
 
+        $this->clearPermissionCaches();
+
         return $deleted;
     }
 
     /**
      * Clear permission cache for all users.
+     *
+     * @return void
      */
     public function clearAllPermissionCaches(): void
     {
@@ -275,5 +368,27 @@ class AuthorizationService
                 }
             });
         });
+
+        $this->clearPermissionCaches();
+    }
+
+    /**
+     * Check if authorization is enabled globally.
+     *
+     * @return bool
+     */
+    public function isEnabled(): bool
+    {
+        return config('studio.authorization.enabled', true);
+    }
+
+    /**
+     * Get the super admin role slug from config.
+     *
+     * @return string
+     */
+    public function getSuperAdminRole(): string
+    {
+        return config('studio.authorization.super_admin_role', 'super_admin');
     }
 }

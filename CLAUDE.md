@@ -24,7 +24,11 @@ src/
 ├── Traits/             # 5 reusable traits
 ├── Console/Commands/   # 10 Artisan commands
 ├── Http/               # Controllers & middleware
-└── Models/             # Activity, Permission models
+├── Models/             # Activity, Permission, Role models
+├── Policies/           # StudioPolicy, UserPolicy, RolePolicy, PermissionPolicy
+├── Observers/          # RoleObserver, PermissionObserver (cache clearing)
+├── Enums/              # Permission enum (type-safe constants)
+└── Exceptions/         # InvalidPermissionException
 
 starters/default/
 ├── backend/            # Laravel starter template
@@ -262,6 +266,96 @@ class ActivateUsersAction extends Action
 
 ---
 
+## Permission System
+
+### Permission Enum (Type-Safe Constants)
+
+All permissions are defined as constants in `SavyApps\LaravelStudio\Enums\Permission`:
+
+```php
+use SavyApps\LaravelStudio\Enums\Permission;
+
+// Use constants instead of strings to prevent typos
+Permission::USERS_LIST;      // 'users.list'
+Permission::USERS_CREATE;    // 'users.create'
+Permission::ROLES_MANAGE;    // 'roles.manage'
+
+// Check if a permission is valid
+Permission::isValid('users.create');  // true
+Permission::isValid('invalid.perm');  // false
+
+// Get all permissions
+Permission::all();           // ['users.list' => 'List Users', ...]
+Permission::grouped();       // Grouped by resource
+
+// Get permissions by role
+Permission::forSuperAdmin(); // All permissions
+Permission::forAdmin();      // All except permissions.manage
+Permission::forUser();       // Limited read-only permissions
+```
+
+### Role Model (Package)
+
+```php
+use SavyApps\LaravelStudio\Models\Role;
+
+// System role constants
+Role::SUPER_ADMIN;  // 'super_admin'
+Role::ADMIN;        // 'admin'
+Role::USER;         // 'user'
+
+// Check if system role (protected from deletion)
+$role->isSystemRole();
+
+// Role relationships
+$role->users();       // BelongsToMany
+$role->permissions(); // BelongsToMany
+
+// Permission checking
+$role->hasPermission('users.create');
+$role->givePermission('users.create');
+$role->revokePermission('users.create');
+```
+
+### Policy-Based Authorization
+
+All resources use policy-based authorization with automatic fallback to permission checking:
+
+```php
+// Policies extend StudioPolicy base class
+use SavyApps\LaravelStudio\Policies\StudioPolicy;
+
+class UserPolicy extends StudioPolicy
+{
+    protected string $resource = 'users';
+
+    // Override for custom logic
+    public function create($user): bool
+    {
+        return $this->checkPermission($user, 'create');
+    }
+}
+```
+
+### RBAC Toggle
+
+Disable RBAC entirely for development or testing:
+
+```env
+STUDIO_AUTH_ENABLED=false
+```
+
+When disabled, all authorization checks return `true`.
+
+### Cache Auto-Clearing
+
+Role and Permission observers automatically clear caches when:
+- A role is created, updated, or deleted
+- A permission is created, updated, or deleted
+- Role-permission relationships change
+
+---
+
 ## Traits
 
 | Trait | Apply To | Purpose |
@@ -463,12 +557,17 @@ Main config file: `config/studio.php`
 ],
 
 'authorization' => [
-    'enabled' => env('STUDIO_AUTH_ENABLED', true),
+    'enabled' => env('STUDIO_AUTH_ENABLED', true),  // Global RBAC toggle
     'super_admin_role' => env('STUDIO_SUPER_ADMIN_ROLE', 'super_admin'),
     'models' => [
         'user' => \App\Models\User::class,
-        'role' => \App\Models\Role::class,
-        'permission' => \SavyApps\LaravelStudio\Models\Permission::class,
+        'role' => \SavyApps\LaravelStudio\Models\Role::class,  // Package model
+        'permission' => \SavyApps\LaravelStudio\Models\Permission::class,  // Package model
+    ],
+    'policies' => [
+        'user' => \SavyApps\LaravelStudio\Policies\UserPolicy::class,
+        'role' => \SavyApps\LaravelStudio\Policies\RolePolicy::class,
+        'permission' => \SavyApps\LaravelStudio\Policies\PermissionPolicy::class,
     ],
 ],
 
