@@ -37,6 +37,35 @@ class Role extends Model
     public const SYSTEM_ROLES = ['super_admin', 'admin', 'user'];
 
     /**
+     * Boot the model.
+     *
+     * Registers event listeners to protect system roles from deletion
+     * and prevent slug changes on system roles.
+     */
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        // Prevent deletion of system roles
+        static::deleting(function (Role $role) {
+            if ($role->isSystemRole()) {
+                throw new \RuntimeException(
+                    "Cannot delete system role: {$role->slug}. System roles (super_admin, admin, user) are protected."
+                );
+            }
+        });
+
+        // Prevent slug changes on system roles
+        static::updating(function (Role $role) {
+            if ($role->isSystemRole() && $role->isDirty('slug')) {
+                throw new \RuntimeException(
+                    "Cannot change slug of system role: {$role->getOriginal('slug')}. System role slugs are protected."
+                );
+            }
+        });
+    }
+
+    /**
      * Super admin role slug.
      */
     public const SUPER_ADMIN = 'super_admin';

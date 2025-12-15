@@ -180,6 +180,36 @@ return [
             'role' => \SavyApps\LaravelStudio\Policies\RolePolicy::class,
             'permission' => \SavyApps\LaravelStudio\Policies\PermissionPolicy::class,
         ],
+
+        /*
+        |--------------------------------------------------------------------------
+        | Hierarchical Permissions
+        |--------------------------------------------------------------------------
+        |
+        | Enable permission inheritance where higher-level permissions automatically
+        | grant access to lower-level ones. For example, if a user has 'users.delete'
+        | permission, they automatically get 'users.update', 'users.view', and 'users.list'.
+        |
+        | This reduces the need to assign multiple permissions for common access patterns.
+        |
+        | Environment variable: STUDIO_PERMISSION_HIERARCHY (default: true)
+        |
+        */
+
+        'use_hierarchy' => env('STUDIO_PERMISSION_HIERARCHY', true),
+
+        // Permission hierarchy definition
+        // Each key implies all permissions in its array (for the same resource)
+        // Example: 'delete' implies 'update', 'view', and 'list'
+        'hierarchy' => [
+            'delete' => ['update', 'view', 'list'],
+            'update' => ['view', 'list'],
+            'create' => ['list'],
+            'view' => ['list'],
+            'bulk.delete' => ['delete', 'update', 'view', 'list'],
+            'bulk.update' => ['update', 'view', 'list'],
+            'export' => ['list'],
+        ],
     ],
 
     /*

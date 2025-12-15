@@ -2,7 +2,6 @@
 
 namespace SavyApps\LaravelStudio\Services;
 
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -10,12 +9,11 @@ use SavyApps\LaravelStudio\Enums\Permission as PermissionEnum;
 use SavyApps\LaravelStudio\Models\Permission;
 
 /**
- * Service for managing authorization, permissions, and role caching.
+ * Service for managing authorization and permissions.
  *
  * This service handles:
  * - Permission syncing from resources and Permission enum
  * - Laravel Gate registration
- * - Permission caching
  * - Role permission management
  *
  * @example
@@ -25,9 +23,6 @@ use SavyApps\LaravelStudio\Models\Permission;
  */
 class AuthorizationService
 {
-    protected const CACHE_KEY_PERMISSIONS = 'studio.permissions.all';
-    protected const CACHE_KEY_GROUPED = 'studio.permissions.grouped';
-
     /**
      * Register gates for all permissions.
      *
@@ -41,8 +36,7 @@ class AuthorizationService
         }
 
         try {
-            // Use cached permissions to avoid N+1 query on every request
-            $permissions = $this->getCachedPermissions();
+            $permissions = $this->getPermissionsFromDatabase();
 
             foreach ($permissions as $permission) {
                 $permissionName = $permission['name'];
@@ -69,42 +63,17 @@ class AuthorizationService
     }
 
     /**
-     * Get cached permissions list.
+     * Get permissions from database.
      *
      * @return array
      */
-    protected function getCachedPermissions(): array
+    protected function getPermissionsFromDatabase(): array
     {
-        if (!config('studio.cache.enabled', true)) {
-            return Permission::select(['id', 'name', 'display_name', 'group'])
-                ->orderBy('group')
-                ->orderBy('name')
-                ->get()
-                ->toArray();
-        }
-
-        $ttl = config('studio.cache.ttl', 3600);
-        $cacheKey = config('studio.cache.prefix', 'studio_') . 'permissions_all';
-
-        return Cache::remember($cacheKey, $ttl, function () {
-            return Permission::select(['id', 'name', 'display_name', 'group'])
-                ->orderBy('group')
-                ->orderBy('name')
-                ->get()
-                ->toArray();
-        });
-    }
-
-    /**
-     * Clear all permission caches.
-     *
-     * @return void
-     */
-    public function clearPermissionCaches(): void
-    {
-        $prefix = config('studio.cache.prefix', 'studio_');
-        Cache::forget($prefix . 'permissions_all');
-        Cache::forget($prefix . 'permissions_grouped');
+        return Permission::select(['id', 'name', 'display_name', 'group'])
+            ->orderBy('group')
+            ->orderBy('name')
+            ->get()
+            ->toArray();
     }
 
     /**
@@ -131,8 +100,6 @@ class AuthorizationService
                 $synced[] = $name;
             }
         }
-
-        $this->clearPermissionCaches();
 
         return $synced;
     }
@@ -184,8 +151,6 @@ class AuthorizationService
             }
         }
 
-        $this->clearPermissionCaches();
-
         return $synced;
     }
 
@@ -200,13 +165,13 @@ class AuthorizationService
     }
 
     /**
-     * Get all permissions as flat array (cached).
+     * Get all permissions as flat array.
      *
      * @return array
      */
     public function getAllPermissions(): array
     {
-        return $this->getCachedPermissions();
+        return $this->getPermissionsFromDatabase();
     }
 
     /**
@@ -235,12 +200,6 @@ class AuthorizationService
     {
         $permissionIds = Permission::whereIn('name', $permissionNames)->pluck('id');
         $role->permissions()->sync($permissionIds);
-
-        // Clear cache for all users with this role
-        $this->clearRoleUsersCaches($role);
-
-        // Clear permission caches
-        $this->clearPermissionCaches();
     }
 
     /**
@@ -254,10 +213,6 @@ class AuthorizationService
     {
         $permissionIds = Permission::whereIn('name', $permissionNames)->pluck('id');
         $role->permissions()->syncWithoutDetaching($permissionIds);
-
-        // Clear cache
-        $this->clearRoleUsersCaches($role);
-        $this->clearPermissionCaches();
     }
 
     /**
@@ -271,33 +226,6 @@ class AuthorizationService
     {
         $permissionIds = Permission::whereIn('name', $permissionNames)->pluck('id');
         $role->permissions()->detach($permissionIds);
-
-        // Clear cache
-        $this->clearRoleUsersCaches($role);
-        $this->clearPermissionCaches();
-    }
-
-    /**
-     * Clear permission caches for all users with a given role.
-     * Uses chunking to avoid memory issues with large user bases.
-     *
-     * @param mixed $role
-     * @return void
-     */
-    public function clearRoleUsersCaches($role): void
-    {
-        if (!method_exists($role, 'users')) {
-            return;
-        }
-
-        // Use chunking to avoid loading all users at once
-        $role->users()->chunk(100, function ($users) {
-            foreach ($users as $user) {
-                if (method_exists($user, 'clearPermissionCache')) {
-                    $user->clearPermissionCache();
-                }
-            }
-        });
     }
 
     /**
@@ -341,35 +269,7 @@ class AuthorizationService
             }
         }
 
-        $deleted = Permission::whereNotIn('name', $definedPermissions->unique())->delete();
-
-        $this->clearPermissionCaches();
-
-        return $deleted;
-    }
-
-    /**
-     * Clear permission cache for all users.
-     *
-     * @return void
-     */
-    public function clearAllPermissionCaches(): void
-    {
-        $userModel = config('studio.authorization.models.user', \App\Models\User::class);
-
-        if (!class_exists($userModel)) {
-            return;
-        }
-
-        $userModel::chunk(100, function ($users) {
-            $users->each(function ($user) {
-                if (method_exists($user, 'clearPermissionCache')) {
-                    $user->clearPermissionCache();
-                }
-            });
-        });
-
-        $this->clearPermissionCaches();
+        return Permission::whereNotIn('name', $definedPermissions->unique())->delete();
     }
 
     /**
@@ -390,5 +290,33 @@ class AuthorizationService
     public function getSuperAdminRole(): string
     {
         return config('studio.authorization.super_admin_role', 'super_admin');
+    }
+
+    /**
+     * @deprecated Caching has been removed. This method is kept for backwards compatibility.
+     * @return void
+     */
+    public function clearPermissionCaches(): void
+    {
+        // No-op: caching has been removed
+    }
+
+    /**
+     * @deprecated Caching has been removed. This method is kept for backwards compatibility.
+     * @param mixed $role
+     * @return void
+     */
+    public function clearRoleUsersCaches($role): void
+    {
+        // No-op: caching has been removed
+    }
+
+    /**
+     * @deprecated Caching has been removed. This method is kept for backwards compatibility.
+     * @return void
+     */
+    public function clearAllPermissionCaches(): void
+    {
+        // No-op: caching has been removed
     }
 }
