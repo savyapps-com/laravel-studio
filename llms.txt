@@ -157,15 +157,38 @@ GET    /api/search
 ## Artisan Commands
 
 ```
-studio:install --all          # Install package
+studio:install                # Interactive installation
+studio:install --all          # Install everything without prompts
+studio:install --force        # Overwrite existing files
+studio:install --dry-run      # Preview installation
 studio:make-resource Name     # Create resource
 studio:make-action Name       # Create action
 studio:make-filter Name       # Create filter
 studio:make-field Name        # Create field type
 studio:make-panel             # Create panel
 studio:sync-permissions       # Sync permissions
+studio:cleanup-activities     # Clean old activity logs
 studio:doctor                 # Diagnostics
 ```
+
+## Configuration
+
+Key environment variables:
+```
+STUDIO_ROUTE_PREFIX=api/studio       # API route prefix
+STUDIO_CACHE_ENABLED=true            # Enable caching
+STUDIO_CACHE_TTL=3600                # Unified cache TTL (seconds)
+STUDIO_AUTH_ENABLED=true             # Enable authorization
+STUDIO_SUPER_ADMIN_ROLE=super_admin  # Role that bypasses checks
+STUDIO_ACTIVITY_LOG_ENABLED=true     # Enable activity logging
+STUDIO_ACTIVITY_LOG_CLEANUP_DAYS=90  # Days to keep logs
+STUDIO_SEARCH_ENABLED=true           # Enable global search
+STUDIO_CARDS_ENABLED=true            # Enable dashboard cards
+```
+
+Middleware aliases:
+- `panel` - Check panel access: `middleware('panel:admin')`
+- `permission` - Check permission: `middleware('permission:users.create')`
 
 ## Frontend (Vue 3)
 

@@ -334,7 +334,10 @@ if (can('users.create')) { /* show button */ }
 
 | Command | Description |
 |---------|-------------|
-| `studio:install --all` | Full installation |
+| `studio:install` | Interactive installation |
+| `studio:install --all` | Install everything without prompts |
+| `studio:install --force` | Overwrite existing files |
+| `studio:install --dry-run` | Preview what will be installed |
 | `studio:make-resource {name}` | Create resource |
 | `studio:make-action {name}` | Create action |
 | `studio:make-filter {name}` | Create filter |
@@ -436,13 +439,51 @@ cd packages/laravel-studio
 
 Main config file: `config/studio.php`
 
-Key settings:
-- `resources` - Resource registry
-- `panels` - Panel definitions
-- `authorization` - Permission settings
-- `activity_log` - Audit logging
-- `global_search` - Search configuration
-- `cards` - Dashboard widgets
+### Key Settings
+
+| Setting | Env Variable | Default | Description |
+|---------|--------------|---------|-------------|
+| `prefix` | `STUDIO_ROUTE_PREFIX` | `api/studio` | API route prefix |
+| `cache.enabled` | `STUDIO_CACHE_ENABLED` | `true` | Enable caching |
+| `cache.ttl` | `STUDIO_CACHE_TTL` | `3600` | Cache TTL (seconds) |
+| `authorization.enabled` | `STUDIO_AUTH_ENABLED` | `true` | Enable permissions |
+| `authorization.super_admin_role` | `STUDIO_SUPER_ADMIN_ROLE` | `super_admin` | Role that bypasses checks |
+| `activity_log.enabled` | `STUDIO_ACTIVITY_LOG_ENABLED` | `true` | Enable audit logging |
+| `activity_log.cleanup_days` | `STUDIO_ACTIVITY_LOG_CLEANUP_DAYS` | `90` | Days to keep logs |
+| `global_search.enabled` | `STUDIO_SEARCH_ENABLED` | `true` | Enable global search |
+| `cards.enabled` | `STUDIO_CARDS_ENABLED` | `true` | Enable dashboard cards |
+
+### Simplified Config Structure
+
+```php
+'cache' => [
+    'enabled' => env('STUDIO_CACHE_ENABLED', true),
+    'ttl' => env('STUDIO_CACHE_TTL', 3600),  // Unified TTL for all caches
+    'prefix' => 'studio_',
+],
+
+'authorization' => [
+    'enabled' => env('STUDIO_AUTH_ENABLED', true),
+    'super_admin_role' => env('STUDIO_SUPER_ADMIN_ROLE', 'super_admin'),
+    'models' => [
+        'user' => \App\Models\User::class,
+        'role' => \App\Models\Role::class,
+        'permission' => \SavyApps\LaravelStudio\Models\Permission::class,
+    ],
+],
+
+'activity_log' => [
+    'enabled' => env('STUDIO_ACTIVITY_LOG_ENABLED', true),
+    'cleanup_days' => env('STUDIO_ACTIVITY_LOG_CLEANUP_DAYS', 90),
+],
+```
+
+### Middleware Aliases
+
+| Alias | Class | Usage |
+|-------|-------|-------|
+| `panel` | `EnsureUserCanAccessPanel` | `middleware('panel:admin')` |
+| `permission` | `CheckResourcePermission` | `middleware('permission:users.create')` |
 
 ---
 

@@ -212,14 +212,41 @@ const { can, canAny } = usePermissions()
 
 | Command | Description |
 |---------|-------------|
-| `studio:install --all` | Full installation |
+| `studio:install` | Interactive installation |
+| `studio:install --all` | Install everything without prompts |
+| `studio:install --force` | Overwrite existing files |
+| `studio:install --dry-run` | Preview installation |
 | `studio:make-resource {name}` | Create resource |
 | `studio:make-action {name}` | Create action |
 | `studio:make-filter {name}` | Create filter |
 | `studio:make-field {name}` | Create custom field |
 | `studio:make-panel` | Create panel (interactive) |
 | `studio:sync-permissions` | Sync permissions to DB |
+| `studio:cleanup-activities` | Clean old activity logs |
 | `studio:doctor` | Run diagnostics |
+
+## Configuration
+
+Main config file: `config/studio.php`
+
+### Key Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `STUDIO_ROUTE_PREFIX` | `api/studio` | API route prefix |
+| `STUDIO_CACHE_ENABLED` | `true` | Enable caching |
+| `STUDIO_CACHE_TTL` | `3600` | Cache TTL (unified) |
+| `STUDIO_AUTH_ENABLED` | `true` | Enable permissions |
+| `STUDIO_SUPER_ADMIN_ROLE` | `super_admin` | Bypass role |
+| `STUDIO_ACTIVITY_LOG_ENABLED` | `true` | Enable audit logging |
+| `STUDIO_ACTIVITY_LOG_CLEANUP_DAYS` | `90` | Days to keep logs |
+| `STUDIO_SEARCH_ENABLED` | `true` | Enable global search |
+| `STUDIO_CARDS_ENABLED` | `true` | Enable dashboard cards |
+
+### Middleware Aliases
+
+- `panel` - Check panel access: `middleware('panel:admin')`
+- `permission` - Check permission: `middleware('permission:users.create')`
 
 ## API Endpoints
 

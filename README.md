@@ -594,14 +594,17 @@ class UserResource extends Resource
 
 ### Card Caching
 
-Cards support caching for performance:
+Cards use the unified cache configuration:
 
 ```php
 // config/studio.php
+'cache' => [
+    'enabled' => env('STUDIO_CACHE_ENABLED', true),
+    'ttl' => env('STUDIO_CACHE_TTL', 3600),  // Unified TTL for all caches
+],
+
 'cards' => [
-    'enabled' => true,
-    'cache_ttl' => 300, // 5 minutes
-    'refresh_interval' => 60,
+    'enabled' => env('STUDIO_CARDS_ENABLED', true),
     'max_per_row' => 4,
 ],
 ```
@@ -610,17 +613,20 @@ Cards support caching for performance:
 
 ## Global Search
 
-Enable cross-resource search with keyboard shortcuts:
+Enable cross-resource search with keyboard shortcuts (Cmd/Ctrl + K):
 
 ```php
 // config/studio.php
 'global_search' => [
-    'enabled' => true,
-    'shortcut' => 'cmd+k', // or 'ctrl+k'
+    'enabled' => env('STUDIO_SEARCH_ENABLED', true),
     'min_characters' => 2,
     'max_results' => 20,
-    'debounce' => 300,
-    'cache_ttl' => 60,
+    'debounce_ms' => 300,
+    'results_per_resource' => 5,
+    'shortcut' => [
+        'key' => 'k',
+        'modifier' => 'meta',  // meta = Cmd on Mac, Ctrl on Windows
+    ],
 ],
 ```
 
@@ -632,12 +638,8 @@ Configure activity logging in `config/studio.php`:
 
 ```php
 'activity_log' => [
-    'enabled' => true,
-    'cleanup_days' => 90,
-    'log_ip' => true,
-    'log_user_agent' => true,
-    'default_events' => ['created', 'updated', 'deleted'],
-    'ignore_attributes' => ['password', 'remember_token', 'updated_at'],
+    'enabled' => env('STUDIO_ACTIVITY_LOG_ENABLED', true),
+    'cleanup_days' => env('STUDIO_ACTIVITY_LOG_CLEANUP_DAYS', 90),
 ],
 ```
 
@@ -669,19 +671,16 @@ Laravel Studio provides **10 Artisan commands**:
 ### Install Options
 
 ```bash
-# Full installation with all features
+# Interactive installation (prompts for each step)
+php artisan studio:install
+
+# Full installation without prompts
 php artisan studio:install --all
 
-# Minimal installation
-php artisan studio:install --minimal
-
-# Skip specific steps
-php artisan studio:install --skip-migrations --skip-seeders --skip-npm
-
-# Dry run to preview changes
+# Preview what will be installed
 php artisan studio:install --dry-run
 
-# Force overwrite existing files
+# Overwrite existing files
 php artisan studio:install --force
 ```
 
@@ -1060,65 +1059,81 @@ return [
     // Panel configuration
     'panels' => [
         'admin' => [
-            'name' => 'Admin Panel',
-            'resources' => ['users', 'roles'],
-            'middleware' => ['auth:sanctum'],
+            'label' => 'Admin Panel',
+            'path' => '/admin',
+            'icon' => 'layout',
+            'middleware' => ['api', 'auth:sanctum', 'panel:admin'],
+            'role' => 'admin',
+            'resources' => [],
+            'menu' => [],
         ],
     ],
 
     // Route configuration
-    'prefix' => 'api/studio',
+    'prefix' => env('STUDIO_ROUTE_PREFIX', 'api/studio'),
     'name_prefix' => 'studio.',
-
-    // Middleware
     'middleware' => ['api', 'auth:sanctum'],
 
+    // Unified cache configuration
+    'cache' => [
+        'enabled' => env('STUDIO_CACHE_ENABLED', true),
+        'ttl' => env('STUDIO_CACHE_TTL', 3600),  // Single TTL for all caches
+        'prefix' => 'studio_',
+    ],
+
     // Bulk operations
-    'bulk' => [
-        'max_ids' => 1000,
-        'chunk_size' => 100,
+    'bulk_operations' => [
+        'max_ids' => env('STUDIO_BULK_MAX_IDS', 1000),
+        'chunk_size' => env('STUDIO_BULK_CHUNK_SIZE', 100),
     ],
 
     // Authorization
     'authorization' => [
-        'enabled' => true,
-        'super_admin_role' => 'super-admin',
-        'cache' => [
-            'enabled' => true,
-            'ttl' => 3600,
+        'enabled' => env('STUDIO_AUTH_ENABLED', true),
+        'super_admin_role' => env('STUDIO_SUPER_ADMIN_ROLE', 'super_admin'),
+        'models' => [
+            'user' => \App\Models\User::class,
+            'role' => \App\Models\Role::class,
+            'permission' => \SavyApps\LaravelStudio\Models\Permission::class,
         ],
-        'gate_registration' => true,
     ],
 
-    // Activity logging
+    // Activity logging (simplified)
     'activity_log' => [
-        'enabled' => true,
-        'cleanup_days' => 90,
-        'log_ip' => true,
-        'log_user_agent' => true,
-        'default_events' => ['created', 'updated', 'deleted'],
-        'ignore_attributes' => ['password', 'remember_token', 'updated_at'],
+        'enabled' => env('STUDIO_ACTIVITY_LOG_ENABLED', true),
+        'cleanup_days' => env('STUDIO_ACTIVITY_LOG_CLEANUP_DAYS', 90),
     ],
 
     // Global search
     'global_search' => [
-        'enabled' => true,
-        'shortcut' => 'cmd+k',
+        'enabled' => env('STUDIO_SEARCH_ENABLED', true),
         'min_characters' => 2,
         'max_results' => 20,
-        'debounce' => 300,
-        'cache_ttl' => 60,
+        'debounce_ms' => 300,
+        'results_per_resource' => 5,
     ],
 
     // Dashboard cards
     'cards' => [
-        'enabled' => true,
-        'cache_ttl' => 300,
+        'enabled' => env('STUDIO_CARDS_ENABLED', true),
         'max_per_row' => 4,
-        'colors' => ['blue', 'green', 'yellow', 'red', 'purple', 'pink', 'indigo', 'cyan', 'orange', 'teal', 'gray'],
     ],
 ];
 ```
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `STUDIO_ROUTE_PREFIX` | `api/studio` | API route prefix |
+| `STUDIO_CACHE_ENABLED` | `true` | Enable caching |
+| `STUDIO_CACHE_TTL` | `3600` | Cache TTL (unified) |
+| `STUDIO_AUTH_ENABLED` | `true` | Enable authorization |
+| `STUDIO_SUPER_ADMIN_ROLE` | `super_admin` | Role that bypasses permission checks |
+| `STUDIO_ACTIVITY_LOG_ENABLED` | `true` | Enable activity logging |
+| `STUDIO_ACTIVITY_LOG_CLEANUP_DAYS` | `90` | Days to keep logs |
+| `STUDIO_SEARCH_ENABLED` | `true` | Enable global search |
+| `STUDIO_CARDS_ENABLED` | `true` | Enable dashboard cards |
 
 ---
 
