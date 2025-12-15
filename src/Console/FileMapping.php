@@ -20,6 +20,8 @@ class FileMapping
             'app/Enums' => 'app/Enums',
             'app/Console' => 'app/Console',
             'app/Providers' => 'app/Providers',
+            'app/Policies' => 'app/Policies',
+            'app/Rules' => 'app/Rules',
             'database/migrations' => 'database/migrations',
             'database/seeders' => 'database/seeders',
             'database/factories' => 'database/factories',
