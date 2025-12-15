@@ -57,7 +57,7 @@ class ActivityService
 
         $this->applyFilters($query, $filters);
 
-        $perPage = $filters['per_page'] ?? config('studio.activity_log.per_page', 25);
+        $perPage = $filters['per_page'] ?? 25;
 
         return $query->paginate($perPage);
     }
@@ -112,7 +112,7 @@ class ActivityService
 
         $this->applyFilters($query, $filters);
 
-        $perPage = $filters['per_page'] ?? config('studio.activity_log.per_page', 25);
+        $perPage = $filters['per_page'] ?? 25;
 
         return $query->paginate($perPage);
     }
@@ -129,7 +129,7 @@ class ActivityService
 
         $this->applyFilters($query, $filters);
 
-        $perPage = $filters['per_page'] ?? config('studio.activity_log.per_page', 25);
+        $perPage = $filters['per_page'] ?? 25;
 
         return $query->paginate($perPage);
     }

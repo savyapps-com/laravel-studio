@@ -90,29 +90,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Features Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Define features that can be enabled/disabled per panel.
-    | Features are non-resource pages or functionality.
-    |
-    */
-
-    'features' => [
-        'email-templates' => [
-            'label' => 'Email Templates',
-            'icon' => 'mail',
-            'route' => 'email-templates.index',
-        ],
-        'system-settings' => [
-            'label' => 'System Settings',
-            'icon' => 'settings',
-            'route' => 'settings.system',
-        ],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
     | Bulk Operations Configuration
     |--------------------------------------------------------------------------
     |
@@ -208,20 +185,12 @@ return [
     | Environment variables:
     | - STUDIO_ACTIVITY_LOG_ENABLED: Enable/disable activity logging (default: true)
     | - STUDIO_ACTIVITY_LOG_CLEANUP_DAYS: Days to keep activities (default: 90, 0 = never)
-    | - STUDIO_ACTIVITY_LOG_IP: Log IP addresses (default: true)
-    | - STUDIO_ACTIVITY_LOG_USER_AGENT: Log user agents (default: true)
     |
     */
 
     'activity_log' => [
         'enabled' => env('STUDIO_ACTIVITY_LOG_ENABLED', true),
-        'per_page' => 25,
         'cleanup_days' => env('STUDIO_ACTIVITY_LOG_CLEANUP_DAYS', 90),
-        'default_events' => ['created', 'updated', 'deleted'],
-        'ignore_attributes' => ['password', 'remember_token', 'updated_at'],
-        'log_ip' => env('STUDIO_ACTIVITY_LOG_IP', true),
-        'log_user_agent' => env('STUDIO_ACTIVITY_LOG_USER_AGENT', true),
-        'model' => \SavyApps\LaravelStudio\Models\Activity::class,
     ],
 
     /*

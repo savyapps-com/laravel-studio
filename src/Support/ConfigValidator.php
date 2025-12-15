@@ -159,26 +159,6 @@ class ConfigValidator
                 'critical' => false,
             ];
         }
-
-        // Validate per_page
-        $perPage = $config['per_page'] ?? null;
-        if ($perPage !== null && (!is_int($perPage) || $perPage < 1 || $perPage > 100)) {
-            $this->errors[] = [
-                'key' => 'activity_log.per_page',
-                'message' => 'activity_log.per_page must be between 1 and 100',
-                'critical' => false,
-            ];
-        }
-
-        // Validate model class
-        $modelClass = $config['model'] ?? null;
-        if ($modelClass && !class_exists($modelClass)) {
-            $this->errors[] = [
-                'key' => 'activity_log.model',
-                'message' => "Activity model class '{$modelClass}' does not exist",
-                'critical' => false,
-            ];
-        }
     }
 
     /**
