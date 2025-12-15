@@ -3,7 +3,15 @@
  *
  * @package laravel-studio
  * @author SavyApps
+ *
+ * For smaller bundle sizes, consider importing from specific entry points:
+ * - 'laravel-studio/core' - Essential components only (~40% smaller)
+ * - 'laravel-studio/activity' - Activity logging components
+ * - 'laravel-studio/cards' - Dashboard card components
+ * - 'laravel-studio/search' - Global search components
  */
+
+import { defineAsyncComponent } from 'vue'
 
 // Core Resource Components
 export { default as ResourceManager } from './components/resource/ResourceManager.vue'
@@ -20,7 +28,10 @@ export { default as PanelSwitcher } from './components/layout/PanelSwitcher.vue'
 
 // Permission Components
 export { default as PermissionGuard } from './components/permissions/PermissionGuard.vue'
-export { default as RolePermissionMatrix } from './components/permissions/RolePermissionMatrix.vue'
+// Heavy component - async loaded
+export const RolePermissionMatrix = defineAsyncComponent(() =>
+    import('./components/permissions/RolePermissionMatrix.vue')
+)
 
 // Activity Components
 export { default as ActivityTimeline } from './components/activity/ActivityTimeline.vue'
@@ -38,7 +49,10 @@ export { default as ValueCard } from './components/cards/ValueCard.vue'
 export { default as TrendCard } from './components/cards/TrendCard.vue'
 export { default as PartitionCard } from './components/cards/PartitionCard.vue'
 export { default as TableCard } from './components/cards/TableCard.vue'
-export { default as ChartCard } from './components/cards/ChartCard.vue'
+// Heavy component - async loaded (includes chart library)
+export const ChartCard = defineAsyncComponent(() =>
+    import('./components/cards/ChartCard.vue')
+)
 
 // Common Components
 export { default as Toast } from './components/common/Toast.vue'
@@ -48,7 +62,10 @@ export { default as ConfirmDialogContainer } from './components/common/ConfirmDi
 export { default as Icon } from './components/common/Icon.vue'
 export { default as ToggleSwitch } from './components/common/ToggleSwitch.vue'
 export { default as VirtualScroll } from './components/common/VirtualScroll.vue'
-export { default as ImageEditor } from './components/common/ImageEditor.vue'
+// Heavy component - async loaded (includes cropper library)
+export const ImageEditor = defineAsyncComponent(() =>
+    import('./components/common/ImageEditor.vue')
+)
 export { default as ImageLightbox } from './components/common/ImageLightbox.vue'
 export { default as ImageWithBlurPlaceholder } from './components/common/ImageWithBlurPlaceholder.vue'
 
@@ -65,7 +82,10 @@ export { default as PasswordInput } from './components/form/PasswordInput.vue'
 export { default as MediaUpload } from './components/form/MediaUpload.vue'
 export { default as FileInput } from './components/form/FileInput.vue'
 export { default as RadioGroup } from './components/form/RadioGroup.vue'
-export { default as JsonEditor } from './components/form/JsonEditor.vue'
+// Heavy component - async loaded
+export const JsonEditor = defineAsyncComponent(() =>
+    import('./components/form/JsonEditor.vue')
+)
 export { default as FormGroup } from './components/form/FormGroup.vue'
 export { default as FormLabel } from './components/form/FormLabel.vue'
 export { default as FormError } from './components/form/FormError.vue'
@@ -74,7 +94,10 @@ export { default as FormHelpText } from './components/form/FormHelpText.vue'
 export { default as FormSection } from './components/form/FormSection.vue'
 export { default as FormActions } from './components/form/FormActions.vue'
 export { default as TagInput } from './components/form/TagInput.vue'
-export { default as IconPicker } from './components/form/IconPicker.vue'
+// Heavy component - async loaded (large icon set)
+export const IconPicker = defineAsyncComponent(() =>
+    import('./components/form/IconPicker.vue')
+)
 export { default as MultiSelectServer } from './components/form/MultiSelectServer.vue'
 
 // Services

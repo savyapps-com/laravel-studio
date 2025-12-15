@@ -12,10 +12,39 @@
         "nova",
         "savyapps"
     ],
-    "main": "dist/laravel-studio.js",
+    "main": "dist/laravel-studio.umd.js",
     "module": "dist/laravel-studio.es.js",
+    "types": "dist/types/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/laravel-studio.es.js",
+            "require": "./dist/laravel-studio.umd.js"
+        },
+        "./core": {
+            "import": "./dist/core.es.js",
+            "require": "./dist/core.umd.js"
+        },
+        "./activity": {
+            "import": "./dist/activity.es.js",
+            "require": "./dist/activity.umd.js"
+        },
+        "./cards": {
+            "import": "./dist/cards.es.js",
+            "require": "./dist/cards.umd.js"
+        },
+        "./search": {
+            "import": "./dist/search.es.js",
+            "require": "./dist/search.umd.js"
+        },
+        "./style.css": "./dist/laravel-studio.css"
+    },
+    "sideEffects": [
+        "*.css",
+        "*.vue"
+    ],
     "files": [
-        "dist"
+        "dist",
+        "resources/js"
     ],
     "scripts": {
         "build": "vite build",

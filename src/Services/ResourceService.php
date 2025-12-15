@@ -9,6 +9,26 @@ use SavyApps\LaravelStudio\Resources\Resource;
 
 class ResourceService
 {
+    /**
+     * Cached flattened index fields to prevent repeated computation.
+     */
+    protected ?array $cachedIndexFields = null;
+
+    /**
+     * Cached flattened form fields to prevent repeated computation.
+     */
+    protected ?array $cachedFormFields = null;
+
+    /**
+     * Cached relationships to eager load.
+     */
+    protected ?array $cachedRelationships = null;
+
+    /**
+     * Cached sortable columns.
+     */
+    protected ?array $cachedSortableColumns = null;
+
     public function __construct(protected Resource $resource) {}
 
     /**
@@ -61,7 +81,8 @@ class ResourceService
     {
         $data = $model->toArray();
 
-        $fields = $this->resource->flattenFields($this->resource->getIndexFields());
+        // Use cached fields to avoid repeated flattenFields() calls
+        $fields = $this->getIndexFields();
 
         foreach ($fields as $field) {
             if (method_exists($field, 'transformValue')) {
@@ -73,6 +94,30 @@ class ResourceService
         }
 
         return $data;
+    }
+
+    /**
+     * Get flattened index fields (cached).
+     */
+    protected function getIndexFields(): array
+    {
+        if ($this->cachedIndexFields === null) {
+            $this->cachedIndexFields = $this->resource->flattenFields($this->resource->getIndexFields());
+        }
+
+        return $this->cachedIndexFields;
+    }
+
+    /**
+     * Get flattened form fields (cached).
+     */
+    protected function getFormFields(): array
+    {
+        if ($this->cachedFormFields === null) {
+            $this->cachedFormFields = $this->resource->flattenFields($this->resource->getFormFields());
+        }
+
+        return $this->cachedFormFields;
     }
 
     /**
@@ -264,11 +309,16 @@ class ResourceService
     }
 
     /**
-     * Get list of sortable column names from resource fields.
+     * Get list of sortable column names from resource fields (cached).
      */
     protected function getSortableColumns(): array
     {
-        $fields = $this->resource->flattenFields($this->resource->getIndexFields());
+        if ($this->cachedSortableColumns !== null) {
+            return $this->cachedSortableColumns;
+        }
+
+        // Use cached fields
+        $fields = $this->getIndexFields();
         $sortableColumns = ['id', 'created_at', 'updated_at']; // Always allow these
 
         foreach ($fields as $field) {
@@ -277,18 +327,24 @@ class ResourceService
             }
         }
 
-        return array_unique($sortableColumns);
+        $this->cachedSortableColumns = array_unique($sortableColumns);
+
+        return $this->cachedSortableColumns;
     }
 
     /**
-     * Get relationships to eager load.
+     * Get relationships to eager load (cached).
      */
     protected function getRelationshipsToLoad(): array
     {
+        if ($this->cachedRelationships !== null) {
+            return $this->cachedRelationships;
+        }
+
         $relationships = $this->resource->with();
 
-        // Add BelongsTo relationships from index fields
-        $fields = $this->resource->flattenFields($this->resource->getIndexFields());
+        // Add BelongsTo relationships from index fields (using cached fields)
+        $fields = $this->getIndexFields();
 
         foreach ($fields as $field) {
             if ($field instanceof \SavyApps\LaravelStudio\Resources\Fields\BelongsTo) {
@@ -301,7 +357,9 @@ class ResourceService
             }
         }
 
-        return $relationships;
+        $this->cachedRelationships = $relationships;
+
+        return $this->cachedRelationships;
     }
 
     /**
@@ -311,7 +369,8 @@ class ResourceService
     {
         $relationshipData = [];
 
-        $fields = $this->resource->flattenFields($this->resource->getFormFields());
+        // Use cached form fields
+        $fields = $this->getFormFields();
 
         foreach ($fields as $field) {
             if ($field instanceof \SavyApps\LaravelStudio\Resources\Fields\BelongsToMany) {
@@ -337,7 +396,8 @@ class ResourceService
      */
     protected function syncRelationships(Model $model, array $relationshipData): void
     {
-        $fields = $this->resource->flattenFields($this->resource->getFormFields());
+        // Use cached form fields
+        $fields = $this->getFormFields();
 
         foreach ($fields as $field) {
             if ($field instanceof \SavyApps\LaravelStudio\Resources\Fields\BelongsToMany) {
