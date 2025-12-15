@@ -48,21 +48,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Panels Cache Configuration
+    | Cache Configuration
     |--------------------------------------------------------------------------
     |
-    | Configure caching for panels loaded from the database. This reduces
-    | database queries on every request when panels are stored in the database.
+    | Unified cache configuration for all Laravel Studio caching (panels,
+    | permissions, search, cards). This simplifies configuration by using
+    | a single TTL value across all cached data.
     |
     | Environment variables:
-    | - STUDIO_PANELS_CACHE_ENABLED: Enable/disable panels caching (default: true)
-    | - STUDIO_PANELS_CACHE_TTL: Cache TTL in seconds (default: 3600)
+    | - STUDIO_CACHE_ENABLED: Enable/disable all caching (default: true)
+    | - STUDIO_CACHE_TTL: Cache TTL in seconds (default: 3600)
     |
     */
 
-    'panels_cache' => [
-        'enabled' => env('STUDIO_PANELS_CACHE_ENABLED', true),
-        'ttl' => env('STUDIO_PANELS_CACHE_TTL', 3600),
+    'cache' => [
+        'enabled' => env('STUDIO_CACHE_ENABLED', true),
+        'ttl' => env('STUDIO_CACHE_TTL', 3600),
+        'prefix' => 'studio_',
     ],
 
     /*
@@ -179,23 +181,14 @@ return [
     | Environment variables:
     | - STUDIO_AUTH_ENABLED: Enable/disable authorization (default: true)
     | - STUDIO_SUPER_ADMIN_ROLE: Role that bypasses checks (default: 'super_admin')
-    | - STUDIO_PERMISSIONS_CACHE_ENABLED: Enable permission caching (default: true)
-    | - STUDIO_PERMISSIONS_CACHE_TTL: Permission cache TTL in seconds (default: 3600)
-    | - STUDIO_REGISTER_GATES: Auto-register Laravel Gates (default: true)
+    |
+    | Note: Caching uses the unified 'cache' configuration above.
     |
     */
 
     'authorization' => [
         'enabled' => env('STUDIO_AUTH_ENABLED', true),
         'super_admin_role' => env('STUDIO_SUPER_ADMIN_ROLE', 'super_admin'),
-
-        'cache' => [
-            'enabled' => env('STUDIO_PERMISSIONS_CACHE_ENABLED', true),
-            'ttl' => env('STUDIO_PERMISSIONS_CACHE_TTL', 3600),
-            'prefix' => 'studio_permissions_',
-        ],
-
-        'register_gates' => env('STUDIO_REGISTER_GATES', true),
 
         // Model classes (can be overridden if using custom models)
         'models' => [
@@ -240,19 +233,17 @@ return [
     |
     | Environment variables:
     | - STUDIO_SEARCH_ENABLED: Enable/disable global search (default: true)
-    | - STUDIO_SEARCH_MIN_CHARS: Minimum characters to trigger search (default: 2)
-    | - STUDIO_SEARCH_MAX_RESULTS: Maximum total results (default: 20)
-    | - STUDIO_SEARCH_CACHE_TTL: Cache TTL in seconds, 0 to disable (default: 60)
+    |
+    | Note: Caching uses the unified 'cache' configuration above.
     |
     */
 
     'global_search' => [
         'enabled' => env('STUDIO_SEARCH_ENABLED', true),
-        'min_characters' => env('STUDIO_SEARCH_MIN_CHARS', 2),
+        'min_characters' => 2,
         'debounce_ms' => 300,
-        'max_results' => env('STUDIO_SEARCH_MAX_RESULTS', 20),
+        'max_results' => 20,
         'results_per_resource' => 5,
-        'cache_ttl' => env('STUDIO_SEARCH_CACHE_TTL', 60),
         'shortcut' => [
             'key' => 'k',
             'modifier' => 'meta',
@@ -269,15 +260,13 @@ return [
     |
     | Environment variables:
     | - STUDIO_CARDS_ENABLED: Enable/disable cards feature (default: true)
-    | - STUDIO_CARDS_CACHE_TTL: Card cache TTL in seconds (default: 300)
-    | - STUDIO_CARDS_REFRESH_INTERVAL: Auto-refresh interval in seconds (default: null)
+    |
+    | Note: Caching uses the unified 'cache' configuration above.
     |
     */
 
     'cards' => [
         'enabled' => env('STUDIO_CARDS_ENABLED', true),
-        'cache_ttl' => env('STUDIO_CARDS_CACHE_TTL', 300),
-        'refresh_interval' => env('STUDIO_CARDS_REFRESH_INTERVAL'),
         'max_per_row' => 4,
         'colors' => [
             'blue' => '#3B82F6',

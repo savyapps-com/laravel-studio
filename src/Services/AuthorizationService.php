@@ -59,7 +59,7 @@ class AuthorizationService
      */
     protected function getCachedPermissions(): array
     {
-        if (!config('studio.authorization.cache.enabled', true)) {
+        if (!config('studio.cache.enabled', true)) {
             return Permission::select(['id', 'name', 'display_name', 'group'])
                 ->orderBy('group')
                 ->orderBy('name')
@@ -67,8 +67,8 @@ class AuthorizationService
                 ->toArray();
         }
 
-        $ttl = config('studio.authorization.cache.ttl', 3600);
-        $cacheKey = config('studio.authorization.cache.prefix', 'studio_permissions_') . 'all';
+        $ttl = config('studio.cache.ttl', 3600);
+        $cacheKey = config('studio.cache.prefix', 'studio_') . 'permissions_all';
 
         return Cache::remember($cacheKey, $ttl, function () {
             return Permission::select(['id', 'name', 'display_name', 'group'])
@@ -84,9 +84,9 @@ class AuthorizationService
      */
     public function clearPermissionCaches(): void
     {
-        $prefix = config('studio.authorization.cache.prefix', 'studio_permissions_');
-        Cache::forget($prefix . 'all');
-        Cache::forget($prefix . 'grouped');
+        $prefix = config('studio.cache.prefix', 'studio_');
+        Cache::forget($prefix . 'permissions_all');
+        Cache::forget($prefix . 'permissions_grouped');
     }
 
     /**

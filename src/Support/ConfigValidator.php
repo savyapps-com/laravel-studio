@@ -21,6 +21,7 @@ class ConfigValidator
     {
         $this->errors = [];
 
+        $this->validateCache();
         $this->validateBulkOperations();
         $this->validateAuthorization();
         $this->validateActivityLog();
@@ -41,6 +42,34 @@ class ConfigValidator
         }
 
         return true;
+    }
+
+    /**
+     * Validate unified cache configuration.
+     */
+    protected function validateCache(): void
+    {
+        $config = config('studio.cache', []);
+
+        // Validate cache TTL
+        $ttl = $config['ttl'] ?? null;
+        if ($ttl !== null && (!is_int($ttl) || $ttl < 0)) {
+            $this->errors[] = [
+                'key' => 'cache.ttl',
+                'message' => 'cache.ttl must be a non-negative integer',
+                'critical' => false,
+            ];
+        }
+
+        // Validate cache prefix
+        $prefix = $config['prefix'] ?? null;
+        if ($prefix !== null && !is_string($prefix)) {
+            $this->errors[] = [
+                'key' => 'cache.prefix',
+                'message' => 'cache.prefix must be a string',
+                'critical' => false,
+            ];
+        }
     }
 
     /**
@@ -90,16 +119,6 @@ class ConfigValidator
     protected function validateAuthorization(): void
     {
         $config = config('studio.authorization', []);
-
-        // Validate cache TTL
-        $ttl = $config['cache']['ttl'] ?? null;
-        if ($ttl !== null && (!is_int($ttl) || $ttl < 0)) {
-            $this->errors[] = [
-                'key' => 'authorization.cache.ttl',
-                'message' => 'authorization.cache.ttl must be a non-negative integer',
-                'critical' => false,
-            ];
-        }
 
         // Validate super admin role is not empty when auth is enabled
         if (($config['enabled'] ?? true) && empty($config['super_admin_role'])) {
@@ -188,16 +207,6 @@ class ConfigValidator
                 'critical' => false,
             ];
         }
-
-        // Validate cache_ttl
-        $cacheTtl = $config['cache_ttl'] ?? null;
-        if ($cacheTtl !== null && (!is_int($cacheTtl) || $cacheTtl < 0)) {
-            $this->errors[] = [
-                'key' => 'global_search.cache_ttl',
-                'message' => 'global_search.cache_ttl must be a non-negative integer',
-                'critical' => false,
-            ];
-        }
     }
 
     /**
@@ -206,16 +215,6 @@ class ConfigValidator
     protected function validateCards(): void
     {
         $config = config('studio.cards', []);
-
-        // Validate cache_ttl
-        $cacheTtl = $config['cache_ttl'] ?? null;
-        if ($cacheTtl !== null && (!is_int($cacheTtl) || $cacheTtl < 0)) {
-            $this->errors[] = [
-                'key' => 'cards.cache_ttl',
-                'message' => 'cards.cache_ttl must be a non-negative integer',
-                'critical' => false,
-            ];
-        }
 
         // Validate max_per_row
         $maxPerRow = $config['max_per_row'] ?? null;

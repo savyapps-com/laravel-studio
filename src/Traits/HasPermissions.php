@@ -61,12 +61,12 @@ trait HasPermissions
      */
     public function getCachedPermissions(): Collection
     {
-        if (!config('studio.authorization.cache.enabled', true)) {
+        if (!config('studio.cache.enabled', true)) {
             return $this->getAllPermissions();
         }
 
-        $cacheKey = config('studio.authorization.cache.prefix', 'studio_permissions_') . $this->id;
-        $ttl = config('studio.authorization.cache.ttl', 3600);
+        $cacheKey = config('studio.cache.prefix', 'studio_') . 'user_permissions_' . $this->id;
+        $ttl = config('studio.cache.ttl', 3600);
 
         return Cache::remember($cacheKey, $ttl, function () {
             return $this->getAllPermissions();
@@ -100,7 +100,7 @@ trait HasPermissions
      */
     public function clearPermissionCache(): void
     {
-        $cacheKey = config('studio.authorization.cache.prefix', 'studio_permissions_') . $this->id;
+        $cacheKey = config('studio.cache.prefix', 'studio_') . 'user_permissions_' . $this->id;
         Cache::forget($cacheKey);
     }
 
