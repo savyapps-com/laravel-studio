@@ -13,14 +13,7 @@ class InstallCommand extends Command
      * The name and signature of the console command.
      */
     protected $signature = 'studio:install
-                            {--default : Install default starter}
-                            {--minimal : Install minimal starter (future)}
                             {--all : Install everything without prompts}
-                            {--no-examples : Skip example resources}
-                            {--skip-migrations : Skip running migrations}
-                            {--skip-seeders : Skip running seeders}
-                            {--skip-npm : Skip npm install}
-                            {--skip-dependencies : Skip dependency checking and installation}
                             {--force : Overwrite existing files}
                             {--dry-run : Preview what will be installed}';
 
@@ -54,31 +47,15 @@ class InstallCommand extends Command
         // Generate application key if not set
         $this->ensureApplicationKey();
 
-        // Check and install required dependencies (unless skipped)
-        if (! $this->option('skip-dependencies')) {
-            $dependenciesSatisfied = $this->checkAndInstallDependencies();
+        // Check and install required dependencies
+        $dependenciesSatisfied = $this->checkAndInstallDependencies();
 
-            if (! $dependenciesSatisfied) {
-                return self::FAILURE;
-            }
-        } else {
-            $this->components->warn('Skipping dependency check (--skip-dependencies flag used)');
-            $this->newLine();
+        if (! $dependenciesSatisfied) {
+            return self::FAILURE;
         }
 
-        // Determine starter type
-        $starter = $this->determineStarter();
-
-        if ($starter === 'none') {
-            $this->components->info('Skipping starter installation.');
-
-            return self::SUCCESS;
-        }
-
-        if ($starter === 'minimal') {
-            $this->components->warn('Minimal starter is not yet available. Using default starter.');
-            $starter = 'default';
-        }
+        // Use default starter
+        $starter = 'default';
 
         $this->newLine();
 
@@ -132,7 +109,7 @@ class InstallCommand extends Command
         $this->newLine();
 
         // Run migrations
-        if (! $this->option('skip-migrations') && ($this->option('all') || $this->confirm('Run migrations?', true))) {
+        if ($this->option('all') || $this->confirm('Run migrations?', true)) {
             try {
                 // Check database connection before running migrations
                 if ($this->checkDatabaseConnection()) {
@@ -171,7 +148,7 @@ class InstallCommand extends Command
         }
 
         // Run seeders
-        if (! $this->option('skip-seeders') && ($this->option('all') || $this->confirm('Run seeders?', true))) {
+        if ($this->option('all') || $this->confirm('Run seeders?', true)) {
             try {
                 $success = $this->components->task('Running seeders', function () {
                     try {
@@ -202,7 +179,7 @@ class InstallCommand extends Command
         }
 
         // Install npm dependencies
-        if (! $this->option('skip-npm') && ($this->option('all') || $this->confirm('Install frontend dependencies (npm install)?', true))) {
+        if ($this->option('all') || $this->confirm('Install frontend dependencies (npm install)?', true)) {
             try {
                 $success = $this->components->task('Installing frontend dependencies', function () {
                     exec('npm install 2>&1', $output, $returnCode);
@@ -625,32 +602,6 @@ class InstallCommand extends Command
 
             return false;
         }
-    }
-
-    /**
-     * Determine which starter to install.
-     */
-    protected function determineStarter(): string
-    {
-        if ($this->option('all') || $this->option('default')) {
-            return 'default';
-        }
-
-        if ($this->option('minimal')) {
-            return 'minimal';
-        }
-
-        $choice = $this->components->choice(
-            'Which starter would you like to install?',
-            [
-                'default' => 'Default (Full admin panel + auth + settings)',
-                'minimal' => 'Minimal (Auth only - coming soon)',
-                'none' => 'Skip (Use core package only)',
-            ],
-            'default'
-        );
-
-        return $choice;
     }
 
     /**
