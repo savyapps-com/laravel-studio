@@ -125,10 +125,6 @@ class LaravelStudioServiceProvider extends ServiceProvider
 
         // Register permission middleware alias
         $router->aliasMiddleware('permission', CheckResourcePermission::class);
-
-        // Legacy aliases for backward compatibility
-        $router->aliasMiddleware('studio.panel', EnsureUserCanAccessPanel::class);
-        $router->aliasMiddleware('studio.permission', CheckResourcePermission::class);
     }
 
     /**
@@ -136,7 +132,8 @@ class LaravelStudioServiceProvider extends ServiceProvider
      */
     protected function registerAuthorizationGates(): void
     {
-        if (!config('studio.authorization.register_gates', true)) {
+        // Only register gates if authorization is enabled
+        if (!config('studio.authorization.enabled', true)) {
             return;
         }
 

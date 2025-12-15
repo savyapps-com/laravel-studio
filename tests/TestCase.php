@@ -86,10 +86,15 @@ abstract class TestCase extends Orchestra
 
         // Setup authorization config
         $app['config']->set('studio.authorization', [
-            'enabled' => true,
+            'enabled' => false, // Disable authorization in tests to avoid gate registration
             'super_admin_role' => 'super_admin',
-            'cache' => ['enabled' => false],
-            'register_gates' => false,
+        ]);
+
+        // Setup unified cache config (disabled for tests)
+        $app['config']->set('studio.cache', [
+            'enabled' => false,
+            'ttl' => 3600,
+            'prefix' => 'studio_test_',
         ]);
 
         // Setup global search config

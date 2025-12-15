@@ -18,10 +18,6 @@ class AuthorizationService
      */
     public function registerGates(): void
     {
-        if (!config('studio.authorization.register_gates', true)) {
-            return;
-        }
-
         // Check if permissions table exists
         if (!Schema::hasTable('permissions')) {
             return;
