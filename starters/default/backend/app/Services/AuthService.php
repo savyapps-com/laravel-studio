@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
+use SavyApps\LaravelStudio\Services\PanelService;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class AuthService
@@ -16,11 +17,15 @@ class AuthService
     /**
      * Authenticate a user with the provided credentials.
      */
-    public function login(array $credentials): array
+    public function login(array $credentials, ?string $panelKey = null): array
     {
         // Extract remember flag if present (not used for API auth)
         $remember = $credentials['remember'] ?? false;
         unset($credentials['remember']);
+
+        // Extract panel if present in credentials
+        $panel = $panelKey ?? $credentials['panel'] ?? null;
+        unset($credentials['panel']);
 
         if (! Auth::attempt($credentials)) {
             throw ValidationException::withMessages([
@@ -29,6 +34,22 @@ class AuthService
         }
 
         $user = Auth::user();
+
+        // Check if user can access the requested panel
+        if ($panel) {
+            $panelService = app(PanelService::class);
+
+            if (! $panelService->userCanAccessPanel($user, $panel)) {
+                // Log out the user since they can't access this panel
+                Auth::logout();
+
+                // Return same error as invalid credentials to not reveal account exists
+                throw ValidationException::withMessages([
+                    'email' => ['The account does not exist.'],
+                ]);
+            }
+        }
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return [

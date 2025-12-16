@@ -132,7 +132,7 @@
 
     <template #links>
       <div class="space-y-2">
-        <router-link :to="{ name: 'panel.login', params: { panel: 'admin' } }" class="auth-link block">
+        <router-link :to="{ name: 'panel.login', params: { panel: currentPanel } }" class="auth-link block">
           Back to Sign In
         </router-link>
         <button @click="changeEmail" class="auth-link block">
@@ -175,6 +175,9 @@ export default {
     const resendCooldown = ref(0)
     const email = ref('')
     let resendTimer = null
+
+    // Get the current panel from route params
+    const currentPanel = computed(() => route.params.panel || 'admin')
 
     const pageTitle = computed(() => {
       switch (verificationStatus.value) {
@@ -277,7 +280,12 @@ export default {
     }
 
     const continueToApp = () => {
-      router.push({ name: 'admin.dashboard' })
+      // Redirect to the current panel's dashboard
+      if (currentPanel.value === 'admin') {
+        router.push({ name: 'admin.dashboard' })
+      } else {
+        router.push({ name: 'panel.dashboard', params: { panel: currentPanel.value } })
+      }
     }
 
     const changeEmail = () => {
@@ -323,6 +331,7 @@ export default {
       pageTitle,
       pageDescription,
       helpText,
+      currentPanel,
       resendVerification,
       continueToApp,
       changeEmail,

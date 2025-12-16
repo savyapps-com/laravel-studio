@@ -2,6 +2,7 @@
   <AuthPage
     title="Welcome Back"
     description="Sign in to your account to continue"
+    :logo-title="panelLabel"
     :help-text="helpText"
   >
     <template #form>
@@ -104,7 +105,8 @@ const helpText = 'Having trouble signing in? Make sure you\'re using the correct
 // Get current panel from route params
 const currentPanel = computed(() => route.params.panel || 'admin')
 
-// Panel registration settings
+// Panel settings
+const panelLabel = ref('')
 const allowRegistration = ref(false)
 const panelLoading = ref(true)
 
@@ -112,9 +114,11 @@ const panelLoading = ref(true)
 onMounted(async () => {
   try {
     const panelInfo = await authService.getPanelInfo(currentPanel.value)
+    panelLabel.value = panelInfo.label || ''
     allowRegistration.value = panelInfo.allow_registration || false
   } catch (error) {
-    // If panel info fetch fails, default to not showing registration
+    // If panel info fetch fails, use defaults
+    panelLabel.value = ''
     allowRegistration.value = false
   } finally {
     panelLoading.value = false

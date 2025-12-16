@@ -9,6 +9,7 @@
     v-else-if="!allowRegistration"
     title="Registration Disabled"
     description="Registration is not available for this panel"
+    :logo-title="panelLabel"
   >
     <template #form>
       <div class="text-center py-8">
@@ -34,6 +35,7 @@
     v-else
     title="Create Account"
     description="Sign up to get started with your new account"
+    :logo-title="panelLabel"
     :help-text="helpText"
   >
     <template #form>
@@ -153,7 +155,8 @@ const helpText = 'Your account will be created instantly and you\'ll be able to 
 // Get current panel from route params
 const currentPanel = computed(() => route.params.panel || 'admin')
 
-// Panel registration settings
+// Panel settings
+const panelLabel = ref('')
 const allowRegistration = ref(false)
 const panelLoading = ref(true)
 
@@ -161,9 +164,11 @@ const panelLoading = ref(true)
 onMounted(async () => {
   try {
     const panelInfo = await authService.getPanelInfo(currentPanel.value)
+    panelLabel.value = panelInfo.label || ''
     allowRegistration.value = panelInfo.allow_registration || false
   } catch (error) {
-    // If panel info fetch fails, default to not allowing registration
+    // If panel info fetch fails, use defaults
+    panelLabel.value = ''
     allowRegistration.value = false
   } finally {
     panelLoading.value = false

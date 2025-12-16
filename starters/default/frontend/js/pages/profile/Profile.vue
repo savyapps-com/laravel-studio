@@ -136,12 +136,13 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useProfileForm } from '@/components/composables/useProfileForm'
 import Icon from '@/components/common/Icon.vue'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 
 // Profile update form
@@ -191,7 +192,9 @@ const handleLogoutAllSessions = async () => {
 
   try {
     await authStore.logoutAllSessions()
-    router.push({ name: 'panel.login', params: { panel: 'admin' } })
+    // Redirect to the current panel's login page
+    const currentPanel = route.params.panel || 'user'
+    router.push({ name: 'panel.login', params: { panel: currentPanel } })
   } catch (error) {
     alert('Failed to logout all sessions. Please try again.')
     isLoggingOut.value = false

@@ -502,15 +502,74 @@ class MakePanelCommand extends Command
     }
 
     /**
-     * Generate and display configuration output.
+     * Generate and write configuration to config/studio.php.
      */
     protected function generateConfigOutput(string $key, array $config): void
     {
+        $configPath = config_path('studio.php');
+
+        if (! file_exists($configPath)) {
+            $this->components->error('Config file not found: config/studio.php');
+            $this->showManualInstructions($key, $config);
+            return;
+        }
+
+        $configContent = file_get_contents($configPath);
+
+        // Add panel to panels array
+        $panelCode = "'{$key}' => [\n" . $this->generateConfigCode($config, 3) . "\n        ],";
+
+        // Find the closing bracket of the panels array and insert before it
+        $pattern = "/('panels'\s*=>\s*\[)(.*?)(\n    \],\s*\n\s*'panel_priority')/s";
+
+        if (preg_match($pattern, $configContent, $matches)) {
+            $newPanelsContent = $matches[1] . $matches[2] . "\n        " . $panelCode . $matches[3];
+            $configContent = preg_replace($pattern, $newPanelsContent, $configContent);
+        } else {
+            $this->components->error('Could not parse config/studio.php structure.');
+            $this->showManualInstructions($key, $config);
+            return;
+        }
+
+        // Add key to panel_priority array
+        $priorityPattern = "/('panel_priority'\s*=>\s*\[)([^\]]*)\]/";
+
+        if (preg_match($priorityPattern, $configContent, $matches)) {
+            $existingPriority = trim($matches[2]);
+            if (! empty($existingPriority) && ! str_ends_with($existingPriority, ',')) {
+                $existingPriority .= ',';
+            }
+            $newPriority = $existingPriority . " '{$key}'";
+            $configContent = preg_replace($priorityPattern, "\$1{$newPriority}]", $configContent);
+        }
+
+        // Write updated config
+        file_put_contents($configPath, $configContent);
+
         $this->newLine();
-        info('Panel configuration generated successfully!');
+        info('Panel configuration written to config/studio.php successfully!');
         $this->newLine();
 
-        $this->components->info("Add the following to config/studio.php under 'panels' array:");
+        // Clear config cache
+        $this->call('config:clear');
+
+        $this->newLine();
+        $this->components->info('Panel created successfully!');
+        $this->components->bulletList([
+            "Panel '{$key}' added to config/studio.php",
+            "Panel '{$key}' added to panel_priority array",
+            'Config cache cleared',
+            'Ensure users have the required role to access this panel',
+        ]);
+    }
+
+    /**
+     * Show manual instructions when auto-write fails.
+     */
+    protected function showManualInstructions(string $key, array $config): void
+    {
+        $this->newLine();
+        warning('Could not automatically update config file. Please add manually:');
         $this->newLine();
 
         $this->line("<fg=yellow>'{$key}' => [</>");
@@ -518,15 +577,11 @@ class MakePanelCommand extends Command
         $this->line('<fg=yellow>],</>');
 
         $this->newLine();
-        $this->line(str_repeat('-', 80));
-        $this->newLine();
-
-        $this->components->info('Next steps:');
+        $this->components->info('Manual steps:');
         $this->components->bulletList([
-            'Copy the above configuration to config/studio.php',
-            "Add '{$key}' to the 'panel_priority' array in config/studio.php",
+            'Copy the above configuration to config/studio.php under panels array',
+            "Add '{$key}' to the 'panel_priority' array",
             'Run: php artisan config:clear',
-            'Ensure users have the required role to access this panel',
         ]);
     }
 
@@ -537,28 +592,55 @@ class MakePanelCommand extends Command
     {
         $spaces = str_repeat('    ', $indent);
         $lines = [];
+        $isSequential = array_keys($config) === range(0, count($config) - 1);
 
         foreach ($config as $key => $value) {
-            $keyStr = is_numeric($key) ? $key : "'{$key}'";
-
             if (is_array($value)) {
                 if (empty($value)) {
-                    $lines[] = "{$spaces}{$keyStr} => [],";
+                    if ($isSequential) {
+                        $lines[] = "{$spaces}[],";
+                    } else {
+                        $lines[] = "{$spaces}'{$key}' => [],";
+                    }
                 } else {
-                    $lines[] = "{$spaces}{$keyStr} => [";
+                    // Check if nested array is sequential (list-like)
+                    $nestedIsSequential = array_keys($value) === range(0, count($value) - 1);
+
+                    if ($isSequential) {
+                        $lines[] = "{$spaces}[";
+                    } else {
+                        $lines[] = "{$spaces}'{$key}' => [";
+                    }
+
                     $lines[] = $this->generateConfigCode($value, $indent + 1);
                     $lines[] = "{$spaces}],";
                 }
             } elseif (is_bool($value)) {
                 $valueStr = $value ? 'true' : 'false';
-                $lines[] = "{$spaces}{$keyStr} => {$valueStr},";
+                if ($isSequential) {
+                    $lines[] = "{$spaces}{$valueStr},";
+                } else {
+                    $lines[] = "{$spaces}'{$key}' => {$valueStr},";
+                }
             } elseif (is_null($value)) {
-                $lines[] = "{$spaces}{$keyStr} => null,";
+                if ($isSequential) {
+                    $lines[] = "{$spaces}null,";
+                } else {
+                    $lines[] = "{$spaces}'{$key}' => null,";
+                }
             } elseif (is_numeric($value)) {
-                $lines[] = "{$spaces}{$keyStr} => {$value},";
+                if ($isSequential) {
+                    $lines[] = "{$spaces}{$value},";
+                } else {
+                    $lines[] = "{$spaces}'{$key}' => {$value},";
+                }
             } else {
                 $valueStr = "'" . addslashes($value) . "'";
-                $lines[] = "{$spaces}{$keyStr} => {$valueStr},";
+                if ($isSequential) {
+                    $lines[] = "{$spaces}{$valueStr},";
+                } else {
+                    $lines[] = "{$spaces}'{$key}' => {$valueStr},";
+                }
             }
         }
 

@@ -41,9 +41,10 @@ export function useResetPasswordForm() {
       const response = await authService.resetPassword(values)
       successMessage.value = response.message || 'Password reset successful! Redirecting to login...'
 
-      // Redirect to login page
+      // Redirect to the current panel's login page
+      const currentPanel = route.params.panel || 'admin'
       setTimeout(() => {
-        router.push({ name: 'panel.login', params: { panel: 'admin' } })
+        router.push({ name: 'panel.login', params: { panel: currentPanel } })
       }, 2000)
     } catch (error) {
       // Handle validation errors

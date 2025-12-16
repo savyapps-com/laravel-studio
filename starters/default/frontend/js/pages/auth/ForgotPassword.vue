@@ -2,6 +2,7 @@
   <AuthPage
     title="Reset Password"
     description="Enter your email address and we'll send you a link to reset your password"
+    :logo-title="panelLabel"
     :help-text="helpText"
   >
     <template #form>
@@ -102,15 +103,18 @@ const helpText = 'We\'ll send you a secure link to reset your password. Check yo
 // Get current panel from route params
 const currentPanel = computed(() => route.params.panel || 'admin')
 
-// Panel registration settings
+// Panel settings
+const panelLabel = ref('')
 const allowRegistration = ref(false)
 
 // Fetch panel info to check registration settings
 onMounted(async () => {
   try {
     const panelInfo = await authService.getPanelInfo(currentPanel.value)
+    panelLabel.value = panelInfo.label || ''
     allowRegistration.value = panelInfo.allow_registration || false
   } catch {
+    panelLabel.value = ''
     allowRegistration.value = false
   }
 })

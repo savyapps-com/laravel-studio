@@ -37,14 +37,28 @@ export function useLoginForm() {
     errorMessage.value = ''
 
     try {
-      await authStore.login(values)
+      // Include the panel from the route in the login request
+      const panel = route.params.panel
+      const loginData = panel ? { ...values, panel } : values
+
+      await authStore.login(loginData)
       successMessage.value = 'Login successful! Redirecting...'
 
-      // Determine redirect destination based on user permissions
+      // Determine redirect destination based on the panel they logged into
       let redirectTo
-      const defaultDashboard = authStore.user?.can_access_admin_panel
-        ? { name: 'admin.dashboard' }
-        : { name: 'panel.dashboard' }
+      let defaultDashboard
+
+      // If logging in from a specific panel route, redirect to that panel's dashboard
+      if (panel === 'admin') {
+        defaultDashboard = { name: 'admin.dashboard' }
+      } else if (panel) {
+        defaultDashboard = { name: 'panel.dashboard', params: { panel } }
+      } else {
+        // Fallback to admin dashboard if user has access, otherwise use panel dashboard
+        defaultDashboard = authStore.user?.can_access_admin_panel
+          ? { name: 'admin.dashboard' }
+          : { name: 'panel.dashboard', params: { panel: 'user' } }
+      }
 
       if (route.query.redirect) {
         // Validate that the redirect path exists as a route

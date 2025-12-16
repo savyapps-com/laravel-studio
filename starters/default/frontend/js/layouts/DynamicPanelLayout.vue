@@ -9,8 +9,8 @@
     <div v-else-if="error" class="flex items-center justify-center min-h-screen">
       <div class="text-center">
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">{{ error }}</h1>
-        <router-link :to="{ name: 'panel.login', params: { panel: 'admin' } }" class="btn btn-primary">
-          Go to Admin Login
+        <router-link :to="{ name: 'panel.login', params: { panel: currentPanel || 'admin' } }" class="btn btn-primary">
+          Go to Login
         </router-link>
       </div>
     </div>

@@ -6,7 +6,7 @@
 export const authService = {
   /**
    * Login with email and password
-   * @param {Object} credentials - { email, password, remember }
+   * @param {Object} credentials - { email, password, remember, panel }
    * @returns {Promise}
    */
   async login(credentials) {
