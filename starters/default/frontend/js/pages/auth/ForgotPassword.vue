@@ -124,7 +124,7 @@ const {
   isSubmitting: loading,
   successMessage,
   errorMessage
-} = useForgotPasswordForm()
+} = useForgotPasswordForm(currentPanel.value)
 
 const resendLoading = ref(false)
 const resendCooldown = ref(0)

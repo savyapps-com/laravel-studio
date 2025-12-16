@@ -115,7 +115,10 @@ class AuthController extends Controller
      */
     public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
     {
-        $this->authService->sendPasswordResetLink($request->validated('email'));
+        $email = $request->validated('email');
+        $panel = $request->validated('panel', 'admin');
+
+        $this->authService->sendPasswordResetLink($email, $panel);
 
         return response()->json([
             'message' => 'Password reset link sent to your email.',

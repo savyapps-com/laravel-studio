@@ -36,10 +36,11 @@ export const authService = {
   /**
    * Send password reset link
    * @param {string} email
+   * @param {string} panel - Panel key for panel-aware reset URL
    * @returns {Promise}
    */
-  async forgotPassword(email) {
-    const response = await window.axios.post('/api/forgot-password', { email })
+  async forgotPassword(email, panel = 'admin') {
+    const response = await window.axios.post('/api/forgot-password', { email, panel })
     return response.data
   },
 

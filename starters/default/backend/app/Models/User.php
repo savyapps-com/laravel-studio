@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Cache;
 use Laravel\Sanctum\HasApiTokens;
 use SavyApps\LaravelStudio\Models\Role;
 use SavyApps\LaravelStudio\Traits\HasPermissions;
@@ -82,14 +83,21 @@ class User extends Authenticatable implements HasMedia
 
     /**
      * Send the password reset notification using database template.
+     * Retrieves the panel from cache (set by AuthService) to generate panel-aware URL.
      */
     public function sendPasswordResetNotification($token): void
     {
-        $resetUrl = config('app.url').'/auth/reset-password?token='.$token.'&email='.urlencode($this->email);
+        // Retrieve the panel from cache (set by AuthService::sendPasswordResetLink)
+        // Default to 'admin' if not found
+        $panel = Cache::pull("password_reset_panel:{$this->email}", 'admin');
+
+        // Generate panel-aware reset URL
+        $resetUrl = config('app.url')."/{$panel}/reset-password?token={$token}&email=".urlencode($this->email);
 
         $this->notify(new \App\Notifications\TemplatedNotification('password_reset', [
             'reset_url' => $resetUrl,
             'token' => $token,
+            'panel' => $panel,
         ]));
     }
 

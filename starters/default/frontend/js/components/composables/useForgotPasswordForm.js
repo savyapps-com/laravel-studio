@@ -9,7 +9,10 @@ import { forgotPasswordSchema } from '../../utils/validationSchemas'
 import { authService } from '../../services/authService'
 import { handleLaravelValidationErrors, getLaravelErrorMessage } from '../../utils/laravelErrorMapper'
 
-export function useForgotPasswordForm() {
+/**
+ * @param {string} panel - The panel key for panel-aware reset URLs (default: 'admin')
+ */
+export function useForgotPasswordForm(panel = 'admin') {
   const isSubmitting = ref(false)
   const successMessage = ref('')
   const errorMessage = ref('')
@@ -28,7 +31,7 @@ export function useForgotPasswordForm() {
     errorMessage.value = ''
 
     try {
-      const response = await authService.forgotPassword(values.email)
+      const response = await authService.forgotPassword(values.email, panel)
       successMessage.value = response.message || 'Password reset link sent to your email.'
       resetForm()
     } catch (error) {

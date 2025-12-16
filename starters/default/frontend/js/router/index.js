@@ -91,13 +91,6 @@ const routes = [
     ]
   },
 
-  // Legacy auth routes - redirect to panel-scoped equivalents
-  { path: '/login', redirect: '/admin/login' },
-  { path: '/auth/register', redirect: '/admin/register' },
-  { path: '/auth/forgot-password', redirect: '/admin/forgot-password' },
-  { path: '/auth/reset-password', redirect: '/admin/reset-password' },
-  { path: '/auth/verify-email', redirect: '/admin/verify-email' },
-
   // Root route - redirect to appropriate dashboard based on user's default panel
   {
     path: '/',

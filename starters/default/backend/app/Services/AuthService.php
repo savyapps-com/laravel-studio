@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
@@ -156,12 +157,20 @@ class AuthService
 
     /**
      * Send a password reset link to the provided email.
+     * Stores the panel in cache for use by the User model's sendPasswordResetNotification.
      */
-    public function sendPasswordResetLink(string $email): void
+    public function sendPasswordResetLink(string $email, string $panel = 'admin'): void
     {
+        // Store the panel in cache for 10 minutes (enough time for the email to be sent)
+        // The User model will retrieve this when generating the reset URL
+        Cache::put("password_reset_panel:{$email}", $panel, now()->addMinutes(10));
+
         $status = Password::sendResetLink(['email' => $email]);
 
         if ($status !== Password::RESET_LINK_SENT) {
+            // Clean up cache on failure
+            Cache::forget("password_reset_panel:{$email}");
+
             throw ValidationException::withMessages([
                 'email' => [__($status)],
             ]);
