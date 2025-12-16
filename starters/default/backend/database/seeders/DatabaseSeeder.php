@@ -19,7 +19,12 @@ class DatabaseSeeder extends Seeder
             EmailTemplatesSeeder::class,
         ]);
 
-        // Create default users with roles
+        // Seed permissions and roles first (creates roles and super admin user)
+        $this->call([
+            PermissionSeeder::class,
+        ]);
+
+        // Create default users with roles (roles must exist before this runs)
         $users = [
             'admin' => 'admin',
             'user' => 'user',
@@ -40,10 +45,5 @@ class DatabaseSeeder extends Seeder
                 $user->assignRole($roleSlug);
             }
         }
-
-        // Seed permissions and assign to roles (includes super admin user)
-        $this->call([
-            PermissionSeeder::class,
-        ]);
     }
 }

@@ -173,6 +173,14 @@ class User extends Authenticatable implements HasMedia
     }
 
     /**
+     * Check if user is a super admin.
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole('super_admin');
+    }
+
+    /**
      * Check if user is an admin (has admin or super_admin role).
      */
     public function isAdmin(): bool

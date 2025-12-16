@@ -52,7 +52,6 @@ const routes = [
       { path: 'email-templates', name: 'admin.email-templates.index', component: () => import('@/pages/admin/EmailTemplates.vue'), meta: { title: 'Email Templates', auth: 'admin' } },
       { path: 'email-templates/create', name: 'admin.email-templates.create', component: () => import('@/pages/admin/EmailTemplateForm.vue'), meta: { title: 'Create Email Template', auth: 'admin' } },
       { path: 'email-templates/:id/edit', name: 'admin.email-templates.edit', component: () => import('@/pages/admin/EmailTemplateForm.vue'), meta: { title: 'Edit Email Template', auth: 'admin' } },
-      { path: 'panels', name: 'admin.panels.index', component: () => import('@/pages/admin/PanelsResource.vue'), meta: { title: 'Panels', auth: 'admin' } },
 
       // Admin Profile Routes
       {
@@ -132,6 +131,14 @@ const routes = [
     path: '/:panel',
     component: DynamicPanelLayout,
     meta: { auth: 'panel', dynamic: true },
+    beforeEnter: (to, from, next) => {
+      // Redirect 'admin' panel to the explicit admin routes
+      if (to.params.panel === 'admin') {
+        next({ name: 'admin.dashboard', replace: true })
+      } else {
+        next()
+      }
+    },
     children: [
       // Panel Dashboard
       {

@@ -19,7 +19,6 @@ return [
     'resources' => [
         'users' => \App\Resources\UserResource::class,
         'roles' => \App\Resources\RoleResource::class,
-        'panels' => \App\Resources\PanelResource::class,
     ],
 
     /*
@@ -84,7 +83,7 @@ return [
             'role' => 'admin',
             'allow_registration' => env('ADMIN_ALLOW_REGISTRATION', false),
             'default_role' => 'admin',
-            'resources' => ['users', 'roles', 'panels'],
+            'resources' => ['users', 'roles'],
             'features' => ['email-templates', 'system-settings'],
             'menu' => [
                 ['type' => 'link', 'label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'home'],

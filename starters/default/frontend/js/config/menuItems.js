@@ -6,7 +6,6 @@ export const adminMainMenuItems = [
   { to: { name: 'admin.users' }, icon: 'team', label: 'Users' },
   { to: { name: 'admin.roles' }, icon: 'shield', label: 'Roles' },
   { to: { name: 'admin.email-templates.index' }, icon: 'mail', label: 'Email Templates' },
-  { to: { name: 'admin.panels.index' }, icon: 'squares-2x2', label: 'Panels' },
 ]
 
 export function getAdminMoreMenuItems() {
