@@ -5,6 +5,7 @@ namespace SavyApps\LaravelStudio\Services;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Hash;
 use SavyApps\LaravelStudio\Resources\Resource;
 
 class ResourceService
@@ -62,7 +63,13 @@ class ResourceService
             $query->with($with);
         }
 
-        $perPage = $params['perPage'] ?? $this->resource::$perPage;
+        // Enforce pagination limits to prevent memory exhaustion from malicious requests
+        $maxPerPage = config('studio.pagination.max', 100);
+        $defaultPerPage = $this->resource::$perPage ?? config('studio.pagination.default', 15);
+        $perPage = min(
+            (int) ($params['perPage'] ?? $defaultPerPage),
+            $maxPerPage
+        );
 
         $paginator = $query->paginate($perPage);
 
@@ -151,7 +158,7 @@ class ResourceService
 
         // Hash password if present
         if (isset($modelData['password'])) {
-            $modelData['password'] = bcrypt($modelData['password']);
+            $modelData['password'] = Hash::make($modelData['password']);
         }
 
         $model = $modelClass::create($modelData);
@@ -178,7 +185,7 @@ class ResourceService
 
         // Hash password if present and not empty
         if (isset($modelData['password']) && ! empty($modelData['password'])) {
-            $modelData['password'] = bcrypt($modelData['password']);
+            $modelData['password'] = Hash::make($modelData['password']);
         } else {
             // Remove password from update if empty
             unset($modelData['password']);
@@ -262,9 +269,17 @@ class ResourceService
             return;
         }
 
-        $query->where(function ($q) use ($search) {
+        // Escape LIKE wildcards to prevent unexpected matches and performance issues
+        // Backslash must be escaped first to avoid double-escaping
+        $escapedSearch = str_replace(
+            ['\\', '%', '_'],
+            ['\\\\', '\\%', '\\_'],
+            $search
+        );
+
+        $query->where(function ($q) use ($escapedSearch) {
             foreach ($this->resource::$search as $column) {
-                $q->orWhere($column, 'LIKE', "%{$search}%");
+                $q->orWhere($column, 'LIKE', "%{$escapedSearch}%");
             }
         });
     }
