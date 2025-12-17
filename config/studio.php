@@ -90,6 +90,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Pagination Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure pagination limits to prevent abuse and memory exhaustion.
+    |
+    | Environment variables:
+    | - STUDIO_PAGINATION_DEFAULT: Default items per page (default: 15)
+    | - STUDIO_PAGINATION_MAX: Maximum items per page (default: 100)
+    |
+    */
+
+    'pagination' => [
+        'default' => env('STUDIO_PAGINATION_DEFAULT', 15),
+        'max' => env('STUDIO_PAGINATION_MAX', 100),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Bulk Operations Configuration
     |--------------------------------------------------------------------------
     |
