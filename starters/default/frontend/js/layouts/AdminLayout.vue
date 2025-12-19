@@ -4,7 +4,7 @@
 
 <script>
 import { computed, onMounted, defineAsyncComponent } from 'vue'
-import { useSettingsStore } from '@/stores/settings'
+import { useSettingsStore } from '@core/stores/settings'
 import { storeToRefs } from 'pinia'
 
 export default {

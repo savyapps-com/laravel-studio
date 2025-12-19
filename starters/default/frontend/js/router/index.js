@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from '@core/stores/auth'
 import AdminLayout from '@/layouts/AdminLayout.vue'
 import DynamicPanelLayout from '@/layouts/DynamicPanelLayout.vue'
 import ProfileLayout from '@/layouts/ProfileLayout.vue'

@@ -5,9 +5,9 @@
 
 import { ref } from 'vue'
 import { useForm } from 'vee-validate'
-import { useAuthStore } from '../../stores/auth'
-import { profileUpdateSchema } from '../../utils/validationSchemas'
-import { handleLaravelValidationErrors, getLaravelErrorMessage } from '../../utils/laravelErrorMapper'
+import { useAuthStore } from '@core/stores/auth'
+import { profileUpdateSchema } from '@/utils/validationSchemas'
+import { handleLaravelValidationErrors, getLaravelErrorMessage } from '@/utils/laravelErrorMapper'
 
 export function useProfileForm() {
   const authStore = useAuthStore()

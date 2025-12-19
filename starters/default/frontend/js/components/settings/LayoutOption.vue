@@ -46,7 +46,7 @@
 </template>
 
 <script>
-import Icon from '@/components/common/Icon.vue'
+import Icon from '@core/components/common/Icon.vue'
 
 export default {
   name: 'LayoutOption',

@@ -3,8 +3,8 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import router from './router/index.js'
 import App from './App.vue'
-import { useAuthStore } from './stores/auth'
-import tooltip from './directives/tooltip'
+import { useAuthStore } from '@core/stores/auth'
+import tooltip from '@core/directives/tooltip'
 
 // Import Tailwind CSS
 import '../css/app.css'
@@ -48,7 +48,7 @@ app.use(pinia)
 app.use(router)
 
 // Initialize stores
-import { useSettingsStore } from './stores/settings'
+import { useSettingsStore } from '@core/stores/settings'
 const settingsStore = useSettingsStore()
 const authStore = useAuthStore()
 authStore.initAuth()

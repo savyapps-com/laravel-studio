@@ -6,9 +6,9 @@
 import { ref } from 'vue'
 import { useForm } from 'vee-validate'
 import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from '../../stores/auth'
-import { loginSchema } from '../../utils/validationSchemas'
-import { handleLaravelValidationErrors, getLaravelErrorMessage } from '../../utils/laravelErrorMapper'
+import { useAuthStore } from '@core/stores/auth'
+import { loginSchema } from '@/utils/validationSchemas'
+import { handleLaravelValidationErrors, getLaravelErrorMessage } from '@/utils/laravelErrorMapper'
 
 export function useLoginForm() {
   const router = useRouter()

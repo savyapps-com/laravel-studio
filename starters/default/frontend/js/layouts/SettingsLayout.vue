@@ -44,9 +44,9 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from '@core/stores/auth'
 import { useContextRoutes } from '@/composables/useContextRoutes'
-import Icon from '@/components/common/Icon.vue'
+import Icon from '@core/components/common/Icon.vue'
 
 const route = useRoute()
 const authStore = useAuthStore()

@@ -70,7 +70,7 @@
 import { ref, computed, onUnmounted, getCurrentInstance } from 'vue'
 import FormSuccess from '@/components/form/FormSuccess.vue'
 import FormActions from '@/components/form/FormActions.vue'
-import Icon from '@/components/common/Icon.vue'
+import Icon from '@core/components/common/Icon.vue'
 
 const props = defineProps({
   isSaving: {

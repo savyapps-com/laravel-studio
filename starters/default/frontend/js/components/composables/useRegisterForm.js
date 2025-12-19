@@ -6,9 +6,9 @@
 import { ref } from 'vue'
 import { useForm } from 'vee-validate'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../../stores/auth'
-import { registerSchema } from '../../utils/validationSchemas'
-import { handleLaravelValidationErrors, getLaravelErrorMessage } from '../../utils/laravelErrorMapper'
+import { useAuthStore } from '@core/stores/auth'
+import { registerSchema } from '@/utils/validationSchemas'
+import { handleLaravelValidationErrors, getLaravelErrorMessage } from '@/utils/laravelErrorMapper'
 
 export function useRegisterForm() {
   const router = useRouter()
