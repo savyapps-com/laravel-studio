@@ -33,6 +33,8 @@
       <Navbar
         :user="user"
         :notification-count="notificationCount"
+        :profile-route="profileRoute"
+        :settings-route="settingsRoute"
         @toggle-sidebar="toggleDesktopSidebar"
         @toggle-mobile-sidebar="toggleMobileSidebar"
         @logout="logout"
@@ -64,6 +66,7 @@ import {
   useAuthStore
 } from 'laravel-studio'
 import { adminMainMenuItems, getAdminMoreMenuItems, userMainMenuItems, getUserMoreMenuItems } from '@/config/menuItems'
+import { useContextRoutes } from '@/composables/useContextRoutes'
 
 export default {
   name: 'ClassicLayout',
@@ -76,6 +79,7 @@ export default {
   setup() {
     const router = useRouter()
     const authStore = useAuthStore()
+    const { profileRoutes, settingsRoutes } = useContextRoutes()
 
     // Determine menu items based on current route
     const currentPath = computed(() => router.currentRoute.value.path)
@@ -119,6 +123,10 @@ export default {
       role: 'User',
       initials: 'U'
     })
+
+    // Profile and Settings routes
+    const profileRoute = computed(() => ({ name: profileRoutes.value.personal }))
+    const settingsRoute = computed(() => ({ name: settingsRoutes.value.appearance }))
 
     // Methods
     const logout = async () => {
@@ -170,6 +178,10 @@ export default {
       messageCount,
       notificationCount,
       user,
+
+      // Routes
+      profileRoute,
+      settingsRoute,
 
       // Methods
       toggleDesktopSidebar,

@@ -1,6 +1,6 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from '@core/stores/auth'
 
 /**
  * Composable to get context-specific routes based on current panel (admin/user)

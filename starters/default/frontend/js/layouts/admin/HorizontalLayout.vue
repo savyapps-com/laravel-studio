@@ -9,6 +9,8 @@
       :notification-count="notificationCount"
       :menu-items="mainMenuItems"
       :logo-title="logoTitle"
+      :profile-route="profileRoute"
+      :settings-route="settingsRoute"
       @logout="logout"
       @search="handleSearch"
     />
@@ -32,6 +34,7 @@ import {
   useAuthStore
 } from 'laravel-studio'
 import { adminMainMenuItems, userMainMenuItems } from '@/config/menuItems'
+import { useContextRoutes } from '@/composables/useContextRoutes'
 
 export default {
   name: 'HorizontalLayout',
@@ -43,6 +46,7 @@ export default {
   setup() {
     const router = useRouter()
     const authStore = useAuthStore()
+    const { profileRoutes, settingsRoutes } = useContextRoutes()
 
     // Determine menu items based on current route
     const currentPath = computed(() => router.currentRoute.value.path)
@@ -67,6 +71,10 @@ export default {
       role: 'User',
       initials: 'U'
     })
+
+    // Profile and Settings routes
+    const profileRoute = computed(() => ({ name: profileRoutes.value.personal }))
+    const settingsRoute = computed(() => ({ name: settingsRoutes.value.appearance }))
 
     const logout = async () => {
       try {
@@ -97,6 +105,8 @@ export default {
       logoTitle,
       notificationCount,
       user,
+      profileRoute,
+      settingsRoute,
       logout,
       handleSearch,
     }

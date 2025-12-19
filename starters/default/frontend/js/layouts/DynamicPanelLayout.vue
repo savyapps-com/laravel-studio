@@ -48,6 +48,8 @@
         <Navbar
           :user="user"
           :notification-count="0"
+          :profile-route="profileRoute"
+          :settings-route="settingsRoute"
           @toggle-sidebar="toggleDesktopSidebar"
           @toggle-mobile-sidebar="toggleMobileSidebar"
           @logout="logout"
@@ -79,10 +81,12 @@ import {
   useAuthStore,
   panelService
 } from 'laravel-studio'
+import { useContextRoutes } from '@/composables/useContextRoutes'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const { profileRoutes, settingsRoutes } = useContextRoutes()
 
 // Panel state
 const isLoading = ref(true)
@@ -207,6 +211,10 @@ const user = computed(() => authStore.user ? {
   role: 'User',
   initials: 'U'
 })
+
+// Profile and Settings routes
+const profileRoute = computed(() => ({ name: profileRoutes.value.personal }))
+const settingsRoute = computed(() => ({ name: settingsRoutes.value.appearance }))
 
 // Load panel configuration
 async function loadPanelConfig() {
