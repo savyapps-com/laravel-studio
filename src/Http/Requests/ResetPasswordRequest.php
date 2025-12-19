@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Requests;
+namespace SavyApps\LaravelStudio\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Password;
 
-class LoginRequest extends FormRequest
+class ResetPasswordRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,10 +23,9 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'token' => ['required', 'string'],
             'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
-            'remember' => ['sometimes', 'boolean'],
-            'panel' => ['sometimes', 'string'],
+            'password' => ['required', 'string', 'confirmed', Password::defaults()],
         ];
     }
 
@@ -37,9 +37,11 @@ class LoginRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'token.required' => 'Reset token is required.',
             'email.required' => 'Please enter your email address.',
             'email.email' => 'Please enter a valid email address.',
-            'password.required' => 'Please enter your password.',
+            'password.required' => 'Please enter a new password.',
+            'password.confirmed' => 'Password confirmation does not match.',
         ];
     }
 }

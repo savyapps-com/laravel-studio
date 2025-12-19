@@ -2,8 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 use SavyApps\LaravelStudio\Http\Controllers\ActivityController;
+use SavyApps\LaravelStudio\Http\Controllers\AuthController;
 use SavyApps\LaravelStudio\Http\Controllers\CardController;
 use SavyApps\LaravelStudio\Http\Controllers\GlobalSearchController;
+use SavyApps\LaravelStudio\Http\Controllers\ImpersonationController;
 use SavyApps\LaravelStudio\Http\Controllers\PanelController;
 use SavyApps\LaravelStudio\Http\Controllers\PermissionController;
 use SavyApps\LaravelStudio\Http\Controllers\ResourceController;
@@ -18,6 +20,67 @@ use SavyApps\LaravelStudio\Http\Controllers\ResourceController;
 | configuration file.
 |
 */
+
+/*
+|--------------------------------------------------------------------------
+| Authentication Routes
+|--------------------------------------------------------------------------
+|
+| These routes handle user authentication (login, register, password reset).
+| They can be disabled via config/studio.php if your app uses custom auth.
+|
+*/
+
+if (config('studio.auth.enabled', true)) {
+    // Public auth routes (no authentication required)
+    Route::middleware(['api'])
+        ->prefix('api')
+        ->name('api.')
+        ->group(function () {
+            // Login - always available when auth is enabled
+            Route::post('login', [AuthController::class, 'login'])->name('login');
+
+            // Registration - conditionally available
+            if (config('studio.auth.registration.enabled', true)) {
+                Route::post('register', [AuthController::class, 'register'])->name('register');
+                Route::get('check-registration', [AuthController::class, 'checkRegistration'])->name('check-registration');
+            }
+
+            // Password reset - conditionally available
+            if (config('studio.auth.password_reset.enabled', true)) {
+                Route::post('forgot-password', [AuthController::class, 'forgotPassword'])->name('forgot-password');
+                Route::post('reset-password', [AuthController::class, 'resetPassword'])->name('reset-password');
+            }
+
+            // Email check (for invitation flows)
+            Route::post('check-email', [AuthController::class, 'checkEmail'])->name('check-email');
+        });
+
+    // Protected auth routes (authentication required)
+    Route::middleware(['api', 'auth:sanctum'])
+        ->prefix('api')
+        ->name('api.')
+        ->group(function () {
+            Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+            Route::get('me', [AuthController::class, 'me'])->name('me');
+            Route::put('profile', [AuthController::class, 'updateProfile'])->name('profile.update');
+            Route::put('password', [AuthController::class, 'changePassword'])->name('password.change');
+            Route::post('logout-all-sessions', [AuthController::class, 'logoutAllSessions'])->name('logout-all-sessions');
+            Route::post('logout-other-sessions', [AuthController::class, 'logoutOtherSessions'])->name('logout-other-sessions');
+        });
+
+    // Impersonation routes - conditionally available
+    if (config('studio.auth.impersonation.enabled', true)) {
+        Route::middleware(['api', 'auth:sanctum'])
+            ->prefix('api/impersonation')
+            ->name('api.impersonation.')
+            ->group(function () {
+                Route::get('status', [ImpersonationController::class, 'status'])->name('status');
+                Route::post('stop', [ImpersonationController::class, 'stopImpersonating'])->name('stop');
+                Route::post('{userId}', [ImpersonationController::class, 'impersonate'])->name('start');
+            });
+    }
+}
 
 // Public Panel API Routes - For login/register pages (no auth required)
 Route::middleware(['api'])

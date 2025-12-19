@@ -1,12 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace SavyApps\LaravelStudio\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\User;
-use SavyApps\LaravelStudio\Services\ImpersonationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
+use SavyApps\LaravelStudio\Services\ImpersonationService;
 
 class ImpersonationController extends Controller
 {
@@ -15,19 +14,22 @@ class ImpersonationController extends Controller
     ) {}
 
     /**
-     * Start impersonating a user
+     * Start impersonating a user.
      */
     public function impersonate(Request $request, int $userId): JsonResponse
     {
         $admin = $request->user();
 
-        if (! $admin->isAdmin()) {
+        // Check if user can impersonate (must be admin or have impersonate permission)
+        if (!$this->canImpersonate($admin)) {
             return response()->json([
                 'message' => 'Unauthorized. Only administrators can impersonate users.',
             ], 403);
         }
 
-        $targetUser = User::findOrFail($userId);
+        // Get the user model class from config
+        $userModel = config('studio.authorization.models.user', 'App\\Models\\User');
+        $targetUser = $userModel::findOrFail($userId);
 
         try {
             $this->impersonationService->impersonate($admin, $targetUser);
@@ -49,11 +51,11 @@ class ImpersonationController extends Controller
     }
 
     /**
-     * Stop impersonating and return to admin account
+     * Stop impersonating and return to admin account.
      */
     public function stopImpersonating(Request $request): JsonResponse
     {
-        if (! $this->impersonationService->isImpersonating()) {
+        if (!$this->impersonationService->isImpersonating()) {
             return response()->json([
                 'message' => 'Not currently impersonating.',
             ], 400);
@@ -78,12 +80,48 @@ class ImpersonationController extends Controller
     }
 
     /**
-     * Get impersonation status
+     * Get impersonation status.
      */
     public function status(): JsonResponse
     {
         return response()->json([
             'data' => $this->impersonationService->getStatus(),
         ]);
+    }
+
+    /**
+     * Check if the user can impersonate others.
+     */
+    protected function canImpersonate($user): bool
+    {
+        // Check if impersonation is enabled in config
+        if (!config('studio.auth.impersonation.enabled', true)) {
+            return false;
+        }
+
+        // Check for isAdmin method (common pattern)
+        if (method_exists($user, 'isAdmin') && $user->isAdmin()) {
+            return true;
+        }
+
+        // Check for isSuperAdmin method
+        if (method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin()) {
+            return true;
+        }
+
+        // Check for hasPermission method
+        if (method_exists($user, 'hasPermission') && $user->hasPermission('users.impersonate')) {
+            return true;
+        }
+
+        // Check for hasRole method with super_admin or admin
+        if (method_exists($user, 'hasRole')) {
+            $superAdminRole = config('studio.authorization.super_admin_role', 'super_admin');
+            if ($user->hasRole($superAdminRole) || $user->hasRole('admin')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

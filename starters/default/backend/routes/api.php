@@ -1,39 +1,18 @@
 <?php
 
-use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\EmailTemplateController;
-use App\Http\Controllers\Api\ImpersonationController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\UserSettingsController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/register', [AuthController::class, 'register'])->name('api.register');
-Route::post('/login', [AuthController::class, 'login'])->name('api.login');
-Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('api.forgot-password');
-Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('api.reset-password');
-Route::get('/check-registration', [AuthController::class, 'checkRegistration'])->name('api.check-registration');
+// Note: Authentication routes are provided by the Laravel Studio package.
+// They are automatically registered when the package is installed.
+// See config/studio.php 'auth' section to configure auth features.
 
-// Public invitation routes (for unauthenticated users)
-Route::post('/check-email', [AuthController::class, 'checkEmail'])->name('api.check-email');
-
-// Protected authentication routes
+// Protected application-specific routes
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout'])->name('api.logout');
-    Route::get('/me', [AuthController::class, 'me'])->name('api.me');
-    Route::put('/profile', [AuthController::class, 'updateProfile'])->name('api.profile.update');
-    Route::put('/password', [AuthController::class, 'changePassword'])->name('api.password.change');
-    Route::post('/logout-all-sessions', [AuthController::class, 'logoutAllSessions'])->name('api.logout-all-sessions');
-    Route::post('/logout-other-sessions', [AuthController::class, 'logoutOtherSessions'])->name('api.logout-other-sessions');
-
-    // Impersonation routes
-    Route::get('/impersonation/status', [ImpersonationController::class, 'status'])->name('api.impersonation.status');
-    Route::post('/impersonation/stop', [ImpersonationController::class, 'stopImpersonating'])->name('api.impersonation.stop');
-    Route::middleware('panel:admin')->post('/impersonation/{userId}', [ImpersonationController::class, 'impersonate'])->name('api.impersonation.start');
-
-
-
     // Settings routes (admin-only for global settings)
     Route::middleware('panel:admin')->group(function () {
         Route::get('/settings', [SettingsController::class, 'index'])->name('api.settings.index');

@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests;
+namespace SavyApps\LaravelStudio\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class ForgotPasswordRequest extends FormRequest
+class LoginRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,7 +23,9 @@ class ForgotPasswordRequest extends FormRequest
     {
         return [
             'email' => ['required', 'string', 'email'],
-            'panel' => ['nullable', 'string', 'max:50'],
+            'password' => ['required', 'string'],
+            'remember' => ['sometimes', 'boolean'],
+            'panel' => ['sometimes', 'string'],
         ];
     }
 
@@ -37,6 +39,7 @@ class ForgotPasswordRequest extends FormRequest
         return [
             'email.required' => 'Please enter your email address.',
             'email.email' => 'Please enter a valid email address.',
+            'password.required' => 'Please enter your password.',
         ];
     }
 }

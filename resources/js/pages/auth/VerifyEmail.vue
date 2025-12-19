@@ -152,190 +152,159 @@
   </AuthPage>
 </template>
 
-<script>
+<script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { AuthPage, Icon } from 'laravel-studio'
+import AuthPage from '../../components/auth/AuthPage.vue'
+import Icon from '../../components/common/Icon.vue'
 
-export default {
-  name: 'VerifyEmail',
-  components: {
-    AuthPage,
-    Icon,
-  },
-  setup() {
-    const router = useRouter()
-    const route = useRoute()
-    const verifying = ref(false)
-    const verificationStatus = ref(null) // null, 'success', 'error', 'expired'
-    const errorMessage = ref('')
-    const resendLoading = ref(false)
-    const resendMessage = ref('')
-    const resendCooldown = ref(0)
-    const email = ref('')
-    let resendTimer = null
+const router = useRouter()
+const route = useRoute()
 
-    // Get the current panel from route params
-    const currentPanel = computed(() => route.params.panel || 'admin')
+const verifying = ref(false)
+const verificationStatus = ref(null) // null, 'success', 'error', 'expired'
+const errorMessage = ref('')
+const resendLoading = ref(false)
+const resendMessage = ref('')
+const resendCooldown = ref(0)
+const email = ref('')
+let resendTimer = null
 
-    const pageTitle = computed(() => {
-      switch (verificationStatus.value) {
-        case 'success':
-          return 'Email Verified'
-        case 'error':
-          return 'Verification Failed'
-        case 'expired':
-          return 'Link Expired'
-        default:
-          return 'Verify Your Email'
-      }
-    })
+// Get the current panel from route params
+const currentPanel = computed(() => route.params.panel || 'admin')
 
-    const pageDescription = computed(() => {
-      switch (verificationStatus.value) {
-        case 'success':
-          return 'Your email has been verified successfully. You can now access all features.'
-        case 'error':
-          return 'We couldn\'t verify your email address. Please try again.'
-        case 'expired':
-          return 'Your verification link has expired. We\'ll send you a new one.'
-        default:
-          return 'Click the verification link in your email to activate your account.'
-      }
-    })
+const pageTitle = computed(() => {
+  switch (verificationStatus.value) {
+    case 'success':
+      return 'Email Verified'
+    case 'error':
+      return 'Verification Failed'
+    case 'expired':
+      return 'Link Expired'
+    default:
+      return 'Verify Your Email'
+  }
+})
 
-    const helpText = computed(() => {
-      switch (verificationStatus.value) {
-        case 'success':
-          return 'Your account is now fully activated and ready to use.'
-        case 'error':
-          return 'If you continue having issues, please contact our support team for assistance.'
-        case 'expired':
-          return 'Verification links expire after 24 hours for security reasons.'
-        default:
-          return 'Check your spam folder if you don\'t see the email. The link will expire in 24 hours.'
-      }
-    })
+const pageDescription = computed(() => {
+  switch (verificationStatus.value) {
+    case 'success':
+      return 'Your email has been verified successfully. You can now access all features.'
+    case 'error':
+      return 'We couldn\'t verify your email address. Please try again.'
+    case 'expired':
+      return 'Your verification link has expired. We\'ll send you a new one.'
+    default:
+      return 'Click the verification link in your email to activate your account.'
+  }
+})
 
-    const verifyEmail = async (token) => {
-      verifying.value = true
+const helpText = computed(() => {
+  switch (verificationStatus.value) {
+    case 'success':
+      return 'Your account is now fully activated and ready to use.'
+    case 'error':
+      return 'If you continue having issues, please contact our support team for assistance.'
+    case 'expired':
+      return 'Verification links expire after 24 hours for security reasons.'
+    default:
+      return 'Check your spam folder if you don\'t see the email. The link will expire in 24 hours.'
+  }
+})
 
-      try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500))
+const verifyEmail = async (token) => {
+  verifying.value = true
 
-        // Mock verification logic
-        if (!token) {
-          verificationStatus.value = null
-        } else if (token === 'expired-token') {
-          verificationStatus.value = 'expired'
-        } else if (token === 'invalid-token') {
-          verificationStatus.value = 'error'
-          errorMessage.value = 'This verification link is invalid or has already been used.'
-        } else {
-          // Success
-          verificationStatus.value = 'success'
-          console.log('Email verification successful for token:', token)
-        }
+  try {
+    // Simulate API call - replace with actual verification
+    await new Promise(resolve => setTimeout(resolve, 1500))
 
-      } catch (error) {
-        verificationStatus.value = 'error'
-        errorMessage.value = 'An unexpected error occurred during verification.'
-        console.error('Verification error:', error)
-      } finally {
-        verifying.value = false
-      }
+    // Mock verification logic
+    if (!token) {
+      verificationStatus.value = null
+    } else if (token === 'expired-token') {
+      verificationStatus.value = 'expired'
+    } else if (token === 'invalid-token') {
+      verificationStatus.value = 'error'
+      errorMessage.value = 'This verification link is invalid or has already been used.'
+    } else {
+      // Success
+      verificationStatus.value = 'success'
     }
-
-    const startResendCooldown = () => {
-      resendCooldown.value = 60
-      resendTimer = setInterval(() => {
-        resendCooldown.value--
-        if (resendCooldown.value <= 0) {
-          clearInterval(resendTimer)
-          resendTimer = null
-        }
-      }, 1000)
-    }
-
-    const resendVerification = async () => {
-      resendLoading.value = true
-      resendMessage.value = ''
-
-      try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000))
-
-        resendMessage.value = `New verification email sent to ${email.value || 'your email address'}`
-        startResendCooldown()
-        console.log('Verification email resent')
-
-      } catch (error) {
-        resendMessage.value = 'Failed to send verification email. Please try again.'
-        console.error('Resend error:', error)
-      } finally {
-        resendLoading.value = false
-      }
-    }
-
-    const continueToApp = () => {
-      // Redirect to the current panel's dashboard
-      if (currentPanel.value === 'admin') {
-        router.push({ name: 'admin.dashboard' })
-      } else {
-        router.push({ name: 'panel.dashboard', params: { panel: currentPanel.value } })
-      }
-    }
-
-    const changeEmail = () => {
-      const newEmail = prompt('Enter your new email address:')
-      if (newEmail && newEmail.includes('@')) {
-        email.value = newEmail
-        resendVerification()
-      }
-    }
-
-    const contactSupport = () => {
-      alert('Support: For email verification issues, please contact support@example.com')
-    }
-
-    // Initialize on mount
-    onMounted(() => {
-      const token = route.query.token
-      email.value = route.query.email || 'user@example.com'
-
-      if (token) {
-        verifyEmail(token)
-      } else {
-        // No token - show pending verification state
-        verificationStatus.value = null
-      }
-    })
-
-    // Cleanup timer on unmount
-    onUnmounted(() => {
-      if (resendTimer) {
-        clearInterval(resendTimer)
-      }
-    })
-
-    return {
-      verifying,
-      verificationStatus,
-      errorMessage,
-      resendLoading,
-      resendMessage,
-      resendCooldown,
-      email,
-      pageTitle,
-      pageDescription,
-      helpText,
-      currentPanel,
-      resendVerification,
-      continueToApp,
-      changeEmail,
-      contactSupport,
-    }
-  },
+  } catch (error) {
+    verificationStatus.value = 'error'
+    errorMessage.value = 'An unexpected error occurred during verification.'
+  } finally {
+    verifying.value = false
+  }
 }
+
+const startResendCooldown = () => {
+  resendCooldown.value = 60
+  resendTimer = setInterval(() => {
+    resendCooldown.value--
+    if (resendCooldown.value <= 0) {
+      clearInterval(resendTimer)
+      resendTimer = null
+    }
+  }, 1000)
+}
+
+const resendVerification = async () => {
+  resendLoading.value = true
+  resendMessage.value = ''
+
+  try {
+    // Simulate API call - replace with actual resend
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    resendMessage.value = `New verification email sent to ${email.value || 'your email address'}`
+    startResendCooldown()
+  } catch (error) {
+    resendMessage.value = 'Failed to send verification email. Please try again.'
+  } finally {
+    resendLoading.value = false
+  }
+}
+
+const continueToApp = () => {
+  // Redirect to the current panel's dashboard
+  if (currentPanel.value === 'admin') {
+    router.push({ name: 'admin.dashboard' })
+  } else {
+    router.push({ name: 'panel.dashboard', params: { panel: currentPanel.value } })
+  }
+}
+
+const changeEmail = () => {
+  const newEmail = prompt('Enter your new email address:')
+  if (newEmail && newEmail.includes('@')) {
+    email.value = newEmail
+    resendVerification()
+  }
+}
+
+const contactSupport = () => {
+  alert('Support: For email verification issues, please contact support@example.com')
+}
+
+// Initialize on mount
+onMounted(() => {
+  const token = route.query.token
+  email.value = route.query.email || 'user@example.com'
+
+  if (token) {
+    verifyEmail(token)
+  } else {
+    // No token - show pending verification state
+    verificationStatus.value = null
+  }
+})
+
+// Cleanup timer on unmount
+onUnmounted(() => {
+  if (resendTimer) {
+    clearInterval(resendTimer)
+  }
+})
 </script>

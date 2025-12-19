@@ -8,34 +8,35 @@ import Dashboard from '@/pages/Dashboard.vue'
 
 const routes = [
   // Panel-scoped Auth Routes (guest routes under each panel)
+  // Auth pages are provided by the laravel-studio package
   {
     path: '/:panel/login',
     name: 'panel.login',
-    component: () => import('@/pages/auth/Login.vue'),
+    component: () => import('@core/pages/auth/Login.vue'),
     meta: { title: 'Sign In', guest: true }
   },
   {
     path: '/:panel/register',
     name: 'panel.register',
-    component: () => import('@/pages/auth/Register.vue'),
+    component: () => import('@core/pages/auth/Register.vue'),
     meta: { title: 'Create Account', guest: true }
   },
   {
     path: '/:panel/forgot-password',
     name: 'panel.forgot-password',
-    component: () => import('@/pages/auth/ForgotPassword.vue'),
+    component: () => import('@core/pages/auth/ForgotPassword.vue'),
     meta: { title: 'Reset Password', guest: true }
   },
   {
     path: '/:panel/reset-password',
     name: 'panel.reset-password',
-    component: () => import('@/pages/auth/ResetPassword.vue'),
+    component: () => import('@core/pages/auth/ResetPassword.vue'),
     meta: { title: 'Set New Password', guest: true }
   },
   {
     path: '/:panel/verify-email',
     name: 'panel.verify-email',
-    component: () => import('@/pages/auth/VerifyEmail.vue'),
+    component: () => import('@core/pages/auth/VerifyEmail.vue'),
     meta: { title: 'Verify Email', guest: true }
   },
 

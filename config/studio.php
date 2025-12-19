@@ -326,4 +326,36 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Authentication Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure the built-in authentication system features. Each feature can
+    | be enabled or disabled independently to match your application's needs.
+    |
+    | Environment variables:
+    | - STUDIO_AUTH_ROUTES_ENABLED: Enable/disable all auth routes (default: true)
+    | - STUDIO_REGISTRATION_ENABLED: Enable/disable registration (default: true)
+    | - STUDIO_PASSWORD_RESET_ENABLED: Enable/disable password reset (default: true)
+    | - STUDIO_IMPERSONATION_ENABLED: Enable/disable user impersonation (default: true)
+    |
+    */
+
+    'auth' => [
+        'enabled' => env('STUDIO_AUTH_ROUTES_ENABLED', true),
+
+        'registration' => [
+            'enabled' => env('STUDIO_REGISTRATION_ENABLED', true),
+        ],
+
+        'password_reset' => [
+            'enabled' => env('STUDIO_PASSWORD_RESET_ENABLED', true),
+        ],
+
+        'impersonation' => [
+            'enabled' => env('STUDIO_IMPERSONATION_ENABLED', true),
+        ],
+    ],
+
 ];

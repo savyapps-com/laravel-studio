@@ -39,6 +39,13 @@ export { default as DarkModeToggle } from './components/layouts/DarkModeToggle.v
 // Auth Components
 export { default as AuthPage } from './components/auth/AuthPage.vue'
 
+// Auth Pages
+export { default as LoginPage } from './pages/auth/Login.vue'
+export { default as RegisterPage } from './pages/auth/Register.vue'
+export { default as ForgotPasswordPage } from './pages/auth/ForgotPassword.vue'
+export { default as ResetPasswordPage } from './pages/auth/ResetPassword.vue'
+export { default as VerifyEmailPage } from './pages/auth/VerifyEmail.vue'
+
 // Error Components
 export { default as ErrorPage } from './components/errors/ErrorPage.vue'
 

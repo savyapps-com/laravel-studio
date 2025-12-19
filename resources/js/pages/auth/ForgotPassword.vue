@@ -89,15 +89,15 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import {
-  AuthPage,
-  Icon,
-  FormGroup,
-  FormLabel,
-  FormInput,
-  authService
-} from 'laravel-studio'
-import { useForgotPasswordForm } from '@/components/composables/useForgotPasswordForm'
+import { useForm } from 'vee-validate'
+import AuthPage from '../../components/auth/AuthPage.vue'
+import Icon from '../../components/common/Icon.vue'
+import FormGroup from '../../components/form/FormGroup.vue'
+import FormLabel from '../../components/form/FormLabel.vue'
+import FormInput from '../../components/form/FormInput.vue'
+import { authService } from '../../services/authService.js'
+import { forgotPasswordSchema } from '../../utils/validationSchemas.js'
+import { handleLaravelValidationErrors, getLaravelErrorMessage } from '../../utils/laravelErrorMapper.js'
 
 const route = useRoute()
 const helpText = 'We\'ll send you a secure link to reset your password. Check your spam folder if you don\'t receive it within a few minutes.'
@@ -108,6 +108,19 @@ const currentPanel = computed(() => route.params.panel || 'admin')
 // Panel settings
 const panelLabel = ref('')
 const allowRegistration = ref(false)
+
+// Form state
+const loading = ref(false)
+const successMessage = ref('')
+const errorMessage = ref('')
+const resendLoading = ref(false)
+const resendCooldown = ref(0)
+let resendTimer = null
+
+const { handleSubmit, setErrors, values } = useForm({
+  validationSchema: forgotPasswordSchema,
+  validateOnMount: false
+})
 
 // Fetch panel info to check registration settings
 onMounted(async () => {
@@ -121,20 +134,22 @@ onMounted(async () => {
   }
 })
 
-const {
-  onSubmit,
-  isSubmitting: loading,
-  successMessage,
-  errorMessage
-} = useForgotPasswordForm(currentPanel.value)
+const handleForgotPassword = handleSubmit(async (formValues) => {
+  loading.value = true
+  successMessage.value = ''
+  errorMessage.value = ''
 
-const resendLoading = ref(false)
-const resendCooldown = ref(0)
-let resendTimer = null
-
-const handleForgotPassword = () => {
-  onSubmit()
-}
+  try {
+    await authService.forgotPassword(formValues.email, currentPanel.value)
+    successMessage.value = 'Password reset link sent to your email.'
+  } catch (error) {
+    if (!handleLaravelValidationErrors(error, setErrors)) {
+      errorMessage.value = getLaravelErrorMessage(error)
+    }
+  } finally {
+    loading.value = false
+  }
+})
 
 const startResendCooldown = () => {
   resendCooldown.value = 30
@@ -150,8 +165,10 @@ const startResendCooldown = () => {
 const resendEmail = async () => {
   resendLoading.value = true
   try {
-    await onSubmit()
+    await authService.forgotPassword(values.email, currentPanel.value)
     startResendCooldown()
+  } catch (error) {
+    errorMessage.value = getLaravelErrorMessage(error)
   } finally {
     resendLoading.value = false
   }

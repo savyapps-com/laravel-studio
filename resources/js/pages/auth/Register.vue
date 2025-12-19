@@ -138,20 +138,23 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import {
-  AuthPage,
-  Icon,
-  FormGroup,
-  FormLabel,
-  FormInput,
-  PasswordInput,
-  CheckboxInput,
-  authService
-} from 'laravel-studio'
-import { useRegisterForm } from '@/components/composables/useRegisterForm'
+import { useRoute, useRouter } from 'vue-router'
+import { useForm } from 'vee-validate'
+import AuthPage from '../../components/auth/AuthPage.vue'
+import Icon from '../../components/common/Icon.vue'
+import FormGroup from '../../components/form/FormGroup.vue'
+import FormLabel from '../../components/form/FormLabel.vue'
+import FormInput from '../../components/form/FormInput.vue'
+import PasswordInput from '../../components/form/PasswordInput.vue'
+import CheckboxInput from '../../components/form/CheckboxInput.vue'
+import { authService } from '../../services/authService.js'
+import { useAuthStore } from '../../stores/auth.js'
+import { registerSchema } from '../../utils/validationSchemas.js'
+import { handleLaravelValidationErrors, getLaravelErrorMessage } from '../../utils/laravelErrorMapper.js'
 
 const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
 const helpText = 'Your account will be created instantly and you\'ll be able to sign in right away.'
 
 // Get current panel from route params
@@ -161,6 +164,16 @@ const currentPanel = computed(() => route.params.panel || 'admin')
 const panelLabel = ref('')
 const allowRegistration = ref(false)
 const panelLoading = ref(true)
+
+// Form state
+const loading = ref(false)
+const successMessage = ref('')
+const errorMessage = ref('')
+
+const { handleSubmit, setErrors, setFieldValue } = useForm({
+  validationSchema: registerSchema,
+  validateOnMount: false
+})
 
 // Fetch panel info to check registration settings
 onMounted(async () => {
@@ -177,19 +190,34 @@ onMounted(async () => {
   }
 })
 
-const {
-  onSubmit,
-  isSubmitting: loading,
-  successMessage,
-  errorMessage,
-  setFieldValue
-} = useRegisterForm()
+const handleRegister = handleSubmit(async (values) => {
+  loading.value = true
+  successMessage.value = ''
+  errorMessage.value = ''
 
-const handleRegister = () => {
-  // Set panel in form data before submitting
-  setFieldValue('panel', currentPanel.value)
-  onSubmit()
-}
+  try {
+    // Set panel in form data before submitting
+    const registerData = { ...values, panel: currentPanel.value }
+
+    await authStore.register(registerData)
+    successMessage.value = 'Registration successful! Redirecting...'
+
+    // Redirect to dashboard after successful registration
+    setTimeout(() => {
+      if (currentPanel.value === 'admin') {
+        router.push({ name: 'admin.dashboard' })
+      } else {
+        router.push({ name: 'panel.dashboard', params: { panel: currentPanel.value } })
+      }
+    }, 1000)
+  } catch (error) {
+    if (!handleLaravelValidationErrors(error, setErrors)) {
+      errorMessage.value = getLaravelErrorMessage(error)
+    }
+  } finally {
+    loading.value = false
+  }
+})
 
 const showTerms = () => {
   alert('Terms of Service would be displayed here')

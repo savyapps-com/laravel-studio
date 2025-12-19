@@ -17,8 +17,8 @@ return [
     */
 
     'resources' => [
-        'users' => \App\Resources\UserResource::class,
-        'roles' => \App\Resources\RoleResource::class,
+        'users' => \SavyApps\LaravelStudio\Resources\UserResource::class,
+        'roles' => \SavyApps\LaravelStudio\Resources\RoleResource::class,
     ],
 
     /*

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Resources;
+namespace SavyApps\LaravelStudio\Resources;
 
 use SavyApps\LaravelStudio\Models\Role;
 use SavyApps\LaravelStudio\Policies\RolePolicy;
@@ -9,7 +9,6 @@ use SavyApps\LaravelStudio\Resources\Fields\BelongsToMany;
 use SavyApps\LaravelStudio\Resources\Fields\Section;
 use SavyApps\LaravelStudio\Resources\Fields\Text;
 use SavyApps\LaravelStudio\Resources\Fields\Textarea;
-use SavyApps\LaravelStudio\Resources\Resource;
 use SavyApps\LaravelStudio\Traits\Authorizable;
 
 class RoleResource extends Resource
@@ -32,7 +31,6 @@ class RoleResource extends Resource
 
     /**
      * Fields shown in the index/table view.
-     * ID and Created At are auto-added.
      */
     public function indexFields(): array
     {
@@ -45,7 +43,6 @@ class RoleResource extends Resource
 
     /**
      * Fields shown in the detail/show view.
-     * ID, Created At, and Updated At are auto-added.
      */
     public function showFields(): array
     {

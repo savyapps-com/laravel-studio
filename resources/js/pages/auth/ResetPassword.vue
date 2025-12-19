@@ -177,10 +177,12 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { AuthPage, Icon } from 'laravel-studio'
-import { useResetPasswordForm } from '@/components/composables/useResetPasswordForm'
+import AuthPage from '../../components/auth/AuthPage.vue'
+import Icon from '../../components/common/Icon.vue'
+import { authService } from '../../services/authService.js'
+import { handleLaravelValidationErrors, getLaravelErrorMessage } from '../../utils/laravelErrorMapper.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -189,23 +191,54 @@ const helpText = 'Choose a strong password that you haven\'t used before. You\'l
 // Get current panel from route params
 const currentPanel = computed(() => route.params.panel || 'admin')
 
-const {
-  onSubmit,
-  errors,
-  values: form,
-  isSubmitting: loading,
-  successMessage,
-  errorMessage,
-  token,
-  email,
-  setFieldValue
-} = useResetPasswordForm()
+// Form state
+const loading = ref(false)
+const successMessage = ref('')
+const errorMessage = ref('')
+const errors = reactive({})
+const token = ref('')
+const email = ref('')
+const form = reactive({
+  password: '',
+  password_confirmation: ''
+})
 
 const showPassword = ref(false)
 const showPasswordConfirm = ref(false)
 
-const handleResetPassword = () => {
-  onSubmit()
+// Extract token and email from route on mount
+onMounted(() => {
+  token.value = route.params.token || route.query.token || ''
+  email.value = route.query.email || ''
+})
+
+const setFieldValue = (field, value) => {
+  form[field] = value
+}
+
+const handleResetPassword = async () => {
+  loading.value = true
+  successMessage.value = ''
+  errorMessage.value = ''
+  Object.keys(errors).forEach(key => delete errors[key])
+
+  try {
+    await authService.resetPassword({
+      token: token.value,
+      email: email.value,
+      password: form.password,
+      password_confirmation: form.password_confirmation
+    })
+    successMessage.value = 'Password reset successfully! Redirecting to login...'
+  } catch (error) {
+    if (error.response?.status === 422 && error.response?.data?.errors) {
+      Object.assign(errors, error.response.data.errors)
+    } else {
+      errorMessage.value = getLaravelErrorMessage(error)
+    }
+  } finally {
+    loading.value = false
+  }
 }
 
 const redirectToLogin = () => {

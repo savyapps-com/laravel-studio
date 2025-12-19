@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Http\Requests;
+namespace SavyApps\LaravelStudio\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Password;
 
-class ChangePasswordRequest extends FormRequest
+class ForgotPasswordRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,8 +22,8 @@ class ChangePasswordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'current_password' => ['required', 'string', 'current_password'],
-            'password' => ['required', 'string', 'confirmed', Password::defaults()],
+            'email' => ['required', 'string', 'email'],
+            'panel' => ['nullable', 'string', 'max:50'],
         ];
     }
 
@@ -36,10 +35,8 @@ class ChangePasswordRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'current_password.required' => 'Please enter your current password.',
-            'current_password.current_password' => 'The current password is incorrect.',
-            'password.required' => 'Please enter a new password.',
-            'password.confirmed' => 'Password confirmation does not match.',
+            'email.required' => 'Please enter your email address.',
+            'email.email' => 'Please enter a valid email address.',
         ];
     }
 }

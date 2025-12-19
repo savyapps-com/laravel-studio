@@ -1,14 +1,12 @@
 <?php
 
-namespace App\Resources;
+namespace SavyApps\LaravelStudio\Resources;
 
-use App\Enums\Status;
-use App\Models\User;
-use SavyApps\LaravelStudio\Models\Role;
-use SavyApps\LaravelStudio\Policies\UserPolicy;
 use SavyApps\LaravelStudio\Cards\PartitionCard;
 use SavyApps\LaravelStudio\Cards\TrendCard;
 use SavyApps\LaravelStudio\Cards\ValueCard;
+use SavyApps\LaravelStudio\Models\Role;
+use SavyApps\LaravelStudio\Policies\UserPolicy;
 use SavyApps\LaravelStudio\Resources\Actions\BulkDeleteAction;
 use SavyApps\LaravelStudio\Resources\Actions\BulkUpdateAction;
 use SavyApps\LaravelStudio\Resources\Fields\BelongsToMany;
@@ -21,14 +19,11 @@ use SavyApps\LaravelStudio\Resources\Fields\Select;
 use SavyApps\LaravelStudio\Resources\Fields\Text;
 use SavyApps\LaravelStudio\Resources\Filters\BelongsToManyFilter;
 use SavyApps\LaravelStudio\Resources\Filters\SelectFilter;
-use SavyApps\LaravelStudio\Resources\Resource;
 use SavyApps\LaravelStudio\Traits\Authorizable;
 
 class UserResource extends Resource
 {
     use Authorizable;
-
-    public static string $model = User::class;
 
     public static string $policy = UserPolicy::class;
 
@@ -43,8 +38,30 @@ class UserResource extends Resource
     public static int $perPage = 15;
 
     /**
+     * Get the model class from config.
+     */
+    public static function model(): string
+    {
+        return config('studio.authorization.models.user', 'App\\Models\\User');
+    }
+
+    /**
+     * Get status options. Override in application to use custom status enum.
+     */
+    protected function getStatusOptions(): array
+    {
+        // Check if the user model has a Status enum defined
+        $userModel = static::model();
+
+        // Default status options
+        return [
+            'active' => 'Active',
+            'inactive' => 'Inactive',
+        ];
+    }
+
+    /**
      * Fields shown in the index/table view.
-     * ID and Created At are auto-added.
      */
     public function indexFields(): array
     {
@@ -55,7 +72,7 @@ class UserResource extends Resource
                 ->rounded(),
             Text::make('Name')->sortable()->searchable(),
             Email::make('Email')->sortable()->searchable(),
-            Select::make('Status')->options(Status::class)->sortable()->toggleable(true, 'active', 'inactive'),
+            Select::make('Status')->options($this->getStatusOptions())->sortable(),
             Date::make('Email Verified At', 'email_verified_at')->sortable(),
             BelongsToMany::make('Roles'),
         ];
@@ -63,7 +80,6 @@ class UserResource extends Resource
 
     /**
      * Fields shown in the detail/show view.
-     * ID, Created At, and Updated At are auto-added.
      */
     public function showFields(): array
     {
@@ -74,7 +90,7 @@ class UserResource extends Resource
                 ->rounded(),
             Text::make('Name'),
             Email::make('Email'),
-            Select::make('Status')->options(Status::class),
+            Select::make('Status')->options($this->getStatusOptions()),
             BelongsToMany::make('Roles'),
             Date::make('Email Verified At'),
         ];
@@ -131,9 +147,9 @@ class UserResource extends Resource
                         ->cols('col-span-12 md:col-span-6'),
 
                     Select::make('Status')
-                        ->options(Status::class)
+                        ->options($this->getStatusOptions())
                         ->rules(['required', 'in:active,inactive'])
-                        ->default(Status::Active->value)
+                        ->default('active')
                         ->cols('col-span-12 md:col-span-6'),
                 ]),
 
@@ -156,7 +172,7 @@ class UserResource extends Resource
     {
         return [
             SelectFilter::make('Status')
-                ->options(Status::class)
+                ->options($this->getStatusOptions())
                 ->column('status'),
 
             BelongsToManyFilter::make('Role')
@@ -170,7 +186,7 @@ class UserResource extends Resource
         return [
             BulkDeleteAction::make(),
             BulkUpdateAction::make()->fields([
-                'status' => Status::class,
+                'status' => $this->getStatusOptions(),
             ]),
         ];
     }
@@ -185,23 +201,25 @@ class UserResource extends Resource
      */
     public function cards(): array
     {
+        $userModel = static::model();
+
         return [
             ValueCard::make('Total Users')
-                ->value(fn () => User::count())
+                ->value(fn () => $userModel::count())
                 ->icon('users')
                 ->color('blue')
                 ->width('1/4'),
 
             TrendCard::make('New Users')
-                ->value(fn () => User::where('created_at', '>=', now()->subDays(30))->count())
-                ->previousValue(fn () => User::whereBetween('created_at', [now()->subDays(60), now()->subDays(30)])->count())
+                ->value(fn () => $userModel::where('created_at', '>=', now()->subDays(30))->count())
+                ->previousValue(fn () => $userModel::whereBetween('created_at', [now()->subDays(60), now()->subDays(30)])->count())
                 ->comparisonLabel('vs last 30 days')
                 ->icon('user-plus')
                 ->color('green')
                 ->width('1/4'),
 
             ValueCard::make('Active Users')
-                ->value(fn () => User::where('status', Status::Active)->count())
+                ->value(fn () => $userModel::where('status', 'active')->count())
                 ->icon('check-circle')
                 ->color('teal')
                 ->width('1/4'),

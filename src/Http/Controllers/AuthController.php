@@ -1,27 +1,24 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace SavyApps\LaravelStudio\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\ChangePasswordRequest;
-use App\Http\Requests\ForgotPasswordRequest;
-use App\Http\Requests\LoginRequest;
-use App\Http\Requests\RegisterRequest;
-use App\Http\Requests\ResetPasswordRequest;
-use App\Http\Requests\UpdateProfileRequest;
-use App\Http\Resources\UserResource;
-use App\Services\SettingsService;
-use SavyApps\LaravelStudio\Services\AuthService;
-use SavyApps\LaravelStudio\Services\ImpersonationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
+use SavyApps\LaravelStudio\Http\Requests\ChangePasswordRequest;
+use SavyApps\LaravelStudio\Http\Requests\ForgotPasswordRequest;
+use SavyApps\LaravelStudio\Http\Requests\LoginRequest;
+use SavyApps\LaravelStudio\Http\Requests\RegisterRequest;
+use SavyApps\LaravelStudio\Http\Requests\ResetPasswordRequest;
+use SavyApps\LaravelStudio\Http\Requests\UpdateProfileRequest;
+use SavyApps\LaravelStudio\Services\AuthService;
+use SavyApps\LaravelStudio\Services\ImpersonationService;
 
 class AuthController extends Controller
 {
     public function __construct(
-        public AuthService $authService,
-        public SettingsService $settingsService,
-        public ImpersonationService $impersonationService
+        protected AuthService $authService,
+        protected ImpersonationService $impersonationService
     ) {}
 
     /**
@@ -35,7 +32,7 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'User registered successfully.',
-            'user' => new UserResource($result['user']),
+            'user' => $this->formatUser($result['user']),
             'token' => $result['token'],
         ], 201);
     }
@@ -62,19 +59,24 @@ class AuthController extends Controller
         $result = $this->authService->login($request->validated());
         $result['user']->load('roles');
 
-        // Get user settings
-        $settings = $this->settingsService->getForUser($result['user']);
-
         // Get impersonation status
         $impersonationStatus = $this->impersonationService->getStatus();
 
-        return response()->json([
+        // Get user settings if settings service is available
+        $settings = $this->getUserSettings($result['user']);
+
+        $response = [
             'message' => 'Login successful.',
-            'user' => new UserResource($result['user']),
+            'user' => $this->formatUser($result['user']),
             'token' => $result['token'],
-            'settings' => $settings,
             'impersonation' => $impersonationStatus,
-        ]);
+        ];
+
+        if ($settings !== null) {
+            $response['settings'] = $settings;
+        }
+
+        return response()->json($response);
     }
 
     /**
@@ -97,17 +99,22 @@ class AuthController extends Controller
         $user = $request->user();
         $user->load('roles');
 
-        // Get user settings
-        $settings = $this->settingsService->getForUser($user);
-
         // Get impersonation status
         $impersonationStatus = $this->impersonationService->getStatus();
 
-        return response()->json([
-            'user' => new UserResource($user),
-            'settings' => $settings,
+        // Get user settings if settings service is available
+        $settings = $this->getUserSettings($user);
+
+        $response = [
+            'user' => $this->formatUser($user),
             'impersonation' => $impersonationStatus,
-        ]);
+        ];
+
+        if ($settings !== null) {
+            $response['settings'] = $settings;
+        }
+
+        return response()->json($response);
     }
 
     /**
@@ -116,7 +123,7 @@ class AuthController extends Controller
     public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
     {
         $email = $request->validated('email');
-        $panel = $request->validated('panel', 'admin');
+        $panel = $request->validated('panel') ?? 'admin';
 
         $this->authService->sendPasswordResetLink($email, $panel);
 
@@ -134,7 +141,7 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Password reset successfully.',
-            'user' => new UserResource($user),
+            'user' => $this->formatUser($user),
         ]);
     }
 
@@ -148,7 +155,7 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Profile updated successfully.',
-            'user' => new UserResource($user),
+            'user' => $this->formatUser($user),
         ]);
     }
 
@@ -204,5 +211,54 @@ class AuthController extends Controller
             'exists' => $exists,
             'email' => $request->input('email'),
         ]);
+    }
+
+    /**
+     * Format user data for API response.
+     * Can be overridden in application by extending this controller.
+     */
+    protected function formatUser($user): array
+    {
+        $data = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'email_verified_at' => $user->email_verified_at,
+            'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at,
+        ];
+
+        // Include roles if loaded
+        if ($user->relationLoaded('roles')) {
+            $data['roles'] = $user->roles->map(fn($role) => [
+                'id' => $role->id,
+                'name' => $role->name,
+                'slug' => $role->slug ?? $role->name,
+            ])->toArray();
+        }
+
+        // Include avatar if available
+        if (method_exists($user, 'getFirstMediaUrl')) {
+            $data['avatar'] = $user->getFirstMediaUrl('avatar', 'thumb') ?: null;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Get user settings if a settings service is available.
+     * Applications can bind their own settings service to 'studio.settings'.
+     */
+    protected function getUserSettings($user): ?array
+    {
+        // Check if application has bound a settings service
+        if (app()->bound('studio.settings')) {
+            $settingsService = app('studio.settings');
+            if (method_exists($settingsService, 'getForUser')) {
+                return $settingsService->getForUser($user);
+            }
+        }
+
+        return null;
     }
 }
