@@ -110,14 +110,6 @@ const routes = [
     }
   },
 
-  // 404 Catch-all for admin paths
-  {
-    path: '/admin/:pathMatch(.*)*',
-    name: 'admin.notFound',
-    component: () => import('@/pages/admin/errors/NotFound.vue'),
-    meta: { title: '404 - Page Not Found', auth: 'admin' }
-  },
-
   // Dynamic Panel Routes (for panels other than admin)
   // These routes handle any panel created via the admin panel management
   {
