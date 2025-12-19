@@ -42,10 +42,8 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore, ProfileUpdateForm, SessionManagement } from 'laravel-studio'
 import { useProfileForm } from '@/components/composables/useProfileForm'
-import ProfileUpdateForm from '@/components/profile/ProfileUpdateForm.vue'
-import SessionManagement from '@/components/profile/SessionManagement.vue'
 
 const router = useRouter()
 const route = useRoute()

@@ -5,7 +5,7 @@
 
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { settingsService } from '@/services/settingsService'
+import { settingsService } from '../services/settingsService'
 
 export const useSettingsStore = defineStore('settings', () => {
   // State

@@ -10,7 +10,7 @@
 </template>
 
 <script>
-import ErrorPage from '@/components/common/ErrorPage.vue'
+import { ErrorPage } from 'laravel-studio'
 
 export default {
   name: 'AdminForbidden',

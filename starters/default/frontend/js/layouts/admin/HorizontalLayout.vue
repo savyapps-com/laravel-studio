@@ -25,10 +25,12 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import HorizontalNav from '@/components/layout/HorizontalNav.vue'
-import ImpersonationBanner from '@/components/common/ImpersonationBanner.vue'
-import ConfirmDialogContainer from '@/components/common/ConfirmDialogContainer.vue'
-import { useAuthStore } from '@/stores/auth'
+import {
+  HorizontalNav,
+  ImpersonationBanner,
+  ConfirmDialogContainer,
+  useAuthStore
+} from 'laravel-studio'
 import { adminMainMenuItems, userMainMenuItems } from '@/config/menuItems'
 
 export default {

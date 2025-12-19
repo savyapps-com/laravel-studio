@@ -1,10 +1,8 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { MonacoEditor, Icon, useToast } from 'laravel-studio'
 import { emailTemplateService } from '@/services/emailTemplateService'
-import { useToast } from '@/composables/useToast'
-import MonacoEditor from '@/components/common/MonacoEditor.vue'
-import Icon from '@/components/common/Icon.vue'
 
 const router = useRouter()
 const route = useRoute()

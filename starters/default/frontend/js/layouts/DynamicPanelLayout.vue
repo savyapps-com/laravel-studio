@@ -69,14 +69,16 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import Sidebar from '@/components/layout/Sidebar.vue'
-import Navbar from '@/components/layout/Navbar.vue'
-import ImpersonationBanner from '@/components/common/ImpersonationBanner.vue'
-import ConfirmDialogContainer from '@/components/common/ConfirmDialogContainer.vue'
-import { useSidebar } from '@/components/composables/useSidebar.js'
-import { useEscapeKey } from '@/components/composables/useClickOutside.js'
-import { useAuthStore } from '@/stores/auth'
-import { panelService } from 'laravel-studio'
+import {
+  Sidebar,
+  Navbar,
+  ImpersonationBanner,
+  ConfirmDialogContainer,
+  useSidebar,
+  useEscapeKey,
+  useAuthStore,
+  panelService
+} from 'laravel-studio'
 
 const router = useRouter()
 const route = useRoute()

@@ -180,7 +180,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import Icon from '@/components/common/Icon.vue'
+import { Icon } from 'laravel-studio'
 
 const isClearing = ref(false)
 const isOptimizing = ref(false)

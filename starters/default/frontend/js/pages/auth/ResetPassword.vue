@@ -179,8 +179,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import AuthPage from '@/components/common/AuthPage.vue'
-import Icon from '@/components/common/Icon.vue'
+import { AuthPage, Icon } from 'laravel-studio'
 import { useResetPasswordForm } from '@/components/composables/useResetPasswordForm'
 
 const router = useRouter()

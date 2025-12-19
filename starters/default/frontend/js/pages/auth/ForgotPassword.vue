@@ -89,13 +89,15 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import AuthPage from '@/components/common/AuthPage.vue'
-import Icon from '@/components/common/Icon.vue'
-import FormGroup from '@/components/form/FormGroup.vue'
-import FormLabel from '@/components/form/FormLabel.vue'
-import FormInput from '@/components/form/FormInput.vue'
+import {
+  AuthPage,
+  Icon,
+  FormGroup,
+  FormLabel,
+  FormInput,
+  authService
+} from 'laravel-studio'
 import { useForgotPasswordForm } from '@/components/composables/useForgotPasswordForm'
-import { authService } from '@/services/authService'
 
 const route = useRoute()
 const helpText = 'We\'ll send you a secure link to reset your password. Check your spam folder if you don\'t receive it within a few minutes.'

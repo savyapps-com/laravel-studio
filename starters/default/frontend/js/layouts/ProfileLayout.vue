@@ -42,7 +42,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useContextRoutes } from '@/composables/useContextRoutes'
-import Icon from '@/components/common/Icon.vue'
+import { Icon } from 'laravel-studio'
 
 const route = useRoute()
 const { profileRoutes } = useContextRoutes()

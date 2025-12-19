@@ -143,17 +143,19 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useForm } from 'vee-validate'
-import { useSettingsStore } from '@/stores/settings'
-import Icon from '@/components/common/Icon.vue'
+import {
+  useSettingsStore,
+  Icon,
+  FormGroup,
+  FormLabel,
+  FormHelpText,
+  SelectInput,
+  CheckboxInput
+} from 'laravel-studio'
 import SettingsForm from '@/components/settings/SettingsForm.vue'
 import SettingGroup from '@/components/settings/SettingGroup.vue'
 import CountrySelect from '@/components/settings/CountrySelect.vue'
 import TimezoneSelect from '@/components/settings/TimezoneSelect.vue'
-import FormGroup from '@/components/form/FormGroup.vue'
-import FormLabel from '@/components/form/FormLabel.vue'
-import FormHelpText from '@/components/form/FormHelpText.vue'
-import SelectInput from '@/components/form/SelectInput.vue'
-import CheckboxInput from '@/components/form/CheckboxInput.vue'
 
 const settingsStore = useSettingsStore()
 

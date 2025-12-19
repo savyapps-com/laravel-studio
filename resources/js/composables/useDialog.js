@@ -1,4 +1,4 @@
-import { useDialogStore } from '@/stores/dialog'
+import { useDialogStore } from '../stores/dialog'
 
 export function useDialog() {
   const store = useDialogStore()

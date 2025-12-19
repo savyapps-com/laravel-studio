@@ -5,7 +5,7 @@
 
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { authService } from '@/services/authService'
+import { authService } from '../services/authService'
 
 export const useAuthStore = defineStore('auth', () => {
   // Helper function to get user from localStorage

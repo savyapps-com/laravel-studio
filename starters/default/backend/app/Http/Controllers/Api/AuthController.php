@@ -10,9 +10,9 @@ use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
-use App\Services\AuthService;
-use App\Services\ImpersonationService;
 use App\Services\SettingsService;
+use SavyApps\LaravelStudio\Services\AuthService;
+use SavyApps\LaravelStudio\Services\ImpersonationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 

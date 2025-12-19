@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Services\ImpersonationService;
+use SavyApps\LaravelStudio\Services\ImpersonationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 

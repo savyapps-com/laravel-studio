@@ -782,6 +782,18 @@ class InstallCommand extends Command
         $this->newLine();
         $this->line('<fg=gray>💡 Tip: All published files are now part of your project.</>');
         $this->line('<fg=gray>   You can customize them freely without affecting package updates.</>');
+
+        $this->newLine();
+        $this->components->info('📦 Core components available from the package (no installation needed):');
+        $this->components->bulletList([
+            'Layout components: Sidebar, MiniSidebar, CompactSidebar, Navbar, HorizontalNav',
+            'Auth components: AuthPage wrapper, auth form composables',
+            'UI components: DataTable, BaseModal, DropdownMenu, RichTextEditor, MonacoEditor',
+            'Profile components: ProfileUpdateForm, PasswordChangeForm',
+            'Error components: ErrorPage',
+            'Services: AuthService, ImpersonationService, BlurPlaceholderService, SecureMediaUrlService',
+        ]);
+        $this->line('<fg=gray>   Import directly: import { Sidebar, DataTable, AuthPage } from \'laravel-studio\'</>');
     }
 
     /**

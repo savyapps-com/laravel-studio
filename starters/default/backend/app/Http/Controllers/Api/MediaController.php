@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Services\Media\BlurPlaceholderService;
-use App\Services\Media\SecureMediaUrlService;
+use SavyApps\LaravelStudio\Services\Media\BlurPlaceholderService;
+use SavyApps\LaravelStudio\Services\Media\SecureMediaUrlService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;

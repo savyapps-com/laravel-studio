@@ -35,11 +35,13 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import CompactSidebar from '@/components/layout/CompactSidebar.vue'
-import Navbar from '@/components/layout/Navbar.vue'
-import ImpersonationBanner from '@/components/common/ImpersonationBanner.vue'
-import ConfirmDialogContainer from '@/components/common/ConfirmDialogContainer.vue'
-import { useAuthStore } from '@/stores/auth'
+import {
+  CompactSidebar,
+  Navbar,
+  ImpersonationBanner,
+  ConfirmDialogContainer,
+  useAuthStore
+} from 'laravel-studio'
 import { adminMainMenuItems, getAdminMoreMenuItems, userMainMenuItems, getUserMoreMenuItems } from '@/config/menuItems'
 
 export default {

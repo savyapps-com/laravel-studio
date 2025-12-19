@@ -48,7 +48,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { ActivityTimeline } from '@core/index'
+import { ActivityTimeline } from 'laravel-studio'
 
 const timelineRef = ref(null)
 const loading = ref(false)

@@ -137,9 +137,8 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore, Icon } from 'laravel-studio'
 import { useProfileForm } from '@/components/composables/useProfileForm'
-import Icon from '@/components/common/Icon.vue'
 
 const router = useRouter()
 const route = useRoute()

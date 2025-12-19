@@ -54,13 +54,15 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import Sidebar from '@/components/layout/Sidebar.vue'
-import Navbar from '@/components/layout/Navbar.vue'
-import ImpersonationBanner from '@/components/common/ImpersonationBanner.vue'
-import ConfirmDialogContainer from '@/components/common/ConfirmDialogContainer.vue'
-import { useSidebar } from '@/components/composables/useSidebar.js'
-import { useEscapeKey } from '@/components/composables/useClickOutside.js'
-import { useAuthStore } from '@/stores/auth'
+import {
+  Sidebar,
+  Navbar,
+  ImpersonationBanner,
+  ConfirmDialogContainer,
+  useSidebar,
+  useEscapeKey,
+  useAuthStore
+} from 'laravel-studio'
 import { adminMainMenuItems, getAdminMoreMenuItems, userMainMenuItems, getUserMoreMenuItems } from '@/config/menuItems'
 
 export default {

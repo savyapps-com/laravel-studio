@@ -139,15 +139,17 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import AuthPage from '@/components/common/AuthPage.vue'
-import Icon from '@/components/common/Icon.vue'
-import FormGroup from '@/components/form/FormGroup.vue'
-import FormLabel from '@/components/form/FormLabel.vue'
-import FormInput from '@/components/form/FormInput.vue'
-import PasswordInput from '@/components/form/PasswordInput.vue'
-import CheckboxInput from '@/components/form/CheckboxInput.vue'
+import {
+  AuthPage,
+  Icon,
+  FormGroup,
+  FormLabel,
+  FormInput,
+  PasswordInput,
+  CheckboxInput,
+  authService
+} from 'laravel-studio'
 import { useRegisterForm } from '@/components/composables/useRegisterForm'
-import { authService } from '@/services/authService'
 
 const route = useRoute()
 const helpText = 'Your account will be created instantly and you\'ll be able to sign in right away.'

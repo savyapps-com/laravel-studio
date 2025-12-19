@@ -186,8 +186,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useSettingsStore } from '@/stores/settings'
-import Icon from '@/components/common/Icon.vue'
+import { useSettingsStore, Icon } from 'laravel-studio'
 
 const settingsStore = useSettingsStore()
 const showSuccess = ref(false)

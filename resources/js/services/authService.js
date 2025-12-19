@@ -36,10 +36,11 @@ export const authService = {
   /**
    * Send password reset link
    * @param {string} email
+   * @param {string} panel - Panel key for panel-aware reset URL
    * @returns {Promise}
    */
-  async forgotPassword(email) {
-    const response = await window.axios.post('/api/forgot-password', { email })
+  async forgotPassword(email, panel = 'admin') {
+    const response = await window.axios.post('/api/forgot-password', { email, panel })
     return response.data
   },
 
@@ -107,6 +108,26 @@ export const authService = {
    */
   async checkEmail(email) {
     const response = await window.axios.post('/api/check-email', { email })
+    return response.data
+  },
+
+  /**
+   * Check if registration is allowed for a panel
+   * @param {string} panel - Panel key
+   * @returns {Promise}
+   */
+  async checkRegistration(panel) {
+    const response = await window.axios.get('/api/check-registration', { params: { panel } })
+    return response.data
+  },
+
+  /**
+   * Get public panel info (for login/register pages)
+   * @param {string} panel - Panel key
+   * @returns {Promise}
+   */
+  async getPanelInfo(panel) {
+    const response = await window.axios.get(`/api/panels/${panel}/info`)
     return response.data
   }
 }

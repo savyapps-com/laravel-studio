@@ -22,9 +22,33 @@ export { default as FilterBar } from './components/resource/FilterBar.vue'
 export { default as ActionButtons } from './components/resource/ActionButtons.vue'
 export { default as QuickCreateModal } from './components/resource/QuickCreateModal.vue'
 
-// Layout Components
+// Layout Components (Panel)
 export { default as PanelLayout } from './components/layout/PanelLayout.vue'
 export { default as PanelSwitcher } from './components/layout/PanelSwitcher.vue'
+
+// Layout Components (Admin)
+export { default as Sidebar } from './components/layouts/Sidebar.vue'
+export { default as MiniSidebar } from './components/layouts/MiniSidebar.vue'
+export { default as CompactSidebar } from './components/layouts/CompactSidebar.vue'
+export { default as Navbar } from './components/layouts/Navbar.vue'
+export { default as HorizontalNav } from './components/layouts/HorizontalNav.vue'
+export { default as NavItem } from './components/layouts/NavItem.vue'
+export { default as UserDropdown } from './components/layouts/UserDropdown.vue'
+export { default as DarkModeToggle } from './components/layouts/DarkModeToggle.vue'
+
+// Auth Components
+export { default as AuthPage } from './components/auth/AuthPage.vue'
+
+// Error Components
+export { default as ErrorPage } from './components/errors/ErrorPage.vue'
+
+// Profile Components
+export { default as ProfileUpdateForm } from './components/profile/ProfileUpdateForm.vue'
+export { default as PasswordChangeForm } from './components/profile/PasswordChangeForm.vue'
+export { default as SessionManagement } from './components/profile/SessionManagement.vue'
+
+// Table Components
+export { default as DataTable } from './components/tables/DataTable.vue'
 
 // Permission Components
 export { default as PermissionGuard } from './components/permissions/PermissionGuard.vue'
@@ -68,6 +92,18 @@ export const ImageEditor = defineAsyncComponent(() =>
 )
 export { default as ImageLightbox } from './components/common/ImageLightbox.vue'
 export { default as ImageWithBlurPlaceholder } from './components/common/ImageWithBlurPlaceholder.vue'
+export { default as BaseModal } from './components/common/BaseModal.vue'
+export { default as ModalDialog } from './components/common/ModalDialog.vue'
+export { default as DropdownMenu } from './components/common/DropdownMenu.vue'
+export { default as ImpersonationBanner } from './components/common/ImpersonationBanner.vue'
+export { default as UploadProgressBar } from './components/common/UploadProgressBar.vue'
+// Heavy components - async loaded (includes tiptap/monaco libraries)
+export const RichTextEditor = defineAsyncComponent(() =>
+    import('./components/common/RichTextEditor.vue')
+)
+export const MonacoEditor = defineAsyncComponent(() =>
+    import('./components/common/MonacoEditor.vue')
+)
 
 // Form Components
 export { default as FormInput } from './components/form/FormInput.vue'
@@ -141,6 +177,16 @@ export { useUploadProgress } from './composables/useUploadProgress.js'
 export { usePermissions, useRolePermissions, useAllPermissions } from './composables/usePermissions.js'
 export { useGlobalSearch } from './composables/useGlobalSearch.js'
 export { useCards } from './composables/useCards.js'
+export { useSidebar, useEscapeKey, useClickOutside } from './composables/useSidebar.js'
+export { useContextRoutes } from './composables/useContextRoutes.js'
+export {
+    useAuthForm,
+    useLoginForm,
+    useRegisterForm,
+    useForgotPasswordForm,
+    useResetPasswordForm,
+    useChangePasswordForm
+} from './composables/useAuthForms.js'
 
 // Directives
 export { default as tooltipDirective } from './directives/tooltip.js'
@@ -171,6 +217,16 @@ export default {
         app.component('ResourceForm', () => import('./components/resource/ResourceForm.vue'))
         app.component('PanelLayout', () => import('./components/layout/PanelLayout.vue'))
         app.component('PanelSwitcher', () => import('./components/layout/PanelSwitcher.vue'))
+
+        // Admin Layout components
+        app.component('Sidebar', () => import('./components/layouts/Sidebar.vue'))
+        app.component('MiniSidebar', () => import('./components/layouts/MiniSidebar.vue'))
+        app.component('CompactSidebar', () => import('./components/layouts/CompactSidebar.vue'))
+        app.component('Navbar', () => import('./components/layouts/Navbar.vue'))
+        app.component('HorizontalNav', () => import('./components/layouts/HorizontalNav.vue'))
+        app.component('NavItem', () => import('./components/layouts/NavItem.vue'))
+        app.component('UserDropdown', () => import('./components/layouts/UserDropdown.vue'))
+        app.component('DarkModeToggle', () => import('./components/layouts/DarkModeToggle.vue'))
 
         // Permission components
         app.component('PermissionGuard', () => import('./components/permissions/PermissionGuard.vue'))

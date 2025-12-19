@@ -107,8 +107,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { CardGrid, ActivityTimeline, useCards, activityService } from '@core/index'
-import Icon from '@/components/common/Icon.vue'
+import { CardGrid, ActivityTimeline, useCards, activityService, Icon } from 'laravel-studio'
 import StatCard from '@/components/stats/StatCard.vue'
 
 // Cards from backend

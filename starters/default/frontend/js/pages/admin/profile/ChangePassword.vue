@@ -36,8 +36,8 @@
 </template>
 
 <script setup>
+import { PasswordChangeForm } from 'laravel-studio'
 import { useChangePasswordForm } from '@/components/composables/useChangePasswordForm'
-import PasswordChangeForm from '@/components/profile/PasswordChangeForm.vue'
 
 const {
   onSubmit: handlePasswordChange,

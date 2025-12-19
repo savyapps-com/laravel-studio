@@ -224,11 +224,8 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { Icon, ToggleSwitch, useToast, useDialog } from 'laravel-studio'
 import { emailTemplateService } from '@/services/emailTemplateService'
-import { useToast } from '@/composables/useToast'
-import { useDialog } from '@/composables/useDialog'
-import Icon from '@/components/common/Icon.vue'
-import ToggleSwitch from '@/components/common/ToggleSwitch.vue'
 
 const router = useRouter()
 const toast = useToast()
