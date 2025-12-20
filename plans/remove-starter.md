@@ -219,23 +219,391 @@ alias: {
 
 ---
 
-## Breaking Changes
-
-1. **Import paths change** - `@/components/...` → `laravel-studio`
-2. **Router configuration** - Full router → Router factory
-3. **File structure** - Most files move to package
-4. **Menu configuration** - Config-driven approach
-
----
-
 ## Implementation Order
 
 1. Move frontend files from starter to package `resources/js/`
-2. Create factory functions (app, router)
-3. Update `index.js` with new exports
-4. Create stub templates
-5. Refactor `InstallCommand` to use stubs
-6. Update `LaravelStudioServiceProvider` with publish tags
-7. Test fresh install
-8. Delete `starters/default/` directory
-9. Update CLAUDE.md documentation
+2. **Refactor all package imports to use relative paths** (Critical)
+3. Create factory functions (app, router)
+4. **Create TypeScript declarations** (`types/*.d.ts`)
+5. Update `index.js` with new exports
+6. Create stub templates (including IDE config stubs)
+7. **Create Vite plugin for override resolution**
+8. Refactor `InstallCommand` to use stubs
+9. Update `LaravelStudioServiceProvider` with publish tags
+10. **Write override resolution tests**
+11. Test fresh install
+12. Delete `starters/default/` directory
+13. Update CLAUDE.md documentation
+
+---
+
+## Import Path Strategy (Critical)
+
+### Problem
+Package internal code must not use `@/` aliases - this would break when users override files.
+
+### Solution: Relative Imports in Package
+
+**All package code uses relative imports:**
+```javascript
+// CORRECT - Package internal (resources/js/components/form/TextField.vue)
+import FormGroup from './FormGroup.vue'
+import { useField } from '../../composables/useField'
+
+// WRONG - Would break with user overrides
+import FormGroup from '@/components/form/FormGroup.vue'
+```
+
+### User Code Uses Aliases
+
+**User app.js:**
+```javascript
+// Import from package
+import { TextField } from 'laravel-studio/components'
+
+// Import local override (if exists)
+import CustomField from '@/components/CustomField.vue'
+```
+
+### Vite Configuration
+
+```javascript
+// vite.config.js (generated stub)
+import { fileURLToPath } from 'url'
+import { existsSync } from 'fs'
+
+function studioResolver() {
+  return {
+    name: 'studio-resolver',
+    resolveId(source, importer) {
+      // Check for local override first
+      if (source.startsWith('laravel-studio/')) {
+        const localPath = source.replace(
+          'laravel-studio/',
+          './resources/js/'
+        )
+        if (existsSync(localPath)) {
+          return localPath
+        }
+      }
+      return null // Fall through to package
+    }
+  }
+}
+
+export default defineConfig({
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./resources/js', import.meta.url)),
+      'laravel-studio': fileURLToPath(
+        new URL('./vendor/savyapps/laravel-studio/resources/js', import.meta.url)
+      ),
+    },
+  },
+  plugins: [studioResolver()],
+})
+```
+
+### Package Export Structure
+
+```javascript
+// Package resources/js/index.js
+// Named exports for tree-shaking
+export { TextField, SelectField, ... } from './components/form'
+export { AdminLayout, ProfileLayout, ... } from './components/layouts'
+export { useToast, useDialog, ... } from './composables'
+export { resourceService, authService, ... } from './services'
+export { createStudioApp } from './bootstrap/app'
+export { createStudioRouter, createStudioRoutes } from './router/factory'
+```
+
+### Import Patterns for Users
+
+```javascript
+// Recommended: Named imports (tree-shakeable)
+import { TextField, SelectField } from 'laravel-studio/components'
+import { useToast } from 'laravel-studio/composables'
+
+// Also works: Direct file import
+import TextField from 'laravel-studio/components/form/TextField.vue'
+```
+
+---
+
+## TypeScript Support
+
+### Type Definitions Location
+```
+resources/js/
+├── types/
+│   ├── index.d.ts          # Main type exports
+│   ├── components.d.ts     # Component prop types
+│   ├── services.d.ts       # Service return types
+│   ├── composables.d.ts    # Composable return types
+│   └── resources.d.ts      # Resource/Field types
+└── index.d.ts              # Root declaration file
+```
+
+### Package.json Exports (for TypeScript)
+```json
+{
+  "name": "laravel-studio",
+  "types": "./resources/js/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./resources/js/index.d.ts",
+      "import": "./resources/js/index.js"
+    },
+    "./components": {
+      "types": "./resources/js/types/components.d.ts",
+      "import": "./resources/js/components/index.js"
+    },
+    "./composables": {
+      "types": "./resources/js/types/composables.d.ts",
+      "import": "./resources/js/composables/index.js"
+    },
+    "./services": {
+      "types": "./resources/js/types/services.d.ts",
+      "import": "./resources/js/services/index.js"
+    }
+  }
+}
+```
+
+### Key Type Definitions
+
+```typescript
+// resources/js/types/index.d.ts
+
+// App Factory
+export interface StudioAppOptions {
+  rootComponent?: Component
+  router?: Router
+  plugins?: Plugin[]
+}
+
+export function createStudioApp(options?: StudioAppOptions): App
+
+// Router Factory
+export interface StudioRouterOptions {
+  additionalRoutes?: RouteRecordRaw[]
+  adminRoutes?: RouteRecordRaw[]
+  panelRoutes?: RouteRecordRaw[]
+  authRoutes?: RouteRecordRaw[]
+}
+
+export function createStudioRouter(options?: StudioRouterOptions): Router
+export function createStudioRoutes(options?: StudioRouterOptions): RouteRecordRaw[]
+
+// Component Props
+export interface TextFieldProps {
+  field: Field
+  modelValue: string | null
+  errors?: Record<string, string[]>
+  disabled?: boolean
+}
+
+// Service Types
+export interface ResourceService {
+  getIndex(resource: string, params?: IndexParams): Promise<PaginatedResponse>
+  create(resource: string, data: Record<string, any>): Promise<ResourceResponse>
+  update(resource: string, id: number, data: Record<string, any>): Promise<ResourceResponse>
+  delete(resource: string, id: number): Promise<void>
+}
+```
+
+### User tsconfig.json Setup
+
+```json
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./resources/js/*"],
+      "laravel-studio": ["./vendor/savyapps/laravel-studio/resources/js"],
+      "laravel-studio/*": ["./vendor/savyapps/laravel-studio/resources/js/*"]
+    }
+  }
+}
+```
+
+---
+
+## IDE Configuration
+
+### VS Code Settings
+
+Create `.vscode/settings.json`:
+```json
+{
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "javascript.preferences.importModuleSpecifier": "non-relative",
+  "path-intellisense.mappings": {
+    "@": "${workspaceFolder}/resources/js",
+    "laravel-studio": "${workspaceFolder}/vendor/savyapps/laravel-studio/resources/js"
+  }
+}
+```
+
+### jsconfig.json (for non-TS projects)
+
+```json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["resources/js/*"],
+      "laravel-studio": ["vendor/savyapps/laravel-studio/resources/js"],
+      "laravel-studio/*": ["vendor/savyapps/laravel-studio/resources/js/*"]
+    }
+  },
+  "include": [
+    "resources/js/**/*",
+    "vendor/savyapps/laravel-studio/resources/js/**/*"
+  ]
+}
+```
+
+### PHPStorm / WebStorm
+
+1. Mark `vendor/savyapps/laravel-studio/resources/js` as "Resource Root"
+2. Configure webpack/vite config path in Settings → Languages → JavaScript → Webpack
+
+### Volar (Vue Language Server)
+
+Works automatically with tsconfig.json paths configuration.
+
+### Generated Stub Includes IDE Config
+
+The `studio:install` command will generate:
+- `jsconfig.json` or update existing
+- `.vscode/settings.json` with path mappings
+- `tsconfig.json` paths (if TypeScript detected)
+
+---
+
+## Testing Strategy
+
+### Unit Tests: Override Resolution
+
+```javascript
+// tests/js/override-resolution.test.js
+import { describe, it, expect, vi } from 'vitest'
+import { resolveStudioComponent } from 'laravel-studio/resolver'
+
+describe('Component Override Resolution', () => {
+  it('uses local component when it exists', () => {
+    // Mock file system
+    vi.mock('fs', () => ({
+      existsSync: (path) => path.includes('resources/js/components/CustomButton')
+    }))
+
+    const resolved = resolveStudioComponent('components/CustomButton.vue')
+    expect(resolved).toContain('resources/js/components/CustomButton')
+  })
+
+  it('falls back to package when local does not exist', () => {
+    vi.mock('fs', () => ({
+      existsSync: () => false
+    }))
+
+    const resolved = resolveStudioComponent('components/TextField.vue')
+    expect(resolved).toContain('vendor/savyapps/laravel-studio')
+  })
+})
+```
+
+### Integration Tests: Published Overrides
+
+```javascript
+// tests/js/integration/published-override.test.js
+import { mount } from '@vue/test-utils'
+import { describe, it, expect, beforeAll } from 'vitest'
+
+describe('Published Component Override', () => {
+  beforeAll(() => {
+    // Simulate published override
+    // Copy custom AdminLayout to resources/js/components/layouts/
+  })
+
+  it('uses published AdminLayout over package default', async () => {
+    const { AdminLayout } = await import('laravel-studio/layouts')
+    const wrapper = mount(AdminLayout)
+
+    // Assert custom content is present
+    expect(wrapper.html()).toContain('custom-admin-class')
+  })
+})
+```
+
+### E2E Tests: Full Override Flow
+
+```javascript
+// tests/e2e/override-flow.spec.js
+import { test, expect } from '@playwright/test'
+
+test('custom dashboard is rendered when published', async ({ page }) => {
+  // 1. Fresh install (package dashboard)
+  await page.goto('/admin/dashboard')
+  await expect(page.locator('[data-testid="package-dashboard"]')).toBeVisible()
+
+  // 2. Publish override
+  // (run: php artisan vendor:publish --tag=studio-pages)
+
+  // 3. Verify custom dashboard
+  await page.reload()
+  await expect(page.locator('[data-testid="custom-dashboard"]')).toBeVisible()
+})
+```
+
+### CI Pipeline Test Matrix
+
+```yaml
+# .github/workflows/test.yml
+jobs:
+  test-overrides:
+    strategy:
+      matrix:
+        scenario:
+          - fresh-install        # No overrides
+          - all-overrides        # All files published
+          - partial-overrides    # Some files published
+          - custom-theme         # Theme override only
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup scenario
+        run: ./scripts/setup-test-scenario.sh ${{ matrix.scenario }}
+      - name: Run tests
+        run: npm run test
+```
+
+### Package Internal Tests
+
+```php
+// tests/Feature/OverrideResolutionTest.php
+<?php
+
+namespace Tests\Feature;
+
+use Tests\TestCase;
+
+class OverrideResolutionTest extends TestCase
+{
+    public function test_publish_creates_override_files(): void
+    {
+        $this->artisan('vendor:publish', ['--tag' => 'studio-layouts'])
+            ->assertSuccessful();
+
+        $this->assertFileExists(resource_path('js/components/layouts/AdminLayout.vue'));
+    }
+
+    public function test_vite_config_stub_has_correct_aliases(): void
+    {
+        $this->artisan('studio:install', ['--force' => true]);
+
+        $viteConfig = file_get_contents(base_path('vite.config.js'));
+
+        $this->assertStringContainsString("'laravel-studio':", $viteConfig);
+        $this->assertStringContainsString("'@':", $viteConfig);
+    }
+}
+```
