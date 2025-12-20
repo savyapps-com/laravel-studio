@@ -11,17 +11,17 @@ abstract class Resource
     /**
      * The model the resource corresponds to.
      */
-    public static string $model;
+    public static string $model = '';
 
     /**
      * The display name for the resource (plural).
      */
-    public static string $label;
+    public static string $label = '';
 
     /**
      * The display name for a single resource.
      */
-    public static string $singularLabel;
+    public static string $singularLabel = '';
 
     /**
      * The column to use for the resource's title/name.
