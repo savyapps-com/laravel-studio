@@ -43,7 +43,7 @@
             ]"
           >
             <span v-if="isSaving" class="flex items-center justify-center">
-              <Icon name="loading" :size="18" class="animate-spin mr-2" />
+              <Icon name="loader-2" :size="18" class="animate-spin mr-2" />
               {{ savingLabel }}
             </span>
             <span v-else>{{ saveLabel }}</span>
@@ -67,10 +67,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onUnmounted, getCurrentInstance } from 'vue'
-import FormSuccess from '@/components/form/FormSuccess.vue'
-import FormActions from '@/components/form/FormActions.vue'
-import Icon from '@core/components/common/Icon.vue'
+import { onUnmounted, getCurrentInstance } from 'vue'
+import FormSuccess from './FormSuccess.vue'
+import FormActions from './FormActions.vue'
+import Icon from '../common/Icon.vue'
 
 const props = defineProps({
   isSaving: {
@@ -180,7 +180,7 @@ if (props.confirmNavigation && instance?.appContext?.config?.globalProperties?.$
     }).catch(() => {
       // Router not available, silently skip navigation guard
     })
-  } catch (error) {
+  } catch {
     // Silently fail if router is not available
   }
 }

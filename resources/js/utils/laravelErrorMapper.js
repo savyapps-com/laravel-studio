@@ -1,9 +1,15 @@
 /**
+ * Laravel Error Mapper Utilities
+ * Handles Laravel validation errors and maps them to VeeValidate format
+ */
+
+/**
  * Maps Laravel validation errors to VeeValidate format
  * Laravel returns errors as { field: ['error1', 'error2'] }
  * VeeValidate expects { field: 'error1' }
+ * @param {Object} laravelErrors - Laravel validation errors object
+ * @returns {Object} - VeeValidate compatible errors object
  */
-
 export function mapLaravelErrorsToVeeValidate(laravelErrors) {
   const veeValidateErrors = {}
 
@@ -18,42 +24,160 @@ export function mapLaravelErrorsToVeeValidate(laravelErrors) {
 }
 
 /**
- * Handles Laravel validation errors from axios responses
- * @param {Object} error - Axios error object
+ * Handle Laravel validation errors and set them on VeeValidate form
+ * @param {Error} error - The error from axios/API call
  * @param {Function} setErrors - VeeValidate setErrors function
- * @returns {boolean} - Returns true if validation errors were handled
+ * @returns {boolean} - True if validation errors were handled, false otherwise
  */
 export function handleLaravelValidationErrors(error, setErrors) {
-  if (error.response && error.response.status === 422) {
-    const laravelErrors = error.response.data.errors || {}
-    const mappedErrors = mapLaravelErrorsToVeeValidate(laravelErrors)
-    setErrors(mappedErrors)
+  // Check if this is a Laravel validation error (422 status)
+  if (error.response?.status === 422 && error.response?.data?.errors) {
+    const laravelErrors = error.response.data.errors
+    const veeValidateErrors = {}
+
+    // Convert Laravel's error format to VeeValidate format
+    // Laravel: { field: ['Error message 1', 'Error message 2'] }
+    // VeeValidate: { field: 'Error message 1' }
+    for (const [field, messages] of Object.entries(laravelErrors)) {
+      // Take the first error message for each field
+      veeValidateErrors[field] = Array.isArray(messages) ? messages[0] : messages
+    }
+
+    setErrors(veeValidateErrors)
     return true
   }
+
   return false
 }
 
 /**
- * Extracts general error message from Laravel response
- * @param {Object} error - Axios error object
- * @returns {string} - Error message
+ * Get a user-friendly error message from Laravel error response
+ * @param {Error} error - The error from axios/API call
+ * @returns {string} - User-friendly error message
  */
 export function getLaravelErrorMessage(error) {
-  if (error.response) {
-    // Handle validation errors (422)
-    if (error.response.status === 422) {
-      return error.response.data.message || 'Validation error occurred.'
-    }
-
-    // Handle other error responses
-    return error.response.data.message || 'An error occurred.'
+  // Check for Laravel's message field
+  if (error.response?.data?.message) {
+    return error.response.data.message
   }
 
-  // Handle network errors
-  if (error.request) {
-    return 'Network error. Please check your connection.'
+  // Check for general error message
+  if (error.response?.data?.error) {
+    return error.response.data.error
   }
 
-  // Handle other errors
-  return error.message || 'An unexpected error occurred.'
+  // Handle specific HTTP status codes
+  switch (error.response?.status) {
+    case 401:
+      return 'Invalid credentials. Please check your email and password.'
+    case 403:
+      return 'You do not have permission to perform this action.'
+    case 404:
+      return 'The requested resource was not found.'
+    case 419:
+      return 'Your session has expired. Please refresh the page and try again.'
+    case 422:
+      return 'Please check the form for errors.'
+    case 429:
+      return 'Too many attempts. Please try again later.'
+    case 500:
+      return 'An unexpected error occurred. Please try again later.'
+    case 503:
+      return 'Service temporarily unavailable. Please try again later.'
+    default:
+      break
+  }
+
+  // Network error
+  if (error.code === 'ERR_NETWORK' || !error.response) {
+    return 'Unable to connect to the server. Please check your internet connection.'
+  }
+
+  // Fallback to generic message
+  return error.message || 'An unexpected error occurred. Please try again.'
+}
+
+/**
+ * Extract all validation error messages as a flat array
+ * @param {Error} error - The error from axios/API call
+ * @returns {string[]} - Array of error messages
+ */
+export function getValidationErrorMessages(error) {
+  if (error.response?.status === 422 && error.response?.data?.errors) {
+    const errors = error.response.data.errors
+    return Object.values(errors).flat()
+  }
+  return []
+}
+
+/**
+ * Check if the error is a validation error
+ * @param {Error} error - The error from axios/API call
+ * @returns {boolean} - True if it's a validation error
+ */
+export function isValidationError(error) {
+  return error.response?.status === 422 && !!error.response?.data?.errors
+}
+
+/**
+ * Check if the error is an authentication error
+ * @param {Error} error - The error from axios/API call
+ * @returns {boolean} - True if it's an auth error
+ */
+export function isAuthError(error) {
+  return error.response?.status === 401
+}
+
+/**
+ * Check if the error is a forbidden error
+ * @param {Error} error - The error from axios/API call
+ * @returns {boolean} - True if it's a forbidden error
+ */
+export function isForbiddenError(error) {
+  return error.response?.status === 403
+}
+
+/**
+ * Check if the error is a not found error
+ * @param {Error} error - The error from axios/API call
+ * @returns {boolean} - True if it's a not found error
+ */
+export function isNotFoundError(error) {
+  return error.response?.status === 404
+}
+
+/**
+ * Check if the error is a session expired error
+ * @param {Error} error - The error from axios/API call
+ * @returns {boolean} - True if it's a session expired error
+ */
+export function isSessionExpiredError(error) {
+  return error.response?.status === 419
+}
+
+/**
+ * Check if the error is a rate limit error
+ * @param {Error} error - The error from axios/API call
+ * @returns {boolean} - True if it's a rate limit error
+ */
+export function isRateLimitError(error) {
+  return error.response?.status === 429
+}
+
+/**
+ * Check if the error is a server error
+ * @param {Error} error - The error from axios/API call
+ * @returns {boolean} - True if it's a server error (5xx)
+ */
+export function isServerError(error) {
+  return error.response?.status >= 500 && error.response?.status < 600
+}
+
+/**
+ * Check if the error is a network error
+ * @param {Error} error - The error from axios/API call
+ * @returns {boolean} - True if it's a network error
+ */
+export function isNetworkError(error) {
+  return error.code === 'ERR_NETWORK' || !error.response
 }

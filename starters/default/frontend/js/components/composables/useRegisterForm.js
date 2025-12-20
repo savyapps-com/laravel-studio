@@ -8,7 +8,7 @@ import { useForm } from 'vee-validate'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@core/stores/auth'
 import { registerSchema } from '@/utils/validationSchemas'
-import { handleLaravelValidationErrors, getLaravelErrorMessage } from '@/utils/laravelErrorMapper'
+import { handleLaravelValidationErrors, getLaravelErrorMessage } from 'laravel-studio'
 
 export function useRegisterForm() {
   const router = useRouter()

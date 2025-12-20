@@ -80,6 +80,7 @@ export { default as ValueCard } from './components/cards/ValueCard.vue'
 export { default as TrendCard } from './components/cards/TrendCard.vue'
 export { default as PartitionCard } from './components/cards/PartitionCard.vue'
 export { default as TableCard } from './components/cards/TableCard.vue'
+export { default as StatCard } from './components/cards/StatCard.vue'
 // Heavy component - async loaded (includes chart library)
 export const ChartCard = defineAsyncComponent(() =>
     import('./components/cards/ChartCard.vue')
@@ -111,6 +112,7 @@ export const RichTextEditor = defineAsyncComponent(() =>
 export const MonacoEditor = defineAsyncComponent(() =>
     import('./components/common/MonacoEditor.vue')
 )
+export { default as ResizableImageNodeView } from './components/common/ResizableImageNodeView.vue'
 
 // Form Components
 export { default as FormInput } from './components/form/FormInput.vue'
@@ -142,6 +144,7 @@ export const IconPicker = defineAsyncComponent(() =>
     import('./components/form/IconPicker.vue')
 )
 export { default as MultiSelectServer } from './components/form/MultiSelectServer.vue'
+export { default as SettingsForm } from './components/form/SettingsForm.vue'
 
 // Services
 export { resourceService } from './services/resourceService.js'
@@ -194,6 +197,8 @@ export {
     useResetPasswordForm,
     useChangePasswordForm
 } from './composables/useAuthForms.js'
+export { useFormState } from './composables/useFormState.js'
+export { useAsyncValidation, createAsyncValidators } from './composables/useAsyncValidation.js'
 
 // Directives
 export { default as tooltipDirective } from './directives/tooltip.js'
@@ -256,6 +261,7 @@ export default {
         app.component('PartitionCard', () => import('./components/cards/PartitionCard.vue'))
         app.component('TableCard', () => import('./components/cards/TableCard.vue'))
         app.component('ChartCard', () => import('./components/cards/ChartCard.vue'))
+        app.component('StatCard', () => import('./components/cards/StatCard.vue'))
 
         // Register tooltip directive
         app.directive('tooltip', tooltipDirective)

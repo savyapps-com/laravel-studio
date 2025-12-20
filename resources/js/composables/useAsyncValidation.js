@@ -92,13 +92,13 @@ export function useAsyncValidation(validationFn, options = {}) {
 
       try {
         const result = await validationFn(value, currentDeps)
-        
+
         // Only update if this is still the current validation
         if (value === lastValidatedValue.value || immediate) {
           validationResult.value = result
           setCache(value, currentDeps, result)
         }
-        
+
         return result
       } catch (error) {
         // Only update if this is still the current validation
@@ -107,7 +107,7 @@ export function useAsyncValidation(validationFn, options = {}) {
           validationError.value = error.message || 'Validation failed'
           setCache(value, currentDeps, false, validationError.value)
         }
-        
+
         return false
       } finally {
         isValidating.value = false
@@ -164,7 +164,7 @@ export function useAsyncValidation(validationFn, options = {}) {
     hasError,
     validationResult,
     validationError,
-    
+
     // Methods
     validateValue,
     validateImmediately,
@@ -181,14 +181,14 @@ export const createAsyncValidators = {
   emailUniqueness: (apiEndpoint) => {
     return async (email) => {
       if (!email) return true
-      
+
       const response = await fetch(`${apiEndpoint}?email=${encodeURIComponent(email)}`)
       const data = await response.json()
-      
+
       if (!response.ok) {
         throw new Error(data.message || 'Email validation failed')
       }
-      
+
       return data.available // Assuming API returns { available: boolean }
     }
   },
@@ -197,14 +197,14 @@ export const createAsyncValidators = {
   usernameAvailability: (apiEndpoint) => {
     return async (username) => {
       if (!username) return true
-      
+
       const response = await fetch(`${apiEndpoint}?username=${encodeURIComponent(username)}`)
       const data = await response.json()
-      
+
       if (!response.ok) {
         throw new Error(data.message || 'Username validation failed')
       }
-      
+
       return data.available
     }
   },
@@ -213,14 +213,14 @@ export const createAsyncValidators = {
   customApi: (apiEndpoint, fieldName = 'value') => {
     return async (value) => {
       if (!value) return true
-      
+
       const response = await fetch(`${apiEndpoint}?${fieldName}=${encodeURIComponent(value)}`)
       const data = await response.json()
-      
+
       if (!response.ok) {
         throw new Error(data.message || 'Validation failed')
       }
-      
+
       return data.valid || data.available || true
     }
   }

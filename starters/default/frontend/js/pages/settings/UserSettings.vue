@@ -150,9 +150,9 @@ import {
   FormLabel,
   FormHelpText,
   SelectInput,
-  CheckboxInput
+  CheckboxInput,
+  SettingsForm
 } from 'laravel-studio'
-import SettingsForm from '@/components/settings/SettingsForm.vue'
 import SettingGroup from '@/components/settings/SettingGroup.vue'
 import CountrySelect from '@/components/settings/CountrySelect.vue'
 import TimezoneSelect from '@/components/settings/TimezoneSelect.vue'

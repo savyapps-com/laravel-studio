@@ -1,20 +1,21 @@
 <template>
-  <div class="card-stat bg-gradient-to-br" :class="gradientClasses">
+  <div class="card-stat bg-gradient-to-br text-white p-6 rounded-xl shadow-lg" :class="gradientClasses">
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-sm font-medium" :class="labelClasses">
+        <p class="text-sm font-medium opacity-90" :class="labelClasses">
           {{ title }}
         </p>
-        <p class="text-2xl font-bold">
+        <p class="text-2xl font-bold mt-1">
           {{ displayValue }}
         </p>
         <div v-if="trend" class="flex items-center mt-2">
           <Icon
-            :name="trend.isPositive ? 'chevron-up' : 'chevron-down'"
+            :name="trend.isPositive ? 'trending-up' : 'trending-down'"
             :size="16"
             class="mr-1"
+            :class="trend.isPositive ? 'text-green-200' : 'text-red-200'"
           />
-          <span class="text-sm font-medium">
+          <span class="text-sm font-medium" :class="trend.isPositive ? 'text-green-200' : 'text-red-200'">
             {{ trend.value }}%
           </span>
           <span class="text-xs ml-1 opacity-80">
@@ -35,7 +36,7 @@
 
 <script>
 import { computed } from 'vue'
-import Icon from '@core/components/common/Icon.vue'
+import Icon from '../common/Icon.vue'
 
 export default {
   name: 'StatCard',
@@ -58,7 +59,7 @@ export default {
     variant: {
       type: String,
       default: 'blue',
-      validator: (value) => ['blue', 'green', 'purple', 'orange', 'red', 'teal'].includes(value),
+      validator: (value) => ['blue', 'green', 'purple', 'orange', 'red', 'teal', 'indigo', 'pink'].includes(value),
     },
     trend: {
       type: Object,
@@ -81,12 +82,14 @@ export default {
   setup(props) {
     const gradientClasses = computed(() => {
       const variants = {
-        blue: 'from-secondary-500 to-secondary-600',
+        blue: 'from-blue-500 to-blue-600',
         green: 'from-green-500 to-green-600',
-        purple: 'from-primary-500 to-primary-600',
+        purple: 'from-purple-500 to-purple-600',
         orange: 'from-orange-500 to-orange-600',
         red: 'from-red-500 to-red-600',
         teal: 'from-teal-500 to-teal-600',
+        indigo: 'from-indigo-500 to-indigo-600',
+        pink: 'from-pink-500 to-pink-600',
       }
       return variants[props.variant] || variants.blue
     })
@@ -99,6 +102,8 @@ export default {
         orange: 'text-orange-100',
         red: 'text-red-100',
         teal: 'text-teal-100',
+        indigo: 'text-indigo-100',
+        pink: 'text-pink-100',
       }
       return variants[props.variant] || variants.blue
     })

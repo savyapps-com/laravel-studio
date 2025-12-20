@@ -8,7 +8,7 @@ import { useForm } from 'vee-validate'
 import { useRouter, useRoute } from 'vue-router'
 import { resetPasswordSchema } from '@/utils/validationSchemas'
 import { authService } from '@core/services/authService'
-import { handleLaravelValidationErrors, getLaravelErrorMessage } from '@/utils/laravelErrorMapper'
+import { handleLaravelValidationErrors, getLaravelErrorMessage } from 'laravel-studio'
 
 export function useResetPasswordForm() {
   const router = useRouter()

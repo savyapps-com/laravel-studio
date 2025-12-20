@@ -7,7 +7,7 @@ import { ref } from 'vue'
 import { useForm } from 'vee-validate'
 import { useAuthStore } from '@core/stores/auth'
 import { changePasswordSchema } from '@/utils/validationSchemas'
-import { handleLaravelValidationErrors, getLaravelErrorMessage } from '@/utils/laravelErrorMapper'
+import { handleLaravelValidationErrors, getLaravelErrorMessage } from 'laravel-studio'
 
 export function useChangePasswordForm() {
   const authStore = useAuthStore()

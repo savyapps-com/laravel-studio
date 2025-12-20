@@ -4,7 +4,6 @@
  */
 
 import { ref, computed, watch, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
 
 export function useFormState(initialValues = {}, options = {}) {
   const {
@@ -12,10 +11,10 @@ export function useFormState(initialValues = {}, options = {}) {
     confirmationMessage = 'You have unsaved changes. Are you sure you want to leave?',
     excludeFields = [],
     autoSave = false,
-    autoSaveDelay = 2000
+    autoSaveDelay = 2000,
+    onAutoSave = null,
+    router = null
   } = options
-
-  const router = useRouter()
 
   // State
   const formValues = ref({ ...initialValues })
@@ -49,7 +48,7 @@ export function useFormState(initialValues = {}, options = {}) {
   const setFieldValue = (fieldName, value) => {
     formValues.value[fieldName] = value
     touchField(fieldName)
-    
+
     if (autoSave && hasUnsavedChanges.value) {
       scheduleAutoSave()
     }
@@ -83,9 +82,9 @@ export function useFormState(initialValues = {}, options = {}) {
   const scheduleAutoSave = () => {
     clearAutoSave()
     autoSaveTimer.value = setTimeout(() => {
-      // Emit auto-save event or call auto-save function
-      // This would need to be implemented based on specific needs
-      console.log('Auto-saving form data...', formValues.value)
+      if (onAutoSave && typeof onAutoSave === 'function') {
+        onAutoSave(formValues.value)
+      }
     }, autoSaveDelay)
   }
 
@@ -123,10 +122,13 @@ export function useFormState(initialValues = {}, options = {}) {
     if (enableUnsavedWarning) {
       // Browser beforeunload event
       window.addEventListener('beforeunload', handleBeforeUnload)
-      
-      // Vue Router beforeRouteLeave guard
-      const removeGuard = router.beforeEach(routerGuard)
-      
+
+      // Vue Router beforeEach guard (if router is provided)
+      let removeGuard = () => {}
+      if (router) {
+        removeGuard = router.beforeEach(routerGuard)
+      }
+
       return () => {
         window.removeEventListener('beforeunload', handleBeforeUnload)
         removeGuard()
@@ -137,12 +139,12 @@ export function useFormState(initialValues = {}, options = {}) {
 
   // Watch for changes to enable/disable unsaved warning
   let removeWarningSetup = null
-  
+
   watch(() => enableUnsavedWarning, (enabled) => {
     if (removeWarningSetup) {
       removeWarningSetup()
     }
-    
+
     if (enabled) {
       removeWarningSetup = setupUnsavedWarning()
     }
@@ -161,12 +163,12 @@ export function useFormState(initialValues = {}, options = {}) {
     formValues,
     touchedFields: touchedFieldsList,
     hasSubmitted,
-    
+
     // Computed
     isDirty,
     isPristine,
     hasUnsavedChanges,
-    
+
     // Methods
     setFieldValue,
     touchField,
@@ -175,7 +177,7 @@ export function useFormState(initialValues = {}, options = {}) {
     updateInitialValues,
     isFieldTouched,
     isFieldDirty,
-    
+
     // Auto-save
     scheduleAutoSave,
     clearAutoSave

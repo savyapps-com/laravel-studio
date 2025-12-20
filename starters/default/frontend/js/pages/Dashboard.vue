@@ -107,8 +107,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { CardGrid, ActivityTimeline, useCards, activityService, Icon } from 'laravel-studio'
-import StatCard from '@/components/stats/StatCard.vue'
+import { CardGrid, ActivityTimeline, useCards, activityService, Icon, StatCard } from 'laravel-studio'
 
 // Cards from backend
 const { cards, loading, hasCards, refreshCard, refreshAllCards, loadCards } = useCards({

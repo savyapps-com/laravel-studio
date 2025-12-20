@@ -60,8 +60,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { CardGrid, useCards, Icon, panelService } from 'laravel-studio'
-import StatCard from '@/components/stats/StatCard.vue'
+import { CardGrid, useCards, Icon, panelService, StatCard } from 'laravel-studio'
 
 const route = useRoute()
 

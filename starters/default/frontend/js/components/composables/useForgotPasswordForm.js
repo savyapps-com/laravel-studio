@@ -7,7 +7,7 @@ import { ref } from 'vue'
 import { useForm } from 'vee-validate'
 import { forgotPasswordSchema } from '@/utils/validationSchemas'
 import { authService } from '@core/services/authService'
-import { handleLaravelValidationErrors, getLaravelErrorMessage } from '@/utils/laravelErrorMapper'
+import { handleLaravelValidationErrors, getLaravelErrorMessage } from 'laravel-studio'
 
 /**
  * @param {string} panel - The panel key for panel-aware reset URLs (default: 'admin')

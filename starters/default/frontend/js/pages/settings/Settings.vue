@@ -252,9 +252,9 @@ import {
   FormInput,
   FormHelpText,
   SelectInput,
-  CheckboxInput
+  CheckboxInput,
+  SettingsForm
 } from 'laravel-studio'
-import SettingsForm from '@/components/settings/SettingsForm.vue'
 import SettingGroup from '@/components/settings/SettingGroup.vue'
 import TimezoneSelect from '@/components/settings/TimezoneSelect.vue'
 
