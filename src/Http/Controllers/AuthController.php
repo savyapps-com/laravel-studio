@@ -237,6 +237,11 @@ class AuthController extends Controller
             ])->toArray();
         }
 
+        // Include admin panel access flag
+        if (isset($user->can_access_admin_panel)) {
+            $data['can_access_admin_panel'] = (bool) $user->can_access_admin_panel;
+        }
+
         // Include avatar if available
         if (method_exists($user, 'getFirstMediaUrl')) {
             $data['avatar'] = $user->getFirstMediaUrl('avatar', 'thumb') ?: null;
