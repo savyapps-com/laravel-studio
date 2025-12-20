@@ -2,7 +2,6 @@
 
 namespace SavyApps\LaravelStudio\Http\Controllers;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -39,7 +38,7 @@ class ResourceController extends Controller
 
             return response()->json([
                 'key' => $resourceInstance::key(),
-                'model' => $resourceInstance::$model,
+                'model' => $resourceInstance::model(),
                 'label' => $resourceInstance::$label,
                 'singularLabel' => $resourceInstance::$singularLabel,
                 'title' => $resourceInstance::$title,
@@ -407,7 +406,7 @@ class ResourceController extends Controller
         $allRules = $resourceInstance->rules('update');
         $rules = [];
 
-        foreach ($fields as $field => $value) {
+        foreach ($fields as $field => $_value) {
             if (!isset($allRules[$field])) {
                 continue;
             }
