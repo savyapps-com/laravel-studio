@@ -143,8 +143,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { Icon } from 'laravel-studio'
-import { useChangePasswordForm } from '@/components/composables/useChangePasswordForm'
+import { Icon, useChangePasswordForm } from 'laravel-studio'
 
 const {
   onSubmit: handlePasswordChange,

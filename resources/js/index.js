@@ -157,6 +157,7 @@ export { permissionService } from './services/permissionService.js'
 export { activityService } from './services/activityService.js'
 export { searchService } from './services/searchService.js'
 export { cardService } from './services/cardService.js'
+export { emailTemplateService } from './services/emailTemplateService.js'
 
 // Stores
 export { useAuthStore } from './stores/auth.js'
@@ -189,6 +190,9 @@ export { useGlobalSearch } from './composables/useGlobalSearch.js'
 export { useCards } from './composables/useCards.js'
 export { useSidebar, useEscapeKey, useClickOutside } from './composables/useSidebar.js'
 export { useContextRoutes } from './composables/useContextRoutes.js'
+export { useDropdown } from './composables/useDropdown.js'
+export { useLayout } from './composables/useLayout.js'
+export { useErrorHandler } from './composables/useErrorHandler.js'
 export {
     useAuthForm,
     useLoginForm,
@@ -202,6 +206,16 @@ export { useAsyncValidation, createAsyncValidators } from './composables/useAsyn
 
 // Directives
 export { default as tooltipDirective } from './directives/tooltip.js'
+
+// Settings Components
+export { default as SettingGroup } from './components/settings/SettingGroup.vue'
+export { default as LayoutOption } from './components/settings/LayoutOption.vue'
+
+// Bootstrap Utilities
+export { configureAxios } from './bootstrap/axios.js'
+
+// Theme Configuration
+export { theme, themeClasses } from './theme/defaultTheme.js'
 
 // Utilities
 export * from './utils/validationRules.js'

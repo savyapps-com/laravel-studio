@@ -6,9 +6,11 @@ use SavyApps\LaravelStudio\Http\Controllers\AuthController;
 use SavyApps\LaravelStudio\Http\Controllers\CardController;
 use SavyApps\LaravelStudio\Http\Controllers\GlobalSearchController;
 use SavyApps\LaravelStudio\Http\Controllers\ImpersonationController;
+use SavyApps\LaravelStudio\Http\Controllers\MediaController;
 use SavyApps\LaravelStudio\Http\Controllers\PanelController;
 use SavyApps\LaravelStudio\Http\Controllers\PermissionController;
 use SavyApps\LaravelStudio\Http\Controllers\ResourceController;
+use SavyApps\LaravelStudio\Http\Controllers\UserSettingsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -163,6 +165,28 @@ Route::middleware(['api', 'auth:sanctum'])
         Route::get('{resource}/{cardKey}', [CardController::class, 'show'])->name('show');
         Route::post('{resource}/{cardKey}/refresh', [CardController::class, 'refresh'])->name('refresh');
         Route::delete('{resource}/cache', [CardController::class, 'clearCache'])->name('cache.clear');
+    });
+
+// Media Upload Routes
+Route::middleware(['api', 'auth:sanctum'])
+    ->prefix('api/media')
+    ->name('api.media.')
+    ->group(function () {
+        Route::post('upload', [MediaController::class, 'upload'])->name('upload');
+        Route::post('upload-multiple', [MediaController::class, 'uploadMultiple'])->name('upload-multiple');
+        Route::get('{media}/download', [MediaController::class, 'download'])->name('download');
+        Route::delete('{media}', [MediaController::class, 'destroy'])->name('destroy');
+    });
+
+// User Settings Routes
+Route::middleware(['api', 'auth:sanctum'])
+    ->prefix('api/user/settings')
+    ->name('api.user.settings.')
+    ->group(function () {
+        Route::get('/', [UserSettingsController::class, 'index'])->name('index');
+        Route::get('{key}', [UserSettingsController::class, 'show'])->name('show');
+        Route::put('/', [UserSettingsController::class, 'update'])->name('update');
+        Route::put('{key}', [UserSettingsController::class, 'updateSingle'])->name('update-single');
     });
 
 // Panel-specific Resource Routes

@@ -5,6 +5,9 @@ namespace Database\Seeders;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use SavyApps\LaravelStudio\Database\Seeders\EmailTemplatesSeeder;
+use SavyApps\LaravelStudio\Database\Seeders\SettingListsSeeder;
+use SavyApps\LaravelStudio\Database\Seeders\SettingsSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,9 +16,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Seed reference data first
+        // Seed reference data from core package first
         $this->call([
             SettingListsSeeder::class,
+            SettingsSeeder::class,
             EmailTemplatesSeeder::class,
         ]);
 

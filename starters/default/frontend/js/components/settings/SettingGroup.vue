@@ -1,47 +1,19 @@
 <template>
-  <FormSection
-    :title="title"
-    :description="description"
-    :collapsible="collapsible"
-    :collapsed="collapsed"
-    :show-divider="showDivider"
-    @toggle="handleToggle"
-  >
-    <div class="space-y-6">
-      <slot />
-    </div>
-  </FormSection>
+  <SettingGroupCore v-bind="$attrs" @toggle="$emit('toggle', $event)">
+    <slot />
+  </SettingGroupCore>
 </template>
 
 <script setup>
-import FormSection from '@/components/form/FormSection.vue'
+import { SettingGroup as SettingGroupCore } from 'laravel-studio'
 
 defineProps({
-  title: {
-    type: String,
-    required: true
-  },
-  description: {
-    type: String,
-    default: ''
-  },
-  collapsible: {
-    type: Boolean,
-    default: false
-  },
-  collapsed: {
-    type: Boolean,
-    default: false
-  },
-  showDivider: {
-    type: Boolean,
-    default: true
-  }
+  title: String,
+  description: String,
+  collapsible: Boolean,
+  collapsed: Boolean,
+  showDivider: Boolean
 })
 
-const emit = defineEmits(['toggle'])
-
-const handleToggle = (isCollapsed) => {
-  emit('toggle', isCollapsed)
-}
+defineEmits(['toggle'])
 </script>

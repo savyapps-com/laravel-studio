@@ -13,9 +13,11 @@ use SavyApps\LaravelStudio\Console\Commands\MakeFilterCommand;
 use SavyApps\LaravelStudio\Console\Commands\MakePanelCommand;
 use SavyApps\LaravelStudio\Console\Commands\MakeResourceCommand;
 use SavyApps\LaravelStudio\Console\Commands\PanelCommand;
+use SavyApps\LaravelStudio\Console\Commands\ResetApplicationCommand;
 use SavyApps\LaravelStudio\Console\Commands\SyncPermissionsCommand;
 use SavyApps\LaravelStudio\Http\Middleware\CheckResourcePermission;
 use SavyApps\LaravelStudio\Http\Middleware\EnsureUserCanAccessPanel;
+use SavyApps\LaravelStudio\Http\Middleware\TokenFromQueryParameter;
 use SavyApps\LaravelStudio\Models\Permission;
 use SavyApps\LaravelStudio\Models\Role;
 use SavyApps\LaravelStudio\Observers\PermissionObserver;
@@ -25,9 +27,14 @@ use SavyApps\LaravelStudio\Policies\RolePolicy;
 use SavyApps\LaravelStudio\Policies\UserPolicy;
 use SavyApps\LaravelStudio\Services\ActivityService;
 use SavyApps\LaravelStudio\Services\AuthorizationService;
+use SavyApps\LaravelStudio\Services\BladeTemplateSecurityService;
 use SavyApps\LaravelStudio\Services\CardService;
+use SavyApps\LaravelStudio\Services\CommentService;
+use SavyApps\LaravelStudio\Services\EmailTemplateService;
+use SavyApps\LaravelStudio\Services\EmailVariableRegistry;
 use SavyApps\LaravelStudio\Services\GlobalSearchService;
 use SavyApps\LaravelStudio\Services\PanelService;
+use SavyApps\LaravelStudio\Services\SettingsService;
 use SavyApps\LaravelStudio\Support\ConfigValidator;
 
 class LaravelStudioServiceProvider extends ServiceProvider
@@ -66,6 +73,33 @@ class LaravelStudioServiceProvider extends ServiceProvider
         // Register CardService as singleton
         $this->app->singleton(CardService::class, function ($app) {
             return new CardService();
+        });
+
+        // Register SettingsService as singleton
+        $this->app->singleton(SettingsService::class, function ($app) {
+            return new SettingsService();
+        });
+
+        // Register BladeTemplateSecurityService as singleton
+        $this->app->singleton(BladeTemplateSecurityService::class, function ($app) {
+            return new BladeTemplateSecurityService();
+        });
+
+        // Register EmailVariableRegistry as singleton
+        $this->app->singleton(EmailVariableRegistry::class, function ($app) {
+            return new EmailVariableRegistry();
+        });
+
+        // Register EmailTemplateService as singleton
+        $this->app->singleton(EmailTemplateService::class, function ($app) {
+            return new EmailTemplateService(
+                $app->make(BladeTemplateSecurityService::class)
+            );
+        });
+
+        // Register CommentService as singleton
+        $this->app->singleton(CommentService::class, function ($app) {
+            return new CommentService();
         });
     }
 
@@ -122,6 +156,7 @@ class LaravelStudioServiceProvider extends ServiceProvider
                 MakePanelCommand::class,
                 MakeResourceCommand::class,
                 PanelCommand::class,
+                ResetApplicationCommand::class,
                 SyncPermissionsCommand::class,
             ]);
         }
@@ -139,6 +174,9 @@ class LaravelStudioServiceProvider extends ServiceProvider
 
         // Register permission middleware alias
         $router->aliasMiddleware('permission', CheckResourcePermission::class);
+
+        // Register token from query parameter middleware alias (for SSE/EventSource)
+        $router->aliasMiddleware('token.query', TokenFromQueryParameter::class);
     }
 
     /**

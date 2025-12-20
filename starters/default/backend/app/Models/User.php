@@ -3,7 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Enums\Status;
+use SavyApps\LaravelStudio\Enums\Status;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,6 +13,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Sanctum\HasApiTokens;
 use SavyApps\LaravelStudio\Models\Role;
+use SavyApps\LaravelStudio\Models\Setting;
 use SavyApps\LaravelStudio\Traits\HasPermissions;
 use SavyApps\LaravelStudio\Traits\LogsActivity;
 use Spatie\MediaLibrary\HasMedia;

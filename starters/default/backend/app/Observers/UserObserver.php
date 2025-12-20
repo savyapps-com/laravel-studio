@@ -2,9 +2,9 @@
 
 namespace App\Observers;
 
-use App\Models\SettingList;
 use App\Models\User;
-use App\Services\SettingsService;
+use SavyApps\LaravelStudio\Models\SettingList;
+use SavyApps\LaravelStudio\Services\SettingsService;
 
 class UserObserver
 {

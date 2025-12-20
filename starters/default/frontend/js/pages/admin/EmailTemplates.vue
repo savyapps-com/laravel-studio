@@ -224,8 +224,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { Icon, ToggleSwitch, useToast, useDialog } from 'laravel-studio'
-import { emailTemplateService } from '@/services/emailTemplateService'
+import { Icon, ToggleSwitch, useToast, useDialog, emailTemplateService } from 'laravel-studio'
 
 const router = useRouter()
 const toast = useToast()

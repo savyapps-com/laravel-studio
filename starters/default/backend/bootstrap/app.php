@@ -14,11 +14,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'panel' => \App\Http\Middleware\EnsurePanelAccess::class,
-            'token.query' => \App\Http\Middleware\TokenFromQueryParameter::class,
+            'token.query' => \SavyApps\LaravelStudio\Http\Middleware\TokenFromQueryParameter::class,
         ]);
 
         // Add TokenFromQueryParameter to API middleware stack to run before Sanctum
-        $middleware->prependToGroup('api', \App\Http\Middleware\TokenFromQueryParameter::class);
+        $middleware->prependToGroup('api', \SavyApps\LaravelStudio\Http\Middleware\TokenFromQueryParameter::class);
     })
     ->withSchedule(function ($schedule) {
         // Cleanup temporary image uploads hourly (images older than 24 hours)

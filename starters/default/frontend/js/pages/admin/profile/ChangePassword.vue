@@ -36,8 +36,7 @@
 </template>
 
 <script setup>
-import { PasswordChangeForm } from 'laravel-studio'
-import { useChangePasswordForm } from '@/components/composables/useChangePasswordForm'
+import { PasswordChangeForm, useChangePasswordForm } from 'laravel-studio'
 
 const {
   onSubmit: handlePasswordChange,
