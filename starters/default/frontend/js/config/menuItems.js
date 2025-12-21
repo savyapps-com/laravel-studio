@@ -1,4 +1,4 @@
-import { useContextRoutes } from '@/composables/useContextRoutes'
+import { useContextRoutes } from 'laravel-studio'
 
 // Admin menu items
 export const adminMainMenuItems = [

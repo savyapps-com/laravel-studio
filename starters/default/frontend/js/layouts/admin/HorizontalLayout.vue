@@ -1,7 +1,13 @@
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
     <!-- Impersonation Banner -->
-    <ImpersonationBanner ref="impersonationBanner" />
+    <ImpersonationBanner
+      ref="impersonationBanner"
+      :is-impersonating="isImpersonating"
+      :user-name="impersonationStatus?.user?.name || ''"
+      :user-email="impersonationStatus?.user?.email || ''"
+      :admin-name="impersonationStatus?.admin?.name || ''"
+    />
 
     <!-- Top Navigation -->
     <HorizontalNav
@@ -34,7 +40,7 @@ import {
   useAuthStore
 } from 'laravel-studio'
 import { adminMainMenuItems, userMainMenuItems } from '@/config/menuItems'
-import { useContextRoutes } from '@/composables/useContextRoutes'
+import { useContextRoutes } from 'laravel-studio'
 
 export default {
   name: 'HorizontalLayout',
@@ -76,6 +82,9 @@ export default {
     const profileRoute = computed(() => ({ name: profileRoutes.value.personal }))
     const settingsRoute = computed(() => ({ name: settingsRoutes.value.appearance }))
 
+    // Impersonation
+    const isImpersonating = computed(() => !!authStore.impersonationStatus?.user)
+
     const logout = async () => {
       try {
         await authStore.logout()
@@ -107,6 +116,8 @@ export default {
       user,
       profileRoute,
       settingsRoute,
+      isImpersonating,
+      impersonationStatus: computed(() => authStore.impersonationStatus),
       logout,
       handleSearch,
     }

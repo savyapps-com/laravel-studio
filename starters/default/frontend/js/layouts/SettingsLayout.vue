@@ -45,8 +45,8 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@core/stores/auth'
-import { useContextRoutes } from '@/composables/useContextRoutes'
-import Icon from '@core/components/common/Icon.vue'
+import { useContextRoutes } from 'laravel-studio'
+import { Icon } from 'laravel-studio'
 
 const route = useRoute()
 const authStore = useAuthStore()

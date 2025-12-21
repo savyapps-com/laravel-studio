@@ -1,22 +1,5 @@
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-semibold text-title">Dashboard</h1>
-        <p class="text-subtitle mt-1">Welcome to your admin dashboard</p>
-      </div>
-      <button
-        v-if="hasCards"
-        @click="refreshAllCards"
-        class="btn btn-secondary"
-        :disabled="loading"
-      >
-        <Icon name="refresh" :size="16" class="mr-2" :class="{ 'animate-spin': loading }" />
-        Refresh
-      </button>
-    </div>
-
     <!-- Resource Cards from Backend -->
     <CardGrid
       v-if="hasCards"

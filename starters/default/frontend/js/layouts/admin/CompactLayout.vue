@@ -10,7 +10,13 @@
     <!-- Main Content -->
     <div class="content-area pl-16">
       <!-- Impersonation Banner -->
-      <ImpersonationBanner ref="impersonationBanner" />
+      <ImpersonationBanner
+        ref="impersonationBanner"
+        :is-impersonating="isImpersonating"
+        :user-name="impersonationStatus?.user?.name || ''"
+        :user-email="impersonationStatus?.user?.email || ''"
+        :admin-name="impersonationStatus?.admin?.name || ''"
+      />
 
       <!-- Top Navbar -->
       <Navbar
@@ -45,7 +51,7 @@ import {
   useAuthStore
 } from 'laravel-studio'
 import { adminMainMenuItems, getAdminMoreMenuItems, userMainMenuItems, getUserMoreMenuItems } from '@/config/menuItems'
-import { useContextRoutes } from '@/composables/useContextRoutes'
+import { useContextRoutes } from 'laravel-studio'
 
 export default {
   name: 'CompactLayout',
@@ -88,6 +94,9 @@ export default {
     const profileRoute = computed(() => ({ name: profileRoutes.value.personal }))
     const settingsRoute = computed(() => ({ name: settingsRoutes.value.appearance }))
 
+    // Impersonation
+    const isImpersonating = computed(() => !!authStore.impersonationStatus?.user)
+
     // Methods
     const logout = async () => {
       try {
@@ -124,6 +133,8 @@ export default {
       user,
       profileRoute,
       settingsRoute,
+      isImpersonating,
+      impersonationStatus: computed(() => authStore.impersonationStatus),
       logout,
       handleSearch,
       handleNavClick,

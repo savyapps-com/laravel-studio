@@ -41,7 +41,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { useContextRoutes } from '@/composables/useContextRoutes'
+import { useContextRoutes } from 'laravel-studio'
 import { Icon } from 'laravel-studio'
 
 const route = useRoute()

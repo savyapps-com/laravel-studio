@@ -42,7 +42,13 @@
       <!-- Main Content -->
       <div class="content-area" :class="mainContentClasses">
         <!-- Impersonation Banner -->
-        <ImpersonationBanner ref="impersonationBanner" />
+        <ImpersonationBanner
+          ref="impersonationBanner"
+          :is-impersonating="isImpersonating"
+          :user-name="authStore.impersonationStatus?.user?.name || ''"
+          :user-email="authStore.impersonationStatus?.user?.email || ''"
+          :admin-name="authStore.impersonationStatus?.admin?.name || ''"
+        />
 
         <!-- Top Navbar -->
         <Navbar
@@ -81,7 +87,7 @@ import {
   useAuthStore,
   panelService
 } from 'laravel-studio'
-import { useContextRoutes } from '@/composables/useContextRoutes'
+import { useContextRoutes } from 'laravel-studio'
 
 const router = useRouter()
 const route = useRoute()
@@ -215,6 +221,9 @@ const user = computed(() => authStore.user ? {
 // Profile and Settings routes
 const profileRoute = computed(() => ({ name: profileRoutes.value.personal }))
 const settingsRoute = computed(() => ({ name: settingsRoutes.value.appearance }))
+
+// Impersonation
+const isImpersonating = computed(() => !!authStore.impersonationStatus?.user)
 
 // Load panel configuration
 async function loadPanelConfig() {
