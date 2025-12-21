@@ -110,6 +110,7 @@ const menuItems = computed(() => {
   if (!panelConfig.value?.menu) return []
 
   return panelConfig.value.menu
+    .filter(item => item && typeof item === 'object' && item.type)
     .map(item => {
       // Handle header items
       if (item.type === 'header') {
@@ -176,7 +177,13 @@ const menuItems = computed(() => {
       // Skip unknown item types
       return null
     })
-    .filter(item => item !== null)
+    .filter(item => {
+      if (!item) return false
+      if (item.type === 'heading') return !!item.text
+      if (item.type === 'separator') return true
+      if (item.type === 'link') return !!(item.label && item.icon && item.to)
+      return false
+    })
 })
 
 // More menu items for user actions
