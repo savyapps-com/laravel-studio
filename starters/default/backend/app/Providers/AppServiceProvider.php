@@ -28,7 +28,7 @@ class AppServiceProvider extends ServiceProvider
         // Register event listeners
         Event::listen(
             \Illuminate\Auth\Events\Registered::class,
-            \App\Listeners\SendWelcomeEmail::class,
+            \SavyApps\LaravelStudio\Listeners\SendWelcomeEmail::class,
         );
 
         // Disable implicit route model binding for resources

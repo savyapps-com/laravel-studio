@@ -358,4 +358,73 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | User Settings Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure default settings for new users. These settings are created
+    | automatically when a user is created if the UserSettingsObserver is
+    | registered on your User model.
+    |
+    | To enable, add to your AppServiceProvider boot():
+    |   User::observe(\SavyApps\LaravelStudio\Observers\UserSettingsObserver::class);
+    |
+    */
+
+    'user_settings' => [
+        // Setting key names (customize if your app uses different keys)
+        'keys' => [
+            'theme' => 'user_theme',
+            'admin_layout' => 'user_admin_layout',
+            'dark_mode' => 'dark_mode',
+            'items_per_page' => 'items_per_page',
+        ],
+
+        // Default values for new users
+        'defaults' => [
+            'theme' => env('STUDIO_DEFAULT_THEME', 'default'),
+            'admin_layout' => env('STUDIO_DEFAULT_LAYOUT', 'classic'),
+            'dark_mode' => env('STUDIO_DEFAULT_DARK_MODE', false),
+            'items_per_page' => env('STUDIO_DEFAULT_ITEMS_PER_PAGE', 25),
+        ],
+
+        // Additional custom settings (add your own settings here)
+        // 'additional' => [
+        //     [
+        //         'key' => 'custom_setting',
+        //         'value' => 'default_value',
+        //         'metadata' => [
+        //             'type' => 'string',
+        //             'group' => 'general',
+        //             'label' => 'Custom Setting',
+        //             'description' => 'A custom user setting',
+        //             'icon' => 'settings',
+        //             'is_public' => true,
+        //             'order' => 1,
+        //         ],
+        //     ],
+        // ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Seeder Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure the PermissionSeeder behavior. These settings control
+    | whether a super admin user is created and with what credentials.
+    |
+    | Usage:
+    |   $this->call(\SavyApps\LaravelStudio\Database\Seeders\PermissionSeeder::class);
+    |
+    */
+
+    'seeder' => [
+        'create_super_admin' => env('STUDIO_SEEDER_CREATE_ADMIN', true),
+        'super_admin_email' => env('STUDIO_SUPER_ADMIN_EMAIL', 'superadmin@app.com'),
+        'super_admin_name' => env('STUDIO_SUPER_ADMIN_NAME', 'Super Admin'),
+        'super_admin_password' => env('STUDIO_SUPER_ADMIN_PASSWORD', 'password'),
+    ],
+
 ];

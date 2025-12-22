@@ -95,7 +95,7 @@ class User extends Authenticatable implements HasMedia
         // Generate panel-aware reset URL
         $resetUrl = config('app.url')."/{$panel}/reset-password?token={$token}&email=".urlencode($this->email);
 
-        $this->notify(new \App\Notifications\TemplatedNotification('password_reset', [
+        $this->notify(new \SavyApps\LaravelStudio\Notifications\TemplatedNotification('password_reset', [
             'reset_url' => $resetUrl,
             'token' => $token,
             'panel' => $panel,

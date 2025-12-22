@@ -3,8 +3,11 @@
 namespace SavyApps\LaravelStudio\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use SavyApps\LaravelStudio\Models\Panel;
 
+/**
+ * @deprecated Panels are now managed via config/studio.php only.
+ * This request class is kept for backwards compatibility but should not be used.
+ */
 class UpdatePanelRequest extends FormRequest
 {
     /**
@@ -20,11 +23,8 @@ class UpdatePanelRequest extends FormRequest
      */
     public function rules(): array
     {
-        $panel = Panel::findByKey($this->route('key'));
-        $panelId = $panel?->id;
-
         return [
-            'key' => 'sometimes|string|max:255|alpha_dash|unique:panels,key,' . $panelId,
+            'key' => 'sometimes|string|max:255|alpha_dash',
             'label' => 'sometimes|string|max:255',
             'path' => ['sometimes', 'string', 'max:255', 'regex:/^\/[a-z0-9\-\/]*$/i'],
             'icon' => 'nullable|string|max:255',
@@ -51,7 +51,6 @@ class UpdatePanelRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'key.unique' => 'A panel with this key already exists.',
             'key.alpha_dash' => 'The panel key may only contain letters, numbers, dashes, and underscores.',
             'path.regex' => 'The panel path must start with / and contain only letters, numbers, hyphens, and forward slashes.',
         ];

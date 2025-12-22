@@ -142,6 +142,13 @@ return [
         'enabled' => true,
         'super_admin_role' => 'admin',  // Role that bypasses all permission checks
         'cache_ttl' => 3600,            // Permission cache TTL in seconds
+
+        // Model classes (can be overridden if using custom models)
+        'models' => [
+            'user' => \App\Models\User::class,
+            'role' => \SavyApps\LaravelStudio\Models\Role::class,
+            'permission' => \SavyApps\LaravelStudio\Models\Permission::class,
+        ],
     ],
 
     /*
@@ -235,6 +242,50 @@ return [
             //     'width' => '1/2',
             // ],
         ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | User Settings Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure default settings for new users. These settings are created
+    | automatically when a user is created via the UserSettingsObserver.
+    |
+    */
+
+    'user_settings' => [
+        // Setting key names
+        'keys' => [
+            'theme' => 'user_theme',
+            'admin_layout' => 'user_admin_layout',
+            'dark_mode' => 'dark_mode',
+            'items_per_page' => 'items_per_page',
+        ],
+
+        // Default values for new users
+        'defaults' => [
+            'theme' => env('STUDIO_DEFAULT_THEME', 'default'),
+            'admin_layout' => env('STUDIO_DEFAULT_LAYOUT', 'classic'),
+            'dark_mode' => env('STUDIO_DEFAULT_DARK_MODE', false),
+            'items_per_page' => env('STUDIO_DEFAULT_ITEMS_PER_PAGE', 25),
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Seeder Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure the PermissionSeeder behavior.
+    |
+    */
+
+    'seeder' => [
+        'create_super_admin' => env('STUDIO_SEEDER_CREATE_ADMIN', true),
+        'super_admin_email' => env('STUDIO_SUPER_ADMIN_EMAIL', 'superadmin@app.com'),
+        'super_admin_name' => env('STUDIO_SUPER_ADMIN_NAME', 'Super Admin'),
+        'super_admin_password' => env('STUDIO_SUPER_ADMIN_PASSWORD', 'password'),
     ],
 
 ];

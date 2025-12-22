@@ -208,6 +208,9 @@ class InstallCommand extends Command
         // Verify critical configuration files
         $this->verifyConfiguration();
 
+        // Clear and optimize caches
+        $this->optimizeApplication();
+
         $this->displayInstallationSummary();
         $this->newLine();
 
@@ -905,6 +908,38 @@ class InstallCommand extends Command
                 File::copy($backupPath, $bootstrapPath);
             }
             throw $e;
+        }
+    }
+
+    /**
+     * Clear and optimize application caches.
+     */
+    protected function optimizeApplication(): void
+    {
+        $this->newLine();
+        $this->components->info('Optimizing application...');
+
+        try {
+            // Clear all caches first
+            $this->components->task('Clearing all caches', function () {
+                $this->callSilently('optimize:clear');
+
+                return true;
+            });
+
+            // Optimize the application
+            $this->components->task('Optimizing application', function () {
+                $this->callSilently('optimize');
+
+                return true;
+            });
+
+            $this->addSuccess('Application optimized');
+        } catch (\Exception) {
+            $this->addWarning(
+                'Failed to optimize application',
+                'Run manually: php artisan optimize:clear && php artisan optimize'
+            );
         }
     }
 

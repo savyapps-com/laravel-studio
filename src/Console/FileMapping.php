@@ -55,7 +55,7 @@ class FileMapping
             'js/stores' => 'resources/js/stores',
             'js/services' => 'resources/js/services',
             'js/router' => 'resources/js/router',
-            'composables' => 'resources/js/composables',
+            'js/composables' => 'resources/js/composables',
             'css' => 'resources/css',
             'views' => 'resources/views',
             'vite.config.js' => 'vite.config.js',
